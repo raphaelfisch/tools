@@ -795,6 +795,15 @@
                     <div id="infoGrid" class="info-grid"></div>
                 </div>
 
+                <div class="config-group">
+                    <div class="config-label">
+                        🏷️ Name der Keimung
+                    </div>
+                    <input type="text" id="keimName" 
+                           style="width: 100%; padding: 0.6rem 0.8rem; border: 2px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 0.95rem;"
+                           placeholder="z.B. Rotklee, Alfalfa, Mungobohnen...">
+                </div>
+
                 <div class="config-group highlight">
                     <div class="config-label">
                         🕐 Startzeit
@@ -1041,8 +1050,11 @@
         function parseExtractedText(text) {
             console.log('Erkannter Text:', text);
             
-            const nameMatch = text.match(/(?:Red clover|Rotklee|Trifoglio|Trèfle|Alfalfa|Mungobohnen|Radieschen|Brokkoli)/i);
-            if (nameMatch) extractedData.name = nameMatch[0];
+            const nameMatch = text.match(/(?:Red clover|Rotklee|Trifoglio|Trèfle|Alfalfa|Mungobohnen|Radieschen|Brokkoli|Kresse|Senf|Rettich|Weizen|Dinkel|Linsen|Kichererbsen|Sonnenblumen)/i);
+            if (nameMatch) {
+                extractedData.name = nameMatch[0];
+                document.getElementById('keimName').value = nameMatch[0];
+            }
 
             const soakMatch = text.match(/(\d+)\s*[-–]\s*(\d+)\s*h/i);
             if (soakMatch) {
@@ -1214,7 +1226,7 @@
         }
 
         function displaySchedule() {
-            const name = extractedData.name || 'Sprossen';
+            const name = document.getElementById('keimName').value.trim() || 'Sprossen';
             document.getElementById('scheduleName').textContent = name + ' Keimplan';
             
             const rinseTimes = [
@@ -1256,7 +1268,8 @@
         }
 
         function copySchedule() {
-            let text = `🌱 ${extractedData.name || 'Sprossen'} KEIMPLAN\n${'═'.repeat(25)}\n`;
+            const keimName = document.getElementById('keimName').value.trim() || 'Sprossen';
+            let text = `🌱 ${keimName} KEIMPLAN\n${'═'.repeat(25)}\n`;
             const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
             let currentDay = '';
             
@@ -1274,8 +1287,9 @@
         }
 
         function downloadSchedule() {
+            const keimName = document.getElementById('keimName').value.trim() || 'Sprossen';
             const blob = new Blob([JSON.stringify({
-                name: extractedData.name,
+                name: keimName,
                 config: extractedData,
                 schedule: generatedSchedule.map(i => ({
                     datetime: i.date.toISOString(),
@@ -1286,11 +1300,13 @@
             
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `keimplan_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `keimplan-${keimName.toLowerCase().replace(/\s+/g, '-')}_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
         }
 
         function addToCalendar() {
+            const keimName = document.getElementById('keimName').value.trim() || 'Sprossen';
+            
             // Hilfsfunktion für lokales Datumsformat (YYYYMMDDTHHMMSS)
             function formatLocalDate(date) {
                 const pad = (n) => n.toString().padStart(2, '0');
@@ -1320,7 +1336,7 @@
                 const uid = `keimplan-${Date.now()}-${index}@keimplan.app`;
                 
                 // Text für ICS escapen (Kommas, Semikolons, Newlines)
-                const summary = item.action.replace(/[,;]/g, '\\$&');
+                const summary = `${keimName}: ${item.action}`.replace(/[,;]/g, '\\$&');
                 const description = item.detail.replace(/[,;]/g, '\\$&').replace(/\n/g, '\\n');
                 
                 ics.push(
@@ -1341,7 +1357,7 @@
             const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'keimplan.ics';
+            a.download = `keimplan-${keimName.toLowerCase().replace(/\s+/g, '-')}.ics`;
             a.click();
             URL.revokeObjectURL(a.href);
         }
