@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Keimplan Generator</title>
+
+```
+<!-- PWA Meta Tags -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Keimplan">
+<meta name="theme-color" content="#43a047">
+
+<!-- PWA Icons (Base64 inline für Standalone-Datei) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%2343a047' width='100' height='100' rx='20'/><text x='50' y='68' text-anchor='middle' font-size='50'>🌱</text></svg>">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+    :root {
+        --bg-primary: #f7f9f7;
+        --bg-secondary: #fff;
+        --bg-accent: #e8f5e9;
+        --bg-accent-2: #fff8e1;
+        --bg-accent-3: #e3f2fd;
+        --text-primary: #1a2e1a;
+        --text-secondary: #5a6e5a;
+        --accent-green: #43a047;
+        --accent-green-light: #66bb6a;
+        --accent-orange: #fb8c00;
+        --accent-orange-light: #ffa726;
+        --accent-blue: #1e88e5;
+        --border: #d5e5d5;
+        --shadow: rgba(26, 46, 26, 0.08);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'DM Sans', sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        line-height: 1.6;
+    }
+
+    .container {
+        max-width: 1300px;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem 0;
+    }
+
+    h1 {
+        font-family: 'Fraunces', serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.4rem;
+    }
+
+    h1 span {
+        color: var(--accent-green);
+    }
+
+    .subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    .steps {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .step {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        background: var(--bg-secondary);
+        border: 2px solid var(--border);
+        border-radius: 25px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        transition: all 0.3s;
+    }
+
+    .step.active {
+        background: var(--accent-green);
+        border-color: var(--accent-green);
+        color: white;
+    }
+
+    .step.done {
+        background: var(--bg-accent);
+        border-color: var(--accent-green);
+        color: var(--accent-green);
+    }
+
+    .step-num {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: currentColor;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .step.active .step-num,
+    .step.done .step-num {
+        background: white;
+        color: var(--accent-green);
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.4fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    @media (max-width: 1000px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .card {
+        background: var(--bg-secondary);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px var(--shadow);
+        border: 1px solid var(--border);
+    }
+
+    .card-title {
+        font-family: 'Fraunces', serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .card-title .icon {
+        font-size: 1.3rem;
+    }
+
+    .camera-container {
+        position: relative;
+        background: #1a1a1a;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 4/3;
+        margin-bottom: 1rem;
+    }
+
+    #video, #preview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    #preview { display: none; }
+
+    .camera-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .camera-overlay.hidden { display: none; }
+
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        flex: 1;
+        min-width: 100px;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+    }
+
+    .btn-primary {
+        background: var(--accent-orange);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #e57c00;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: var(--bg-accent);
+        color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+        background: #d0e8d0;
+    }
+
+    .btn-success {
+        background: var(--accent-green);
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #388e3c;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    .upload-area {
+        border: 2px dashed var(--border);
+        border-radius: 10px;
+        padding: 1.25rem;
+        text-align: center;
+        margin-top: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .upload-area:hover {
+        border-color: var(--accent-green);
+        background: var(--bg-accent);
+    }
+
+    .upload-area input { display: none; }
+
+    .progress-container {
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .progress-container.active { display: block; }
+
+    .progress-bar {
+        height: 6px;
+        background: var(--bg-accent);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-green), var(--accent-green-light));
+        width: 0%;
+        transition: width 0.3s;
+    }
+
+    .progress-text {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-top: 0.4rem;
+        text-align: center;
+    }
+
+    .config-section {
+        display: none;
+    }
+
+    .config-section.active { display: block; }
+
+    .config-group {
+        background: var(--bg-accent);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .config-group.highlight {
+        background: var(--bg-accent-2);
+        border: 2px solid var(--accent-orange);
+    }
+
+    .config-group.blue {
+        background: var(--bg-accent-3);
+        border: 2px solid var(--accent-blue);
+    }
+
+    .config-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .config-label .badge {
+        font-size: 0.7rem;
+        background: var(--accent-orange);
+        color: white;
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+
+    .config-label .badge.blue {
+        background: var(--accent-blue);
+    }
+
+    .time-input-group {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .time-input-group input[type="date"],
+    .time-input-group input[type="time"] {
+        padding: 0.6rem 0.8rem;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 0.95rem;
+        background: white;
+    }
+
+    .time-input-group input:focus {
+        outline: none;
+        border-color: var(--accent-green);
+    }
+
+    /* Spülzeiten Config */
+    .rinse-times-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .rinse-time-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: white;
+        padding: 0.6rem;
+        border-radius: 8px;
+    }
+
+    .rinse-time-row label {
+        font-size: 0.85rem;
+        min-width: 80px;
+        color: var(--text-secondary);
+    }
+
+    .rinse-time-row input[type="time"] {
+        flex: 1;
+        padding: 0.5rem;
+        border: 2px solid var(--border);
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 0.9rem;
+    }
+
+    .rinse-time-row input[type="time"]:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+    }
+
+    .rinse-count-selector {
+        display: flex;
+        gap: 0.4rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .rinse-count-btn {
+        flex: 1;
+        padding: 0.5rem;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: white;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .rinse-count-btn:hover {
+        border-color: var(--accent-blue);
+    }
+
+    .rinse-count-btn.active {
+        background: var(--accent-blue);
+        border-color: var(--accent-blue);
+        color: white;
+    }
+
+    .timespan-item {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border);
+    }
+
+    .timespan-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .timespan-name {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .timespan-range {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        background: var(--bg-accent);
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+    }
+
+    .timespan-slider {
+        width: 100%;
+        margin: 0.5rem 0;
+        -webkit-appearance: none;
+        height: 8px;
+        background: var(--bg-accent);
+        border-radius: 4px;
+        outline: none;
+    }
+
+    .timespan-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        background: var(--accent-green);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .timespan-value {
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--accent-green);
+    }
+
+    .quick-btns {
+        display: flex;
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+    }
+
+    .quick-btn {
+        flex: 1;
+        padding: 0.4rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: white;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .quick-btn:hover, .quick-btn.active {
+        background: var(--accent-green);
+        color: white;
+        border-color: var(--accent-green);
+    }
+
+    .schedule-section {
+        display: none;
+    }
+
+    .schedule-section.active { display: block; }
+
+    .schedule-header {
+        background: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-light) 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .schedule-header h3 {
+        font-family: 'Fraunces', serif;
+        font-size: 1.2rem;
+    }
+
+    .schedule-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .schedule-timeline::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--bg-accent);
+        border-radius: 2px;
+    }
+
+    .schedule-day {
+        margin-bottom: 1.5rem;
+    }
+
+    .schedule-day-header {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--accent-green);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .schedule-day-header::before {
+        content: '';
+        position: absolute;
+        left: 4px;
+        width: 11px;
+        height: 11px;
+        background: var(--accent-green);
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px var(--accent-green);
+    }
+
+    .schedule-item {
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--bg-accent);
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        margin-left: 0.5rem;
+        transition: transform 0.2s;
+    }
+
+    .schedule-item:hover {
+        transform: translateX(4px);
+    }
+
+    .schedule-item.highlight {
+        background: var(--bg-accent-2);
+        border-left: 3px solid var(--accent-orange);
+    }
+
+    .schedule-item.rinse {
+        background: var(--bg-accent-3);
+        border-left: 3px solid var(--accent-blue);
+    }
+
+    .schedule-time {
+        min-width: 55px;
+        font-weight: 700;
+        color: var(--accent-orange);
+        font-size: 0.9rem;
+    }
+
+    .schedule-item.rinse .schedule-time {
+        color: var(--accent-blue);
+    }
+
+    .schedule-content {
+        flex: 1;
+    }
+
+    .schedule-action {
+        font-weight: 600;
+        margin-bottom: 0.15rem;
+    }
+
+    .schedule-detail {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .export-section {
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .extracted-info {
+        background: var(--bg-accent-2);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .extracted-info h4 {
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .info-item {
+        background: white;
+        padding: 0.5rem;
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .info-item .label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .info-item .value {
+        font-weight: 700;
+        color: var(--accent-green);
+    }
+
+    .hidden { display: none !important; }
+
+    /* PWA Install Banner */
+    .install-banner {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, var(--accent-green), var(--accent-green-light));
+        color: white;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        z-index: 1000;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    }
+
+    .install-banner.hidden { display: none; }
+
+    .install-banner-text {
+        flex: 1;
+    }
+
+    .install-banner-text strong {
+        display: block;
+        margin-bottom: 0.2rem;
+    }
+
+    .install-banner-text small {
+        opacity: 0.9;
+        font-size: 0.85rem;
+    }
+
+    .install-banner button {
+        padding: 0.6rem 1rem;
+        border: 2px solid white;
+        background: transparent;
+        color: white;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .install-banner .close-btn {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        padding: 0.4rem 0.6rem;
+        font-size: 1.2rem;
+    }
+
+    /* iPad Optimierungen */
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .container {
+            padding: 2rem;
+        }
+        
+        .main-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    /* Standalone Mode (wenn als App geöffnet) */
+    @media (display-mode: standalone) {
+        .install-banner { display: none !important; }
+        
+        body {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
+</style>
+```
+
+</head>
+<body>
+    <!-- PWA Install Banner -->
+    <div id="installBanner" class="install-banner hidden">
+        <div class="install-banner-text">
+            <strong>📲 Als App installieren</strong>
+            <small>Tippe auf "Teilen" → "Zum Home-Bildschirm"</small>
+        </div>
+        <button onclick="closeInstallBanner()">OK</button>
+        <button class="close-btn" onclick="closeInstallBanner()">✕</button>
+    </div>
+
+```
+<div class="container">
+    <header>
+        <h1>🌱 Keim<span>plan</span> Generator</h1>
+        <p class="subtitle">Scanne die Packung → Konfiguriere Zeiten → Erhalte deinen persönlichen Plan</p>
+    </header>
+
+    <div class="steps">
+        <div class="step active" id="step1">
+            <span class="step-num">1</span>
+            <span>Bild scannen</span>
+        </div>
+        <div class="step" id="step2">
+            <span class="step-num">2</span>
+            <span>Zeiten konfigurieren</span>
+        </div>
+        <div class="step" id="step3">
+            <span class="step-num">3</span>
+            <span>Zeitplan</span>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="card">
+            <!-- Step 1: Image -->
+            <div id="imageSection">
+                <h2 class="card-title">
+                    <span class="icon">📷</span>
+                    Packung fotografieren
+                </h2>
+
+                <div class="camera-container">
+                    <video id="video" autoplay playsinline></video>
+                    <img id="preview" alt="Vorschau">
+                    <div id="cameraOverlay" class="camera-overlay">
+                        <div>
+                            <p style="font-size: 2rem; margin-bottom: 0.5rem;">📦</p>
+                            <p>Fotografiere die Rückseite der Packung</p>
+                            <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.3rem;">mit den Keimangaben</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button id="btnStartCamera" class="btn btn-secondary" onclick="startCamera()">
+                        🎥 Kamera
+                    </button>
+                    <button id="btnCapture" class="btn btn-primary" onclick="capturePhoto()" disabled>
+                        📸 Aufnehmen
+                    </button>
+                </div>
+
+                <div class="btn-group" style="margin-top: 0.5rem;">
+                    <button id="btnReset" class="btn btn-secondary hidden" onclick="resetCapture()">
+                        🔄 Neu
+                    </button>
+                    <button id="btnAnalyze" class="btn btn-success" onclick="analyzeImage()" disabled>
+                        🔍 Analysieren
+                    </button>
+                </div>
+
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
+                    <span style="font-size: 1.5rem;">📁</span>
+                    <p><strong>Bild hochladen</strong></p>
+                </div>
+
+                <div id="progressContainer" class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <p id="progressText" class="progress-text">Analysiere...</p>
+                </div>
+            </div>
+
+            <!-- Step 2: Configuration -->
+            <div id="configSection" class="config-section">
+                <h2 class="card-title">
+                    <span class="icon">⚙️</span>
+                    Zeiten konfigurieren
+                </h2>
+
+                <div id="extractedInfo" class="extracted-info">
+                    <h4>📋 Erkannte Angaben</h4>
+                    <div id="infoGrid" class="info-grid"></div>
+                </div>
+
+                <div class="config-group highlight">
+                    <div class="config-label">
+                        🕐 Startzeit
+                        <span class="badge">Wann legst du los?</span>
+                    </div>
+                    <div class="time-input-group">
+                        <input type="date" id="startDate">
+                        <input type="time" id="startTime">
+                    </div>
+                </div>
+
+                <!-- Spülzeiten Konfiguration -->
+                <div class="config-group blue">
+                    <div class="config-label">
+                        🚿 Spülzeiten
+                        <span class="badge blue">Wann spülst du?</span>
+                    </div>
+                    
+                    <div class="rinse-count-selector">
+                        <button class="rinse-count-btn" onclick="setRinseCount(1)">1x</button>
+                        <button class="rinse-count-btn active" onclick="setRinseCount(2)">2x</button>
+                        <button class="rinse-count-btn" onclick="setRinseCount(3)">3x</button>
+                    </div>
+
+                    <div id="rinseTimesContainer" class="rinse-times-container">
+                        <div class="rinse-time-row">
+                            <label>🌅 Morgens</label>
+                            <input type="time" id="rinseTime1" value="08:00">
+                        </div>
+                        <div class="rinse-time-row">
+                            <label>🌙 Abends</label>
+                            <input type="time" id="rinseTime2" value="20:00">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="timespanConfigs"></div>
+
+                <div class="btn-group" style="margin-top: 1rem;">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">
+                        ← Zurück
+                    </button>
+                    <button class="btn btn-success" onclick="generateSchedule()">
+                        📅 Plan erstellen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Schedule -->
+        <div class="card">
+            <div id="placeholderSection">
+                <h2 class="card-title">
+                    <span class="icon">📅</span>
+                    Dein Keimplan
+                </h2>
+                <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+                    <p style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;">🌱</p>
+                    <p>Scanne eine Packung, um deinen</p>
+                    <p>persönlichen Keimplan zu erstellen</p>
+                </div>
+            </div>
+
+            <div id="scheduleSection" class="schedule-section">
+                <div class="schedule-header">
+                    <div>
+                        <h3 id="scheduleName">Keimplan</h3>
+                        <p id="scheduleSubtitle" style="font-size: 0.85rem; opacity: 0.9;"></p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="goToStep(2)" style="flex: 0; min-width: auto; background: rgba(255,255,255,0.2); color: white;">
+                        ✏️ Bearbeiten
+                    </button>
+                </div>
+
+                <div id="scheduleTimeline" class="schedule-timeline"></div>
+
+                <div class="export-section">
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="copySchedule()">
+                            📋 Kopieren
+                        </button>
+                        <button class="btn btn-secondary" onclick="downloadSchedule()">
+                            💾 Speichern
+                        </button>
+                        <button class="btn btn-secondary" onclick="addToCalendar()">
+                            📆 Kalender
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let capturedImageData = null;
+    let extractedData = {
+        name: '',
+        einweichen: { min: 6, max: 8, unit: 'h', selected: 6 },
+        temperatur: { min: 18, max: 22, unit: '°C', selected: 20 },
+        spuelen: { times: 2, unit: 'täglich' },
+        ernte: { min: 3, max: 5, unit: 'Tage', selected: 4 },
+        hinweise: '' // Hinweise vor dem Verzehr
+    };
+    
+    // Spülzeiten Konfiguration
+    let rinseConfig = {
+        count: 2,
+        times: ['08:00', '20:00', '14:00'] // Max 3 Zeiten
+    };
+    
+    let generatedSchedule = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const currentTime = now.toTimeString().slice(0, 5); // HH:MM Format
+        document.getElementById('startDate').value = today;
+        document.getElementById('startTime').value = currentTime;
+        
+        // PWA Install Banner für iOS
+        checkInstallBanner();
+    });
+
+    // PWA Install Banner Logic
+    function checkInstallBanner() {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isStandalone = window.navigator.standalone === true;
+        const bannerDismissed = localStorage.getItem('installBannerDismissed');
+        
+        if (isIOS && !isStandalone && !bannerDismissed) {
+            document.getElementById('installBanner').classList.remove('hidden');
+        }
+    }
+
+    function closeInstallBanner() {
+        document.getElementById('installBanner').classList.add('hidden');
+        localStorage.setItem('installBannerDismissed', 'true');
+    }
+
+    // Spülzeiten Anzahl ändern
+    function setRinseCount(count) {
+        rinseConfig.count = count;
+        extractedData.spuelen.times = count;
+        
+        // Buttons aktualisieren
+        document.querySelectorAll('.rinse-count-btn').forEach((btn, i) => {
+            btn.classList.toggle('active', i + 1 === count);
+        });
+        
+        // Zeitfelder anzeigen/verstecken
+        updateRinseTimeFields();
+    }
+
+    function updateRinseTimeFields() {
+        const container = document.getElementById('rinseTimesContainer');
+        const labels = [
+            ['🌅 Morgens', '08:00'],
+            ['🌙 Abends', '20:00'],
+            ['☀️ Mittags', '14:00']
+        ];
+        
+        let html = '';
+        for (let i = 0; i < rinseConfig.count; i++) {
+            const currentValue = rinseConfig.times[i] || labels[i][1];
+            html += `
+                <div class="rinse-time-row">
+                    <label>${labels[i][0]}</label>
+                    <input type="time" id="rinseTime${i+1}" value="${currentValue}" 
+                           onchange="updateRinseTime(${i}, this.value)">
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    function updateRinseTime(index, value) {
+        rinseConfig.times[index] = value;
+    }
+
+    // Camera functions
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
+            });
+            document.getElementById('video').srcObject = stream;
+            document.getElementById('cameraOverlay').classList.add('hidden');
+            document.getElementById('btnCapture').disabled = false;
+            document.getElementById('btnStartCamera').disabled = true;
+        } catch (err) {
+            alert('Kamera nicht verfügbar. Bitte lade ein Bild hoch.');
+        }
+    }
+
+    function capturePhoto() {
+        const video = document.getElementById('video');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
+        document.getElementById('preview').src = capturedImageData;
+        document.getElementById('video').style.display = 'none';
+        document.getElementById('preview').style.display = 'block';
+        
+        document.getElementById('btnCapture').disabled = true;
+        document.getElementById('btnReset').classList.remove('hidden');
+        document.getElementById('btnAnalyze').disabled = false;
+    }
+
+    function resetCapture() {
+        document.getElementById('video').style.display = 'block';
+        document.getElementById('preview').style.display = 'none';
+        capturedImageData = null;
+        document.getElementById('btnCapture').disabled = false;
+        document.getElementById('btnReset').classList.add('hidden');
+        document.getElementById('btnAnalyze').disabled = true;
+    }
+
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            capturedImageData = e.target.result;
+            document.getElementById('preview').src = capturedImageData;
+            document.getElementById('preview').style.display = 'block';
+            document.getElementById('video').style.display = 'none';
+            document.getElementById('cameraOverlay').classList.add('hidden');
+            document.getElementById('btnReset').classList.remove('hidden');
+            document.getElementById('btnAnalyze').disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function analyzeImage() {
+        if (!capturedImageData) return;
+
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        progressContainer.classList.add('active');
+        document.getElementById('btnAnalyze').disabled = true;
+
+        try {
+            const result = await Tesseract.recognize(capturedImageData, 'deu+eng', {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        progressFill.style.width = Math.round(m.progress * 100) + '%';
+                        progressText.textContent = 'Erkenne Text... ' + Math.round(m.progress * 100) + '%';
+                    } else if (m.status === 'loading language traineddata') {
+                        progressText.textContent = 'Lade Sprachdaten...';
+                    }
+                }
+            });
+
+            parseExtractedText(result.data.text);
+            goToStep(2);
+
+        } catch (error) {
+            alert('Fehler bei der Texterkennung: ' + error.message);
+        } finally {
+            progressContainer.classList.remove('active');
+            document.getElementById('btnAnalyze').disabled = false;
+        }
+    }
+
+    function parseExtractedText(text) {
+        console.log('Erkannter Text:', text);
+        
+        const nameMatch = text.match(/(?:Red clover|Rotklee|Trifoglio|Trèfle|Alfalfa|Mungobohnen|Radieschen|Brokkoli)/i);
+        if (nameMatch) extractedData.name = nameMatch[0];
+
+        const soakMatch = text.match(/(?:Einweichen|Soaking|Trempage|Ammollo)[:\s]*(\d+)\s*[-–]\s*(\d+)\s*h/i) ||
+                         text.match(/(\d+)\s*[-–]\s*(\d+)\s*h/i);
+        if (soakMatch) {
+            extractedData.einweichen.min = parseInt(soakMatch[1]);
+            extractedData.einweichen.max = parseInt(soakMatch[2]);
+            extractedData.einweichen.selected = extractedData.einweichen.min;
+        }
+
+        const tempMatch = text.match(/(\d+)\s*[-–]\s*(\d+)\s*°?\s*C/i);
+        if (tempMatch) {
+            extractedData.temperatur.min = parseInt(tempMatch[1]);
+            extractedData.temperatur.max = parseInt(tempMatch[2]);
+            extractedData.temperatur.selected = Math.round((extractedData.temperatur.min + extractedData.temperatur.max) / 2);
+        }
+
+        const rinseMatch = text.match(/(\d+)\s*[x×]\s*(?:täglich|daily|jour|giorno)/i);
+        if (rinseMatch) {
+            extractedData.spuelen.times = parseInt(rinseMatch[1]);
+            rinseConfig.count = extractedData.spuelen.times;
+            setRinseCount(rinseConfig.count);
+        }
+
+        const harvestMatch = text.match(/(\d+)\s*[-–]\s*(\d+)\s*(?:Tagen?|days?|jours?|giorni)/i);
+        if (harvestMatch) {
+            extractedData.ernte.min = parseInt(harvestMatch[1]);
+            extractedData.ernte.max = parseInt(harvestMatch[2]);
+            extractedData.ernte.selected = extractedData.ernte.min;
+        }
+
+        // Hinweise vor dem Verzehr extrahieren
+        const hinweisPatterns = [
+            /(?:Vor dem Verzehr|vor Verzehr|before consumption|prior to consumption)[:\s]*([^.]+\.)/i,
+            /(?:Hinweis|Note|Nota|Avvertenza)[:\s]*[^.]*(?:Vor dem Verzehr|vor Verzehr|spülen|rinse|Rincer)[^.]+\./i,
+            /(?:Rinse|Spülen|Rincer)[^.]*(?:before|vor|avant)[^.]+\./i
+        ];
+        
+        for (const pattern of hinweisPatterns) {
+            const hinweisMatch = text.match(pattern);
+            if (hinweisMatch) {
+                extractedData.hinweise = hinweisMatch[0].trim();
+                break;
+            }
+        }
+
+        updateConfigUI();
+    }
+
+    function updateConfigUI() {
+        const infoGrid = document.getElementById('infoGrid');
+        infoGrid.innerHTML = `
+            <div class="info-item">
+                <div class="label">Einweichen</div>
+                <div class="value">${extractedData.einweichen.min}-${extractedData.einweichen.max}h</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Temperatur</div>
+                <div class="value">${extractedData.temperatur.min}-${extractedData.temperatur.max}°C</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Spülen</div>
+                <div class="value">${extractedData.spuelen.times}x täglich</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Ernte</div>
+                <div class="value">${extractedData.ernte.min}-${extractedData.ernte.max} Tage</div>
+            </div>
+        `;
+
+        const configsContainer = document.getElementById('timespanConfigs');
+        configsContainer.innerHTML = `
+            ${createTimespanConfig('einweichen', '💧 Einweichdauer', extractedData.einweichen, 'Stunden')}
+            ${createTimespanConfig('ernte', '🌿 Keimdauer bis Ernte', extractedData.ernte, 'Tage')}
+            
+            <div class="timespan-item">
+                <div class="timespan-header">
+                    <span class="timespan-name">📝 Hinweis vor Verzehr</span>
+                </div>
+                <textarea id="hinweisInput" 
+                          style="width: 100%; min-height: 60px; padding: 0.5rem; border: 2px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 0.9rem; resize: vertical;"
+                          placeholder="Von Packung erkannt oder manuell eingeben..."
+                          oninput="extractedData.hinweise = this.value">${extractedData.hinweise}</textarea>
+            </div>
+        `;
+    }
+
+    function createTimespanConfig(key, label, data, unitLabel) {
+        return `
+            <div class="timespan-item">
+                <div class="timespan-header">
+                    <span class="timespan-name">${label}</span>
+                    <span class="timespan-range">${data.min} - ${data.max} ${unitLabel}</span>
+                </div>
+                <input type="range" class="timespan-slider" 
+                       min="${data.min}" max="${data.max}" value="${data.selected}"
+                       oninput="updateTimespan('${key}', this.value)">
+                <div class="timespan-value" id="${key}Value">${data.selected} ${unitLabel}</div>
+                <div class="quick-btns">
+                    <button class="quick-btn ${data.selected === data.min ? 'active' : ''}" 
+                            onclick="setTimespan('${key}', ${data.min})">
+                        Min (${data.min})
+                    </button>
+                    <button class="quick-btn ${data.selected === Math.round((data.min + data.max) / 2) ? 'active' : ''}" 
+                            onclick="setTimespan('${key}', ${Math.round((data.min + data.max) / 2)})">
+                        Mittel
+                    </button>
+                    <button class="quick-btn ${data.selected === data.max ? 'active' : ''}" 
+                            onclick="setTimespan('${key}', ${data.max})">
+                        Max (${data.max})
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateTimespan(key, value) {
+        extractedData[key].selected = parseInt(value);
+        const unitLabel = key === 'einweichen' ? 'Stunden' : 'Tage';
+        document.getElementById(key + 'Value').textContent = value + ' ' + unitLabel;
+    }
+
+    function setTimespan(key, value) {
+        extractedData[key].selected = value;
+        updateConfigUI();
+    }
+
+    function goToStep(step) {
+        document.querySelectorAll('.step').forEach((el, i) => {
+            el.classList.remove('active', 'done');
+            if (i + 1 < step) el.classList.add('done');
+            if (i + 1 === step) el.classList.add('active');
+        });
+
+        document.getElementById('imageSection').style.display = step === 1 ? 'block' : 'none';
+        document.getElementById('configSection').classList.toggle('active', step === 2);
+        document.getElementById('placeholderSection').style.display = step < 3 ? 'block' : 'none';
+        document.getElementById('scheduleSection').classList.toggle('active', step === 3);
+    }
+
+    function generateSchedule() {
+        const startDate = new Date(document.getElementById('startDate').value + 'T' + document.getElementById('startTime').value);
+        generatedSchedule = [];
+
+        const soakHours = extractedData.einweichen.selected;
+        const harvestDays = extractedData.ernte.selected;
+        const rinsePerDay = rinseConfig.count;
+        
+        // Spülzeiten aus Inputs lesen
+        const rinseTimes = [];
+        for (let i = 0; i < rinsePerDay; i++) {
+            const input = document.getElementById(`rinseTime${i+1}`);
+            if (input) {
+                rinseTimes.push(input.value);
+            }
+        }
+        // Sortieren nach Zeit
+        rinseTimes.sort();
+
+        // Start einweichen
+        generatedSchedule.push({
+            date: new Date(startDate),
+            time: formatTime(startDate),
+            action: 'Einweichen starten',
+            detail: `Samen in Wasser einlegen für ${soakHours} Stunden`,
+            highlight: true,
+            type: 'highlight'
+        });
+
+        // Ende Einweichen
+        const soakEnd = new Date(startDate.getTime() + soakHours * 60 * 60 * 1000);
+        generatedSchedule.push({
+            date: new Date(soakEnd),
+            time: formatTime(soakEnd),
+            action: 'Einweichen beenden',
+            detail: 'Wasser abgiessen, Samen abspülen und ins Keimglas geben',
+            highlight: true,
+            type: 'highlight'
+        });
+
+        // Spülen ab Tag 1 nach Einweichen (nicht am ersten Tag!)
+        for (let day = 1; day <= harvestDays; day++) {
+            rinseTimes.forEach((rinseTimeStr, rinseIndex) => {
+                const [hours, minutes] = rinseTimeStr.split(':').map(Number);
+                const rinseTime = new Date(soakEnd);
+                rinseTime.setDate(rinseTime.getDate() + day);
+                rinseTime.setHours(hours, minutes, 0, 0);
+
+                generatedSchedule.push({
+                    date: new Date(rinseTime),
+                    time: formatTime(rinseTime),
+                    action: `Spülen (${rinseIndex + 1}/${rinsePerDay})`,
+                    detail: 'Mit frischem Wasser durchspülen und abtropfen lassen',
+                    highlight: false,
+                    type: 'rinse'
+                });
+            });
+        }
+
+        // Ernte: frühestmöglicher Zeitpunkt = nach letzter Spülung am letzten Keimdauer-Tag
+        const harvestDate = new Date(soakEnd);
+        harvestDate.setDate(harvestDate.getDate() + harvestDays);
+        // Letzte Spülzeit des Tages + 30 Min zum Abtropfen
+        const lastRinseTime = rinseTimes[rinseTimes.length - 1];
+        const [lastH, lastM] = lastRinseTime.split(':').map(Number);
+        harvestDate.setHours(lastH, lastM + 30, 0, 0);
+        
+        // Hinweis aus Textarea holen (falls bearbeitet)
+        const hinweisInput = document.getElementById('hinweisInput');
+        const hinweis = hinweisInput ? hinweisInput.value.trim() : extractedData.hinweise;
+        
+        generatedSchedule.push({
+            date: new Date(harvestDate),
+            time: formatTime(harvestDate),
+            action: '🎉 Ernte möglich!',
+            detail: hinweis ? `Sprossen sind bereit. ${hinweis}` : 'Sprossen sind bereit zum Verzehr.',
+            highlight: true,
+            type: 'highlight'
+        });
+
+        // Nach Datum sortieren
+        generatedSchedule.sort((a, b) => a.date - b.date);
+
+        displaySchedule();
+        goToStep(3);
+    }
+
+    function formatTime(date) {
+        return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatDate(date) {
+        const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+        return days[date.getDay()] + ', ' + date.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+    }
+
+    function displaySchedule() {
+        const timeline = document.getElementById('scheduleTimeline');
+        const name = extractedData.name || 'Sprossen';
+        
+        // Spülzeiten für Subtitle formatieren
+        const rinseTimes = [];
+        for (let i = 0; i < rinseConfig.count; i++) {
+            const input = document.getElementById(`rinseTime${i+1}`);
+            if (input) rinseTimes.push(input.value);
+        }
+        
+        document.getElementById('scheduleName').textContent = name + ' Keimplan';
+        document.getElementById('scheduleSubtitle').textContent = 
+            `${extractedData.einweichen.selected}h einweichen • Spülen: ${rinseTimes.join(' & ')} Uhr • ${extractedData.ernte.selected} Tage`;
+
+        const byDay = {};
+        generatedSchedule.forEach(item => {
+            const dayKey = item.date.toDateString();
+            if (!byDay[dayKey]) byDay[dayKey] = [];
+            byDay[dayKey].push(item);
+        });
+
+        let html = '';
+        Object.entries(byDay).forEach(([dayKey, items]) => {
+            const date = new Date(dayKey);
+            html += `
+                <div class="schedule-day">
+                    <div class="schedule-day-header">${formatDate(date)}</div>
+                    ${items.map(item => `
+                        <div class="schedule-item ${item.type}">
+                            <div class="schedule-time">${item.time}</div>
+                            <div class="schedule-content">
+                                <div class="schedule-action">${item.action}</div>
+                                <div class="schedule-detail">${item.detail}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        });
+
+        timeline.innerHTML = html;
+    }
+
+    function copySchedule() {
+        let text = `🌱 ${extractedData.name || 'Sprossen'} KEIMPLAN\n`;
+        text += '═'.repeat(30) + '\n\n';
+        
+        let currentDay = '';
+        generatedSchedule.forEach(item => {
+            const day = formatDate(item.date);
+            if (day !== currentDay) {
+                currentDay = day;
+                text += `\n📅 ${day}\n`;
+            }
+            text += `  ${item.time}  ${item.action}\n`;
+        });
+
+        navigator.clipboard.writeText(text).then(() => alert('Zeitplan kopiert!'));
+    }
+
+    function downloadSchedule() {
+        const data = {
+            name: extractedData.name || 'Sprossen',
+            config: extractedData,
+            rinseConfig: rinseConfig,
+            schedule: generatedSchedule.map(item => ({
+                datetime: item.date.toISOString(),
+                time: item.time,
+                action: item.action,
+                detail: item.detail
+            }))
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `keimplan_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function addToCalendar() {
+        let ics = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Keimplan Generator//DE\n';
+        
+        generatedSchedule.forEach(item => {
+            const start = item.date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const end = new Date(item.date.getTime() + 15 * 60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            
+            ics += `BEGIN:VEVENT\n`;
+            ics += `DTSTART:${start}\n`;
+            ics += `DTEND:${end}\n`;
+            ics += `SUMMARY:🌱 ${item.action}\n`;
+            ics += `DESCRIPTION:${item.detail}\n`;
+            ics += `END:VEVENT\n`;
+        });
+        
+        ics += 'END:VCALENDAR';
+
+        const blob = new Blob([ics], { type: 'text/calendar' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'keimplan.ics';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // Drag & drop
+    document.querySelector('.upload-area').addEventListener('dragover', e => {
+        e.preventDefault();
+        e.currentTarget.style.borderColor = 'var(--accent-green)';
+    });
+    document.querySelector('.upload-area').addEventListener('dragleave', e => {
+        e.currentTarget.style.borderColor = 'var(--border)';
+    });
+    document.querySelector('.upload-area').addEventListener('drop', e => {
+        e.preventDefault();
+        e.currentTarget.style.borderColor = 'var(--border)';
+        const file = e.dataTransfer.files[0];
+        if (file?.type.startsWith('image/')) {
+            document.getElementById('fileInput').files = e.dataTransfer.files;
+            handleFileUpload({ target: { files: [file] } });
+        }
+    });
+</script>
+```
+
+</body>
+</html>
