@@ -117,6 +117,16 @@
             color: var(--accent-green);
         }
 
+        .step.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .step.locked:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border);
+        }
+
         /* Step Numbers - KONTRAST FIX */
         .step-num {
             width: 24px;
@@ -799,13 +809,7 @@
                 <div class="config-group blue">
                     <div class="config-label">
                         🚿 Spülzeiten
-                        <span class="badge blue">Wann spülst du?</span>
-                    </div>
-                    
-                    <div class="rinse-count-selector">
-                        <button class="rinse-count-btn" onclick="setRinseCount(1)">1x</button>
-                        <button class="rinse-count-btn active" onclick="setRinseCount(2)">2x</button>
-                        <button class="rinse-count-btn" onclick="setRinseCount(3)">3x</button>
+                        <span class="badge blue">2x täglich</span>
                     </div>
 
                     <div id="rinseTimesContainer" class="rinse-times-container">
@@ -870,11 +874,12 @@
         
         let rinseConfig = {
             count: 2,
-            times: ['08:00', '20:00', '14:00']
+            times: ['08:00', '20:00']
         };
         
         let generatedSchedule = [];
         let currentStep = 1;
+        let unlockedStep = 1; // Nur Step 1 ist initial freigeschaltet
 
         document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
@@ -882,24 +887,43 @@
             document.getElementById('startTime').value = now.toTimeString().slice(0, 5);
             
             updateConfigUI();
+            updateStepStates();
             checkInstallBanner();
         });
 
-        // Step Navigation - KLICKBAR
+        // Step Navigation - nur freigeschaltete Steps klickbar
         function goToStep(step) {
-            currentStep = step;
+            if (step > unlockedStep) return; // Gesperrte Steps ignorieren
             
-            // Steps aktualisieren
-            document.querySelectorAll('.step').forEach((el, i) => {
-                el.classList.remove('active', 'done');
-                if (i + 1 < step) el.classList.add('done');
-                if (i + 1 === step) el.classList.add('active');
-            });
+            currentStep = step;
+            updateStepStates();
 
             // Sections anzeigen/verstecken
             document.querySelectorAll('.step-section').forEach((el, i) => {
                 el.classList.toggle('active', i + 1 === step);
             });
+        }
+
+        function updateStepStates() {
+            document.querySelectorAll('.step').forEach((el, i) => {
+                const stepNum = i + 1;
+                el.classList.remove('active', 'done', 'locked');
+                
+                if (stepNum < currentStep) {
+                    el.classList.add('done');
+                } else if (stepNum === currentStep) {
+                    el.classList.add('active');
+                } else if (stepNum > unlockedStep) {
+                    el.classList.add('locked');
+                }
+            });
+        }
+
+        function unlockStep(step) {
+            if (step > unlockedStep) {
+                unlockedStep = step;
+                updateStepStates();
+            }
         }
 
         // PWA
@@ -918,34 +942,7 @@
             localStorage.setItem('installBannerDismissed', 'true');
         }
 
-        // Spülzeiten
-        function setRinseCount(count) {
-            rinseConfig.count = count;
-            extractedData.spuelen.times = count;
-            
-            document.querySelectorAll('.rinse-count-btn').forEach((btn, i) => {
-                btn.classList.toggle('active', i + 1 === count);
-            });
-            
-            updateRinseTimeFields();
-        }
-
-        function updateRinseTimeFields() {
-            const container = document.getElementById('rinseTimesContainer');
-            const labels = [['🌅 Morgens', '08:00'], ['🌙 Abends', '20:00'], ['☀️ Mittags', '14:00']];
-            
-            let html = '';
-            for (let i = 0; i < rinseConfig.count; i++) {
-                html += `
-                    <div class="rinse-time-row">
-                        <label>${labels[i][0]}</label>
-                        <input type="time" id="rinseTime${i+1}" value="${rinseConfig.times[i] || labels[i][1]}" 
-                               onchange="rinseConfig.times[${i}] = this.value">
-                    </div>
-                `;
-            }
-            container.innerHTML = html;
-        }
+        // Spülzeiten werden direkt aus den Inputs gelesen
 
         // Camera
         async function startCamera() {
@@ -977,6 +974,7 @@
             document.getElementById('btnCapture').disabled = true;
             document.getElementById('btnReset').classList.remove('hidden');
             document.getElementById('btnAnalyze').disabled = false;
+            unlockStep(2); // Step 2 freischalten
         }
 
         function resetCapture() {
@@ -1001,6 +999,7 @@
                 document.getElementById('cameraOverlay').classList.add('hidden');
                 document.getElementById('btnReset').classList.remove('hidden');
                 document.getElementById('btnAnalyze').disabled = false;
+                unlockStep(2); // Step 2 freischalten
             };
             reader.readAsDataURL(file);
         }
@@ -1061,7 +1060,6 @@
             const rinseMatch = text.match(/(\d+)\s*[x×]\s*(?:täglich|daily|jour|giorno)/i);
             if (rinseMatch) {
                 extractedData.spuelen.times = parseInt(rinseMatch[1]);
-                setRinseCount(extractedData.spuelen.times);
             }
 
             const harvestMatch = text.match(/(\d+)\s*[-–]\s*(\d+)\s*(?:Tagen?|days?|jours?|giorni)/i);
@@ -1091,7 +1089,7 @@
                 </div>
                 <div class="info-item">
                     <div class="label">Spülen</div>
-                    <div class="value">${extractedData.spuelen.times}x täglich</div>
+                    <div class="value">2x täglich</div>
                 </div>
                 <div class="info-item">
                     <div class="label">Ernte</div>
@@ -1151,14 +1149,13 @@
 
             const soakHours = extractedData.einweichen.selected;
             const harvestDays = extractedData.ernte.selected;
-            const rinsePerDay = rinseConfig.count;
+            const rinsePerDay = 2; // Fix 2x täglich
             
-            const rinseTimes = [];
-            for (let i = 0; i < rinsePerDay; i++) {
-                const input = document.getElementById(`rinseTime${i+1}`);
-                if (input) rinseTimes.push(input.value);
-            }
-            rinseTimes.sort();
+            // Spülzeiten aus Inputs lesen
+            const rinseTimes = [
+                document.getElementById('rinseTime1').value,
+                document.getElementById('rinseTime2').value
+            ].sort();
 
             // Einweichen Start
             generatedSchedule.push({
@@ -1212,6 +1209,7 @@
 
             generatedSchedule.sort((a, b) => a.date - b.date);
             displaySchedule();
+            unlockStep(3); // Step 3 freischalten
             goToStep(3);
         }
 
@@ -1219,11 +1217,10 @@
             const name = extractedData.name || 'Sprossen';
             document.getElementById('scheduleName').textContent = name + ' Keimplan';
             
-            const rinseTimes = [];
-            for (let i = 0; i < rinseConfig.count; i++) {
-                const input = document.getElementById(`rinseTime${i+1}`);
-                if (input) rinseTimes.push(input.value);
-            }
+            const rinseTimes = [
+                document.getElementById('rinseTime1').value,
+                document.getElementById('rinseTime2').value
+            ];
             document.getElementById('scheduleSubtitle').textContent = 
                 `${extractedData.einweichen.selected}h • Spülen: ${rinseTimes.join(' & ')} • ${extractedData.ernte.selected} Tage`;
 
@@ -1294,19 +1291,59 @@
         }
 
         function addToCalendar() {
-            let ics = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Keimplan//DE\n';
+            // Hilfsfunktion für lokales Datumsformat (YYYYMMDDTHHMMSS)
+            function formatLocalDate(date) {
+                const pad = (n) => n.toString().padStart(2, '0');
+                return date.getFullYear().toString() +
+                    pad(date.getMonth() + 1) +
+                    pad(date.getDate()) + 'T' +
+                    pad(date.getHours()) +
+                    pad(date.getMinutes()) +
+                    pad(date.getSeconds());
+            }
             
-            generatedSchedule.forEach(item => {
-                const start = item.date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                const end = new Date(item.date.getTime() + 900000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                ics += `BEGIN:VEVENT\nDTSTART:${start}\nDTEND:${end}\nSUMMARY:🌱 ${item.action}\nDESCRIPTION:${item.detail}\nEND:VEVENT\n`;
+            // Aktuelle Zeit für DTSTAMP
+            const now = formatLocalDate(new Date()) + 'Z';
+            
+            let ics = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Keimplan Generator//DE',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH'
+            ];
+            
+            generatedSchedule.forEach((item, index) => {
+                const startTime = formatLocalDate(item.date);
+                const endDate = new Date(item.date.getTime() + 15 * 60000); // +15 Min
+                const endTime = formatLocalDate(endDate);
+                const uid = `keimplan-${Date.now()}-${index}@keimplan.app`;
+                
+                // Text für ICS escapen (Kommas, Semikolons, Newlines)
+                const summary = item.action.replace(/[,;]/g, '\\$&');
+                const description = item.detail.replace(/[,;]/g, '\\$&').replace(/\n/g, '\\n');
+                
+                ics.push(
+                    'BEGIN:VEVENT',
+                    `UID:${uid}`,
+                    `DTSTAMP:${now}`,
+                    `DTSTART:${startTime}`,
+                    `DTEND:${endTime}`,
+                    `SUMMARY:🌱 ${summary}`,
+                    `DESCRIPTION:${description}`,
+                    'END:VEVENT'
+                );
             });
             
-            ics += 'END:VCALENDAR';
+            ics.push('END:VCALENDAR');
+            
+            const icsContent = ics.join('\r\n');
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+            a.href = URL.createObjectURL(blob);
             a.download = 'keimplan.ics';
             a.click();
+            URL.revokeObjectURL(a.href);
         }
     </script>
 </body>
