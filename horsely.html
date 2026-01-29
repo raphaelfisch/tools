@@ -1127,7 +1127,38 @@
         .empty-state p {
             font-size: clamp(0.8rem, 3vw, 0.9rem);
             color: var(--color-text-light);
+            margin-bottom: 5%;
         }
+        .empty-state .btn-primary {
+            padding: 3% 8%;
+            flex: none;
+        }
+        
+        /* Toggle Switch */
+        .toggle {
+            width: 50px;
+            height: 28px;
+            background: var(--color-earth-light);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        .toggle.active { background: var(--color-accept); }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle.active::after { transform: translateX(22px); }
         
         /* Filter Overlay */
         .filter-overlay {
@@ -1171,7 +1202,26 @@
                     <h1>Horsely</h1>
                     <p>Finde dein Traumpferd</p>
                     <button class="splash-btn" onclick="navigate('register')">Jetzt starten</button>
-                    <p class="splash-login">Bereits dabei? <a href="#" onclick="skipToApp(); return false;">Anmelden</a></p>
+                    <p class="splash-login">Bereits dabei? <a onclick="navigate('login')" style="cursor:pointer;">Anmelden</a></p>
+                </div>
+                
+                <!-- ========== LOGIN ========== -->
+                <div class="screen onboarding" id="login">
+                    <h2 style="margin-top: 15%;">Willkommen zurück!</h2>
+                    <p>Melde dich an, um fortzufahren.</p>
+                    <div class="form-group">
+                        <label class="form-label">E-Mail</label>
+                        <input type="email" class="form-input" placeholder="deine@email.ch" value="max@beispiel.ch">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Passwort</label>
+                        <input type="password" class="form-input" placeholder="••••••••" value="password123">
+                    </div>
+                    <button class="btn-skip" style="text-align: right; width: 100%;">Passwort vergessen?</button>
+                    <div class="btn-row" style="margin-top: auto;">
+                        <button class="btn-secondary" onclick="navigate('splash')">Zurück</button>
+                        <button class="btn-primary" onclick="startApp()">Anmelden</button>
+                    </div>
                 </div>
                 
                 <!-- ========== REGISTER ========== -->
@@ -1339,7 +1389,7 @@
                             <div class="app-header">
                                 <span></span>
                                 <h1>Meine Pferde</h1>
-                                <button class="app-header-btn gold">＋</button>
+                                <button class="app-header-btn gold" onclick="openNewHorse()">＋</button>
                             </div>
                             <div class="list-scroll" id="myHorsesList"></div>
                             
@@ -1352,6 +1402,58 @@
                                     <span class="count" id="reqCount">3 Anfragen</span>
                                 </div>
                                 <div class="list-scroll" id="requestsList"></div>
+                            </div>
+                            
+                            <!-- New Horse Sub-Screen -->
+                            <div class="sub-screen" id="newHorseScreen">
+                                <div class="sub-header">
+                                    <button class="back-btn" onclick="closeNewHorse()">←</button>
+                                    <h2>Neues Inserat</h2>
+                                    <span></span>
+                                </div>
+                                <div class="list-scroll" style="padding: 4%;">
+                                    <div style="width:100%;aspect-ratio:16/9;background:var(--color-cream);border:2px dashed var(--color-earth-light);border-radius:var(--radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;margin-bottom:4%;">
+                                        <div style="font-size:2rem;margin-bottom:2%;">📷</div>
+                                        <p style="font-size:0.85rem;color:var(--color-text-light);">Fotos hinzufügen</p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Name des Pferdes</label>
+                                        <input type="text" class="form-input" placeholder="z.B. Django">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Alter (Jahre)</label>
+                                        <input type="number" class="form-input" placeholder="z.B. 7">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Rasse</label>
+                                        <input type="text" class="form-input" placeholder="z.B. KWPN">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Stockmass (cm)</label>
+                                        <input type="number" class="form-input" placeholder="z.B. 170">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Preis (CHF)</label>
+                                        <input type="number" class="form-input" placeholder="z.B. 45000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Disziplin</label>
+                                        <div class="chip-group">
+                                            <span class="chip" onclick="toggleChip(this)">Dressur</span>
+                                            <span class="chip" onclick="toggleChip(this)">Springen</span>
+                                            <span class="chip" onclick="toggleChip(this)">Vielseitigkeit</span>
+                                            <span class="chip" onclick="toggleChip(this)">Western</span>
+                                            <span class="chip" onclick="toggleChip(this)">Freizeit</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Beschreibung</label>
+                                        <textarea class="form-input" style="min-height:80px;resize:none;" placeholder="Erzähle etwas über dein Pferd..."></textarea>
+                                    </div>
+                                </div>
+                                <div style="padding:4%;background:white;border-top:1px solid rgba(139,115,85,0.1);">
+                                    <button class="btn-primary" onclick="publishHorse()" style="width:100%;">Inserieren</button>
+                                </div>
                             </div>
                         </div>
                         
@@ -1388,35 +1490,223 @@
                                 <div class="profile-verified">✓ Verifiziert</div>
                             </div>
                             <div class="profile-menu">
-                                <div class="profile-menu-item" onclick="openFilter()">
+                                <div class="profile-menu-item" onclick="openProfileScreen('filterScreen')">
                                     <div class="profile-menu-icon">🎯</div>
                                     <div class="profile-menu-text"><h4>Suchfilter</h4><p>Disziplin, Preis, Alter</p></div>
                                     <span class="profile-menu-arrow">›</span>
                                 </div>
-                                <div class="profile-menu-item">
+                                <div class="profile-menu-item" onclick="openProfileScreen('editProfileScreen')">
                                     <div class="profile-menu-icon">👤</div>
                                     <div class="profile-menu-text"><h4>Profil bearbeiten</h4><p>Name, Foto, Kontakt</p></div>
                                     <span class="profile-menu-arrow">›</span>
                                 </div>
-                                <div class="profile-menu-item">
+                                <div class="profile-menu-item" onclick="openProfileScreen('searchProfileScreen')">
                                     <div class="profile-menu-icon">📋</div>
                                     <div class="profile-menu-text"><h4>Suchprofil</h4><p>Budget, Erfahrung</p></div>
                                     <span class="profile-menu-arrow">›</span>
                                 </div>
-                                <div class="profile-menu-item">
+                                <div class="profile-menu-item" onclick="openProfileScreen('verifyStatusScreen')">
                                     <div class="profile-menu-icon">🛡️</div>
                                     <div class="profile-menu-text"><h4>Verifizierung</h4><p>Abgeschlossen</p></div>
                                     <span class="profile-menu-arrow">›</span>
                                 </div>
-                                <div class="profile-menu-item">
+                                <div class="profile-menu-item" onclick="openProfileScreen('settingsScreen')">
                                     <div class="profile-menu-icon">⚙️</div>
                                     <div class="profile-menu-text"><h4>Einstellungen</h4><p>Benachrichtigungen</p></div>
                                     <span class="profile-menu-arrow">›</span>
                                 </div>
-                                <div class="profile-menu-item" onclick="restart()">
+                                <div class="profile-menu-item" onclick="navigate('splash')">
                                     <div class="profile-menu-icon">🚪</div>
                                     <div class="profile-menu-text"><h4>Abmelden</h4><p></p></div>
                                     <span class="profile-menu-arrow">›</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Edit Profile Screen -->
+                            <div class="sub-screen" id="editProfileScreen">
+                                <div class="sub-header">
+                                    <button class="back-btn" onclick="closeProfileScreen('editProfileScreen')">←</button>
+                                    <h2>Profil bearbeiten</h2>
+                                    <span></span>
+                                </div>
+                                <div class="list-scroll" style="padding:4%;">
+                                    <div style="text-align:center;margin-bottom:5%;">
+                                        <div class="profile-avatar" style="background-image:url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop');margin:0 auto;"></div>
+                                        <button class="btn-skip">Foto ändern</button>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Name</label>
+                                        <input type="text" class="form-input" value="Max Mustermann">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">E-Mail</label>
+                                        <input type="email" class="form-input" value="max@beispiel.ch">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Telefon</label>
+                                        <input type="tel" class="form-input" value="+41 79 123 45 67">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Land</label>
+                                        <input type="text" class="form-input" value="Schweiz">
+                                    </div>
+                                </div>
+                                <div style="padding:4%;background:white;border-top:1px solid rgba(139,115,85,0.1);">
+                                    <button class="btn-primary" onclick="closeProfileScreen('editProfileScreen')" style="width:100%;">Speichern</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Search Profile Screen -->
+                            <div class="sub-screen" id="searchProfileScreen">
+                                <div class="sub-header">
+                                    <button class="back-btn" onclick="closeProfileScreen('searchProfileScreen')">←</button>
+                                    <h2>Suchprofil</h2>
+                                    <span></span>
+                                </div>
+                                <div class="list-scroll" style="padding:4%;">
+                                    <div class="form-group">
+                                        <label class="form-label">Erfahrung</label>
+                                        <div class="chip-group">
+                                            <span class="chip" onclick="toggleChip(this)">Anfänger</span>
+                                            <span class="chip" onclick="toggleChip(this)">Wiedereinsteiger</span>
+                                            <span class="chip selected" onclick="toggleChip(this)">Fortgeschritten</span>
+                                            <span class="chip" onclick="toggleChip(this)">Profi</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Disziplin</label>
+                                        <div class="chip-group">
+                                            <span class="chip selected" onclick="toggleChip(this)">Dressur</span>
+                                            <span class="chip" onclick="toggleChip(this)">Springen</span>
+                                            <span class="chip" onclick="toggleChip(this)">Vielseitigkeit</span>
+                                            <span class="chip" onclick="toggleChip(this)">Western</span>
+                                            <span class="chip" onclick="toggleChip(this)">Freizeit</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Budget</label>
+                                        <div class="budget-display">25'000 – 45'000 CHF</div>
+                                        <input type="range" min="5000" max="100000" value="35000" oninput="updateBudget(this.value)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Über mich</label>
+                                        <textarea class="form-input" style="min-height:80px;resize:none;">Erfahrener Reiter sucht gut ausgebildetes Dressurpferd für den Turniersport.</textarea>
+                                    </div>
+                                </div>
+                                <div style="padding:4%;background:white;border-top:1px solid rgba(139,115,85,0.1);">
+                                    <button class="btn-primary" onclick="closeProfileScreen('searchProfileScreen')" style="width:100%;">Speichern</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Verify Status Screen -->
+                            <div class="sub-screen" id="verifyStatusScreen">
+                                <div class="sub-header">
+                                    <button class="back-btn" onclick="closeProfileScreen('verifyStatusScreen')">←</button>
+                                    <h2>Verifizierung</h2>
+                                    <span></span>
+                                </div>
+                                <div class="list-scroll" style="padding:4%;text-align:center;padding-top:15%;">
+                                    <div style="width:80px;height:80px;background:var(--color-accept);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto 5%;">✓</div>
+                                    <h3 style="font-family:var(--font-display);font-size:1.4rem;color:var(--color-earth-dark);margin-bottom:3%;">Verifiziert!</h3>
+                                    <p style="color:var(--color-text-light);margin-bottom:8%;">Deine Identität wurde bestätigt. Käufer sehen das ✓ Badge bei deinen Inseraten.</p>
+                                    <div style="background:white;border-radius:var(--radius-md);padding:5%;text-align:left;">
+                                        <div style="display:flex;justify-content:space-between;margin-bottom:3%;">
+                                            <span style="color:var(--color-text-light);">Telefon</span>
+                                            <span style="color:var(--color-accept);font-weight:500;">✓ Bestätigt</span>
+                                        </div>
+                                        <div style="display:flex;justify-content:space-between;">
+                                            <span style="color:var(--color-text-light);">Verifiziert am</span>
+                                            <span style="color:var(--color-earth-dark);">15. Januar 2026</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Settings Screen -->
+                            <div class="sub-screen" id="settingsScreen">
+                                <div class="sub-header">
+                                    <button class="back-btn" onclick="closeProfileScreen('settingsScreen')">←</button>
+                                    <h2>Einstellungen</h2>
+                                    <span></span>
+                                </div>
+                                <div class="list-scroll" style="padding:4%;">
+                                    <h4 style="font-size:0.8rem;color:var(--color-text-light);margin-bottom:3%;text-transform:uppercase;">Benachrichtigungen</h4>
+                                    <div style="background:white;border-radius:var(--radius-md);padding:0 4%;">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;padding:4% 0;border-bottom:1px solid rgba(139,115,85,0.1);">
+                                            <div><h4 style="font-weight:500;color:var(--color-earth-dark);font-size:0.95rem;">Push-Nachrichten</h4><p style="font-size:0.8rem;color:var(--color-text-light);">Neue Anfragen & Matches</p></div>
+                                            <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+                                        </div>
+                                        <div style="display:flex;justify-content:space-between;align-items:center;padding:4% 0;border-bottom:1px solid rgba(139,115,85,0.1);">
+                                            <div><h4 style="font-weight:500;color:var(--color-earth-dark);font-size:0.95rem;">E-Mail</h4><p style="font-size:0.8rem;color:var(--color-text-light);">Wöchentliche Zusammenfassung</p></div>
+                                            <div class="toggle" onclick="this.classList.toggle('active')"></div>
+                                        </div>
+                                        <div style="display:flex;justify-content:space-between;align-items:center;padding:4% 0;">
+                                            <div><h4 style="font-weight:500;color:var(--color-earth-dark);font-size:0.95rem;">Chat-Nachrichten</h4><p style="font-size:0.8rem;color:var(--color-text-light);">Neue Nachrichten</p></div>
+                                            <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+                                        </div>
+                                    </div>
+                                    <h4 style="font-size:0.8rem;color:var(--color-text-light);margin:6% 0 3%;text-transform:uppercase;">Privatsphäre</h4>
+                                    <div style="background:white;border-radius:var(--radius-md);padding:0 4%;">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;padding:4% 0;border-bottom:1px solid rgba(139,115,85,0.1);">
+                                            <div><h4 style="font-weight:500;color:var(--color-earth-dark);font-size:0.95rem;">Profil öffentlich</h4><p style="font-size:0.8rem;color:var(--color-text-light);">Andere können dich sehen</p></div>
+                                            <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+                                        </div>
+                                        <div style="display:flex;justify-content:space-between;align-items:center;padding:4% 0;">
+                                            <div><h4 style="font-weight:500;color:var(--color-earth-dark);font-size:0.95rem;">Online-Status</h4><p style="font-size:0.8rem;color:var(--color-text-light);">Zeige wann du online bist</p></div>
+                                            <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Filter Screen -->
+                            <div class="sub-screen" id="filterScreen">
+                                <div class="sub-header">
+                                    <button class="back-btn" onclick="closeProfileScreen('filterScreen')">←</button>
+                                    <h2>Suchfilter</h2>
+                                    <button class="app-header-btn" onclick="clearFilters()">↻</button>
+                                </div>
+                                <div class="list-scroll" style="padding:4%;">
+                                    <div class="form-group">
+                                        <label class="form-label">Disziplin</label>
+                                        <div class="chip-group">
+                                            <span class="chip" onclick="toggleChip(this)">Dressur</span>
+                                            <span class="chip" onclick="toggleChip(this)">Springen</span>
+                                            <span class="chip" onclick="toggleChip(this)">Vielseitigkeit</span>
+                                            <span class="chip" onclick="toggleChip(this)">Western</span>
+                                            <span class="chip" onclick="toggleChip(this)">Freizeit</span>
+                                            <span class="chip" onclick="toggleChip(this)">Barock</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Preis</label>
+                                        <div class="chip-group">
+                                            <span class="chip" onclick="toggleChip(this)">< 20k</span>
+                                            <span class="chip" onclick="toggleChip(this)">20-35k</span>
+                                            <span class="chip" onclick="toggleChip(this)">35-50k</span>
+                                            <span class="chip" onclick="toggleChip(this)">> 50k</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Alter</label>
+                                        <div class="chip-group">
+                                            <span class="chip" onclick="toggleChip(this)">3-6 J</span>
+                                            <span class="chip" onclick="toggleChip(this)">7-10 J</span>
+                                            <span class="chip" onclick="toggleChip(this)">11-15 J</span>
+                                            <span class="chip" onclick="toggleChip(this)">15+ J</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Stockmass</label>
+                                        <div class="chip-group">
+                                            <span class="chip" onclick="toggleChip(this)">< 160 cm</span>
+                                            <span class="chip" onclick="toggleChip(this)">160-170 cm</span>
+                                            <span class="chip" onclick="toggleChip(this)">> 170 cm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding:4%;background:white;border-top:1px solid rgba(139,115,85,0.1);">
+                                    <button class="btn-primary" onclick="closeProfileScreen('filterScreen')" style="width:100%;">Anwenden</button>
                                 </div>
                             </div>
                         </div>
@@ -1477,49 +1767,7 @@
                         </div>
                     </div>
                     
-                    <!-- Filter Overlay -->
-                    <div class="filter-overlay" id="filterOverlay">
-                        <div class="sub-header">
-                            <button class="back-btn" onclick="closeFilter()">←</button>
-                            <h2>Filter</h2>
-                            <button class="app-header-btn" onclick="clearFilters()">↻</button>
-                        </div>
-                        <div class="filter-body">
-                            <div class="filter-section">
-                                <label>Disziplin</label>
-                                <div class="chip-group">
-                                    <span class="chip" onclick="toggleChip(this)">Dressur</span>
-                                    <span class="chip" onclick="toggleChip(this)">Springen</span>
-                                    <span class="chip" onclick="toggleChip(this)">Vielseitigkeit</span>
-                                    <span class="chip" onclick="toggleChip(this)">Western</span>
-                                    <span class="chip" onclick="toggleChip(this)">Freizeit</span>
-                                    <span class="chip" onclick="toggleChip(this)">Barock</span>
-                                </div>
-                            </div>
-                            <div class="filter-section">
-                                <label>Preis</label>
-                                <div class="chip-group">
-                                    <span class="chip" onclick="toggleChip(this)">< 20k</span>
-                                    <span class="chip" onclick="toggleChip(this)">20-35k</span>
-                                    <span class="chip" onclick="toggleChip(this)">35-50k</span>
-                                    <span class="chip" onclick="toggleChip(this)">> 50k</span>
-                                </div>
-                            </div>
-                            <div class="filter-section">
-                                <label>Alter</label>
-                                <div class="chip-group">
-                                    <span class="chip" onclick="toggleChip(this)">3-6 J</span>
-                                    <span class="chip" onclick="toggleChip(this)">7-10 J</span>
-                                    <span class="chip" onclick="toggleChip(this)">11-15 J</span>
-                                    <span class="chip" onclick="toggleChip(this)">15+ J</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="filter-footer">
-                            <button class="btn-secondary" onclick="closeFilter()">Abbrechen</button>
-                            <button class="btn-primary" onclick="applyFilter()">Anwenden</button>
-                        </div>
-                    </div>
+                    
                 </div>
                 
             </div>
@@ -1533,7 +1781,10 @@ const horses = [
     { id: 2, name: "Bella Luna", age: 6, breed: "Westfale", height: 168, discipline: "Dressur", price: "38'000 CHF", desc: "Elegante Stute mit drei hervorragenden Grundgangarten. Ideal für ambitionierte Amateure.", image: "https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800", location: "Bern", verified: true },
     { id: 3, name: "Carlos", age: 12, breed: "Andalusier", height: 162, discipline: "Working Eq.", price: "25'000 CHF", desc: "Wunderschöner PRE mit viel Ausstrahlung. Perfekt für Working Equitation.", image: "https://images.unsplash.com/photo-1534773728080-33d31da27ae5?w=800", location: "Luzern", verified: false },
     { id: 4, name: "Estrella", age: 9, breed: "Lusitano", height: 160, discipline: "Dressur", price: "32'000 CHF", desc: "Bildschöne Schimmelstute, ausgebildet bis Klasse M. Showtalent.", image: "https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?w=800", location: "Tessin", verified: true },
-    { id: 5, name: "Fiero", age: 7, breed: "Hannoveraner", height: 170, discipline: "Vielseitigkeit", price: "42'000 CHF", desc: "Mutiger Wallach für Vielseitigkeit. Geländesicher, springfreudig.", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800", location: "Aargau", verified: true }
+    { id: 5, name: "Fiero", age: 7, breed: "Hannoveraner", height: 170, discipline: "Vielseitigkeit", price: "42'000 CHF", desc: "Mutiger Wallach für Vielseitigkeit. Geländesicher, springfreudig.", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800", location: "Aargau", verified: true },
+    { id: 6, name: "Gina", age: 11, breed: "Oldenburger", height: 167, discipline: "Dressur", price: "28'000 CHF", desc: "Erfahrene Schulmeisterin bis Klasse S. Perfekt zum Lernen.", image: "https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=800", location: "Solothurn", verified: true },
+    { id: 7, name: "Hurricane", age: 4, breed: "Trakehner", height: 169, discipline: "Dressur", price: "35'000 CHF", desc: "Junger Hengst mit viel Bewegungsqualität. Top-Abstammung.", image: "https://images.unsplash.com/photo-1551884831-bbf3cdc6469e?w=800", location: "Thurgau", verified: true },
+    { id: 8, name: "Isabella", age: 8, breed: "Friese", height: 165, discipline: "Freizeit", price: "30'000 CHF", desc: "Traumhaft schöne Friesenstute. Blickfang überall.", image: "https://images.unsplash.com/photo-1557514070-b67e3c4b7f83?w=800", location: "St. Gallen", verified: true }
 ];
 
 const myHorses = [
@@ -1613,13 +1864,18 @@ function renderCards() {
     const stack = document.getElementById('cardStack');
     stack.innerHTML = '';
     if (cardIndex >= horses.length) {
-        stack.innerHTML = '<div class="empty-state"><div class="icon">🐴</div><h3>Keine weiteren Pferde</h3><p>Du hast alle gesehen!</p></div>';
+        stack.innerHTML = '<div class="empty-state"><div class="icon">🐴</div><h3>Keine weiteren Pferde</h3><p>Du hast alle Pferde gesehen!</p><button class="btn-primary" onclick="reloadHorses()">Neu laden</button></div>';
         return;
     }
     if (cardIndex + 1 < horses.length) stack.innerHTML += createCard(horses[cardIndex + 1], true);
     stack.innerHTML += createCard(horses[cardIndex], false);
     currentHorse = horses[cardIndex];
     setupSwipe();
+}
+
+function reloadHorses() {
+    cardIndex = 0;
+    renderCards();
 }
 
 function createCard(h, isNext) {
@@ -1723,10 +1979,18 @@ function likeFromDetail() { closeDetail(); swipe('right'); }
 // ==================== FILTER ====================
 function openFilter() { document.getElementById('filterOverlay').classList.add('active'); }
 function closeFilter() { document.getElementById('filterOverlay').classList.remove('active'); }
-function clearFilters() { document.querySelectorAll('#filterOverlay .chip').forEach(c => c.classList.remove('selected')); }
+function clearFilters() { document.querySelectorAll('#filterScreen .chip, #filterOverlay .chip').forEach(c => c.classList.remove('selected')); }
 function applyFilter() { closeFilter(); }
 
+// ==================== PROFILE SCREENS ====================
+function openProfileScreen(id) { document.getElementById(id).classList.add('active'); }
+function closeProfileScreen(id) { document.getElementById(id).classList.remove('active'); }
+
 // ==================== MY HORSES ====================
+function openNewHorse() { document.getElementById('newHorseScreen').classList.add('active'); }
+function closeNewHorse() { document.getElementById('newHorseScreen').classList.remove('active'); }
+function publishHorse() { closeNewHorse(); alert('Pferd erfolgreich inseriert! 🎉'); }
+
 function renderMyHorses() {
     document.getElementById('myHorsesList').innerHTML = myHorses.map(h => `
         <div class="horse-list-item" onclick="openRequests(${h.id})">
@@ -1737,7 +2001,7 @@ function renderMyHorses() {
                 <div class="requests"><span class="requests-dot"></span>${h.requests} Anfragen</div>
             </div>
         </div>
-    `).join('') + '<div class="add-horse-btn">＋ Neues Pferd</div>';
+    `).join('') + '<div class="add-horse-btn" onclick="openNewHorse()">＋ Neues Pferd</div>';
 }
 
 function openRequests(id) {
