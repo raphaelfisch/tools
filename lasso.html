@@ -313,6 +313,23 @@
             border-color: var(--border);
         }
 
+        .rating-key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-right: 6px;
+        }
+
+        .rating-btn.rating-skip .rating-key {
+            background: rgba(0,0,0,0.08);
+        }
+
         /* Progress */
         .progress-container {
             margin-bottom: 24px;
@@ -1165,9 +1182,9 @@
             <nav class="sidebar-nav">
                 <div class="nav-item active" data-screen="dashboard" onclick="showScreen('dashboard')">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
-                    Stundenplan
+                    Dashboard
                 </div>
                 <div class="nav-item" data-screen="masterdata" onclick="showScreen('masterdata')">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1235,6 +1252,17 @@
             <!-- Dashboard Screen -->
             <div class="screen active" id="screen-dashboard">
                 <div class="dashboard-content">
+                    <!-- Semester-Info -->
+                    <div id="dashboard-semester-info" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 12px 16px; background: var(--primary); color: white; border-radius: var(--radius);">
+                        <div>
+                            <strong id="dashboard-semester-name" style="font-size: 1.1rem;">Aktuelles Semester</strong>
+                            <span id="dashboard-semester-dates" style="margin-left: 12px; opacity: 0.85; font-size: 0.9rem;"></span>
+                        </div>
+                        <a href="#" onclick="showScreen('config'); return false;" style="color: white; opacity: 0.85; font-size: 0.85rem; text-decoration: none;">
+                            Bearbeiten →
+                        </a>
+                    </div>
+
                     <div class="card">
                         <div class="card-header">
                             <h2 class="card-title">Stundenplan</h2>
@@ -1485,6 +1513,7 @@
                     <div class="tabs" style="margin-bottom: 16px;">
                         <div class="tab active" onclick="showEvalTab('einzelschueler')">Einzelschüler</div>
                         <div class="tab" onclick="showEvalTab('klassenuebersicht')">Klassenübersicht</div>
+                        <div class="tab" onclick="showEvalTab('archiv')">Archiv</div>
                     </div>
 
                     <!-- Einzelschüler Tab -->
@@ -1528,6 +1557,36 @@
                             <option value="luecken">Nach Lücken (meiste zuerst)</option>
                         </select>
                     </div>
+
+                    <!-- Archiv Tab -->
+                    <div id="eval-tab-archiv" style="display: none;">
+                        <p style="margin-bottom: 16px; color: var(--text-light);">
+                            Hier findest du abgeschlossene Semester. Die Daten sind schreibgeschützt archiviert.
+                        </p>
+                        
+                        <!-- Aktuelles Semester abschliessen -->
+                        <div style="background: var(--bg); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; border: 1px solid var(--border);">
+                            <h4 style="margin-bottom: 8px;">Aktuelles Semester abschliessen</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 12px;">
+                                Archiviert alle Beobachtungen und Zeugnisnoten. Das aktuelle Semester wird zurückgesetzt für den neuen Start.
+                            </p>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+                                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+                                    <label class="form-label">Bezeichnung</label>
+                                    <input type="text" class="form-input" id="archive-name" placeholder="z.B. Herbstsemester 2024/25">
+                                </div>
+                                <button class="btn btn-primary" onclick="archiveSemester()">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 6px;">
+                                        <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                    </svg>
+                                    Archivieren
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Archiv-Liste -->
+                        <div id="archive-list"></div>
+                    </div>
                 </div>
 
                 <!-- Einzelschüler Content -->
@@ -1567,11 +1626,15 @@
                     <!-- Zeitraum -->
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title">Zeitraum</h2>
+                            <h2 class="card-title">Aktuelles Semester</h2>
                         </div>
                         <p style="margin-bottom: 16px; color: var(--text-light);">
-                            Definiere den Zeitraum des aktuellen Semesters. Dies wird für die Fortschrittsberechnung verwendet.
+                            Definiere das aktuelle Semester. Die Bezeichnung wird im Dashboard angezeigt.
                         </p>
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label class="form-label">Bezeichnung</label>
+                            <input type="text" class="form-input" id="config-semester-name" placeholder="z.B. Frühlingssemester 2025" onchange="saveSemesterConfig()" style="max-width: 350px;">
+                        </div>
                         <div style="display: flex; gap: 16px; flex-wrap: wrap;">
                             <div class="form-group" style="flex: 1; min-width: 200px;">
                                 <label class="form-label">Semester-Start</label>
@@ -2047,21 +2110,24 @@
                     </div>
                     <div class="rating-buttons">
                         <button class="rating-btn rating-1" onclick="submitModalRating(1)">
-                            1 - nicht genügend
+                            <span class="rating-key">1</span> – nicht genügend
                         </button>
                         <button class="rating-btn rating-2" onclick="submitModalRating(2)">
-                            2 - genügend
+                            <span class="rating-key">2</span> = genügend
                         </button>
                         <button class="rating-btn rating-3" onclick="submitModalRating(3)">
-                            3 - gut
+                            <span class="rating-key">3</span> + gut
                         </button>
                         <button class="rating-btn rating-4" onclick="submitModalRating(4)">
-                            4 - sehr gut
+                            <span class="rating-key">4</span> ++ sehr gut
                         </button>
                         <button class="rating-btn rating-skip" onclick="submitModalRating(0)">
-                            Überspringen
+                            <span class="rating-key">0</span> Überspringen
                         </button>
                     </div>
+                    <p style="text-align: center; font-size: 0.8rem; color: var(--text-light); margin-top: 12px;">
+                        Tastatur: 1-4 für Bewertung, 0 = Überspringen, Esc = Schliessen
+                    </p>
                 </div>
             </div>
         </div>
@@ -2275,6 +2341,7 @@
 
         let state = {
             semester: {
+                name: '',                      // z.B. "Frühlingssemester 2025"
                 start: '2025-08-11',
                 end: '2026-01-23',
                 targetObservations: 3,
@@ -2296,7 +2363,8 @@
             customIndikatoren: {},     // { 'L01': ['Eigener Indikator 1', ...], ... }
             beobachtungen: [],
             zeugnisNoten: {},
-            pendingLessons: [] // Verpasste Lektionen
+            pendingLessons: [], // Verpasste Lektionen
+            archive: []  // Archivierte Semester
         };
 
         // Current observation session
@@ -2437,6 +2505,7 @@
                     if (!state.semester.questionsPerRound) state.semester.questionsPerRound = 13;
                     
                     // Neue Einstellungen mit Defaults initialisieren
+                    if (state.semester.name === undefined) state.semester.name = '';
                     if (!state.semester.reminderTiming) state.semester.reminderTiming = 'end-5';
                     if (state.semester.reminderSound === undefined) state.semester.reminderSound = true;
                     if (!state.semester.pendingRetention) state.semester.pendingRetention = 'day-end';
@@ -2449,6 +2518,9 @@
                     
                     // Ferien initialisieren
                     if (!state.ferien) state.ferien = [];
+                    
+                    // Archiv initialisieren
+                    if (!state.archive) state.archive = [];
                     
                     // Demo-Flag initialisieren
                     if (state.isDemo === undefined) state.isDemo = false;
@@ -2620,6 +2692,21 @@
         }
 
         function updateDashboard() {
+            // Update Semester-Info
+            const semesterName = state.semester.name || 'Aktuelles Semester';
+            const startDate = state.semester.start ? new Date(state.semester.start).toLocaleDateString('de-CH') : '';
+            const endDate = state.semester.end ? new Date(state.semester.end).toLocaleDateString('de-CH') : '';
+            const datesStr = startDate && endDate ? `${startDate} – ${endDate}` : '';
+            
+            document.getElementById('dashboard-semester-name').textContent = semesterName;
+            document.getElementById('dashboard-semester-dates').textContent = datesStr;
+            
+            // Verstecke Info-Box wenn kein Name gesetzt
+            const infoBox = document.getElementById('dashboard-semester-info');
+            if (infoBox) {
+                infoBox.style.display = state.semester.name ? 'flex' : 'none';
+            }
+            
             // Update dashboard timetable
             updateDashboardStundenplan();
             
@@ -3290,6 +3377,7 @@
             // Content umschalten
             document.getElementById('eval-tab-einzelschueler').style.display = tabName === 'einzelschueler' ? 'block' : 'none';
             document.getElementById('eval-tab-klassenuebersicht').style.display = tabName === 'klassenuebersicht' ? 'block' : 'none';
+            document.getElementById('eval-tab-archiv').style.display = tabName === 'archiv' ? 'block' : 'none';
             document.getElementById('evaluation-content').style.display = tabName === 'einzelschueler' ? 'block' : 'none';
             document.getElementById('heatmap-content').style.display = tabName === 'klassenuebersicht' ? 'block' : 'none';
             
@@ -3305,6 +3393,16 @@
                             select.appendChild(opt);
                         }
                     });
+                }
+            }
+            
+            // Archiv-Liste laden und Name vorausfüllen
+            if (tabName === 'archiv') {
+                updateArchiveList();
+                // Aktuellen Semester-Namen als Vorschlag einfügen
+                const archiveNameInput = document.getElementById('archive-name');
+                if (archiveNameInput && !archiveNameInput.value) {
+                    archiveNameInput.value = state.semester.name || '';
                 }
             }
         }
@@ -5184,10 +5282,53 @@
         }
 
         // ========================================
+        // KEYBOARD SHORTCUTS
+        // ========================================
+
+        document.addEventListener('keydown', function(e) {
+            // Nur wenn Observation-Modal aktiv ist
+            const obsModal = document.getElementById('observation-modal');
+            if (!obsModal || !obsModal.classList.contains('active')) return;
+            
+            // Nicht bei Input-Feldern
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            switch(e.key) {
+                case '1':
+                    e.preventDefault();
+                    submitModalRating(1);
+                    break;
+                case '2':
+                    e.preventDefault();
+                    submitModalRating(2);
+                    break;
+                case '3':
+                    e.preventDefault();
+                    submitModalRating(3);
+                    break;
+                case '4':
+                    e.preventDefault();
+                    submitModalRating(4);
+                    break;
+                case '0':
+                case 's':
+                case 'S':
+                    e.preventDefault();
+                    submitModalRating(0);
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    closeObservationModal();
+                    break;
+            }
+        });
+
+        // ========================================
         // CONFIGURATION
         // ========================================
 
         function updateSemesterConfig() {
+            document.getElementById('config-semester-name').value = state.semester.name || '';
             document.getElementById('config-semester-start').value = state.semester.start;
             document.getElementById('config-semester-end').value = state.semester.end;
             document.getElementById('config-target').value = state.semester.targetObservations;
@@ -5259,6 +5400,7 @@
         }
 
         function saveSemesterConfig() {
+            state.semester.name = document.getElementById('config-semester-name').value.trim();
             state.semester.start = document.getElementById('config-semester-start').value;
             state.semester.end = document.getElementById('config-semester-end').value;
             state.semester.targetObservations = parseInt(document.getElementById('config-target').value) || 3;
@@ -5275,6 +5417,7 @@
             
             saveState();
             updateStats();
+            updateDashboard(); // Semester-Name im Dashboard aktualisieren
             updateMinQuestionsDisplay();
             showToast('Einstellungen gespeichert', 'success');
         }
@@ -5756,6 +5899,258 @@
                 return isDateInFerien(new Date());
             }
             return isDateInFerien(new Date());
+        }
+
+        // ========================================
+        // SEMESTER-ARCHIV
+        // ========================================
+
+        function archiveSemester() {
+            const name = document.getElementById('archive-name').value.trim();
+            
+            if (!name) {
+                showToast('Bitte eine Bezeichnung eingeben', 'error');
+                return;
+            }
+            
+            // Prüfen ob Daten vorhanden sind
+            if (state.beobachtungen.length === 0) {
+                showToast('Keine Beobachtungen zum Archivieren vorhanden', 'error');
+                return;
+            }
+            
+            // Bestätigung
+            const beobCount = state.beobachtungen.length;
+            const zeugnisCount = Object.keys(state.zeugnisNoten).length;
+            
+            if (!confirm(`Semester "${name}" archivieren?\n\n` +
+                `• ${beobCount} Beobachtungen\n` +
+                `• ${zeugnisCount} Zeugnisnoten\n\n` +
+                `Die aktuellen Daten werden archiviert und das Semester wird für einen Neustart zurückgesetzt.`)) {
+                return;
+            }
+            
+            // Archiv erstellen
+            const archive = {
+                id: Date.now().toString(),
+                name: name,
+                closedAt: new Date().toISOString(),
+                semester: { ...state.semester },
+                beobachtungen: [...state.beobachtungen],
+                zeugnisNoten: { ...state.zeugnisNoten },
+                schueler: JSON.parse(JSON.stringify(state.schueler)),
+                faecher: JSON.parse(JSON.stringify(state.faecher)),
+                kriterienEnabled: { ...state.kriterienEnabled }
+            };
+            
+            // Zum Archiv hinzufügen
+            if (!state.archive) state.archive = [];
+            state.archive.push(archive);
+            
+            // Aktuelles Semester zurücksetzen
+            state.beobachtungen = [];
+            state.zeugnisNoten = {};
+            state.pendingLessons = [];
+            
+            // Neues Semester-Datum setzen (Start = heute)
+            const today = new Date();
+            const endDate = new Date(today);
+            endDate.setMonth(endDate.getMonth() + 5); // Ca. 5 Monate später
+            
+            state.semester.name = ''; // Neuer Name für neues Semester
+            state.semester.start = today.toISOString().split('T')[0];
+            state.semester.end = endDate.toISOString().split('T')[0];
+            
+            // Ferien leeren (neues Semester = neue Ferien)
+            state.ferien = [];
+            
+            saveState();
+            
+            // UI aktualisieren
+            document.getElementById('archive-name').value = '';
+            updateArchiveList();
+            updateSemesterConfig();
+            updateStats();
+            updateDashboard();
+            
+            showToast(`Semester "${name}" archiviert!`, 'success');
+        }
+
+        function updateArchiveList() {
+            const container = document.getElementById('archive-list');
+            if (!container) return;
+            
+            if (!state.archive || state.archive.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom: 12px; opacity: 0.5;">
+                            <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                        </svg>
+                        <p>Noch keine archivierten Semester.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<h4 style="margin-bottom: 12px;">Archivierte Semester</h4>';
+            
+            // Neueste zuerst
+            const sortedArchive = [...state.archive].sort((a, b) => 
+                new Date(b.closedAt) - new Date(a.closedAt)
+            );
+            
+            sortedArchive.forEach(archive => {
+                const closedDate = new Date(archive.closedAt).toLocaleDateString('de-CH');
+                const beobCount = archive.beobachtungen?.length || 0;
+                const zeugnisCount = Object.keys(archive.zeugnisNoten || {}).length;
+                const schuelerCount = archive.schueler?.length || 0;
+                
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg); border-radius: var(--radius); margin-bottom: 8px; border: 1px solid var(--border);">
+                        <div>
+                            <strong>${archive.name}</strong>
+                            <div style="font-size: 0.85rem; color: var(--text-light); margin-top: 4px;">
+                                Abgeschlossen: ${closedDate} · ${beobCount} Beobachtungen · ${schuelerCount} Schüler
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewArchivedSemester('${archive.id}')">
+                                Ansehen
+                            </button>
+                            <button class="btn btn-secondary btn-sm" style="color: var(--danger);" onclick="deleteArchivedSemester('${archive.id}')">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function viewArchivedSemester(archiveId) {
+            const archive = state.archive.find(a => a.id === archiveId);
+            if (!archive) return;
+            
+            // Modal mit Zusammenfassung anzeigen
+            const closedDate = new Date(archive.closedAt).toLocaleDateString('de-CH');
+            const semesterStart = new Date(archive.semester.start).toLocaleDateString('de-CH');
+            const semesterEnd = new Date(archive.semester.end).toLocaleDateString('de-CH');
+            
+            // Statistiken berechnen
+            const beobCount = archive.beobachtungen?.length || 0;
+            const zeugnisNoten = archive.zeugnisNoten || {};
+            
+            // Zeugnisnoten nach Fach gruppieren
+            let zeugnisHtml = '';
+            if (Object.keys(zeugnisNoten).length > 0) {
+                const RATING_LABELS = { 1: '–', 2: '=', 3: '+', 4: '++' };
+                
+                // Nach Fach gruppieren
+                const byFach = {};
+                Object.entries(zeugnisNoten).forEach(([key, ratings]) => {
+                    const [schuelerId, fachId] = key.split('_');
+                    if (!byFach[fachId]) byFach[fachId] = [];
+                    
+                    const schueler = archive.schueler.find(s => s.id === schuelerId);
+                    const schuelerName = schueler ? `${schueler.vorname} ${schueler.nachname}` : 'Unbekannt';
+                    
+                    byFach[fachId].push({ schuelerName, ratings });
+                });
+                
+                Object.entries(byFach).forEach(([fachId, entries]) => {
+                    const fach = archive.faecher.find(f => f.id === fachId);
+                    const fachName = fach ? `${fach.name} ${fach.klasse}` : fachId;
+                    
+                    zeugnisHtml += `<div style="margin-top: 16px;"><strong>${fachName}</strong></div>`;
+                    zeugnisHtml += '<div style="font-size: 0.9rem; margin-top: 8px;">';
+                    
+                    entries.forEach(({ schuelerName, ratings }) => {
+                        const ratingStr = Object.entries(ratings)
+                            .map(([k, v]) => `${k}: ${RATING_LABELS[v] || v}`)
+                            .join(', ');
+                        zeugnisHtml += `<div style="padding: 4px 0; border-bottom: 1px solid var(--border);">${schuelerName}: ${ratingStr}</div>`;
+                    });
+                    
+                    zeugnisHtml += '</div>';
+                });
+            }
+            
+            // Modal erstellen und anzeigen
+            const modalHtml = `
+                <div class="modal-overlay active" id="archive-view-modal" onclick="if(event.target===this)this.remove()">
+                    <div class="modal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                        <div class="modal-header">
+                            <h3 class="modal-title">${archive.name}</h3>
+                            <button class="modal-close" onclick="document.getElementById('archive-view-modal').remove()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+                                <div style="background: var(--bg); padding: 12px; border-radius: var(--radius);">
+                                    <div style="font-size: 0.85rem; color: var(--text-light);">Zeitraum</div>
+                                    <div style="font-weight: 500;">${semesterStart} – ${semesterEnd}</div>
+                                </div>
+                                <div style="background: var(--bg); padding: 12px; border-radius: var(--radius);">
+                                    <div style="font-size: 0.85rem; color: var(--text-light);">Abgeschlossen</div>
+                                    <div style="font-weight: 500;">${closedDate}</div>
+                                </div>
+                                <div style="background: var(--bg); padding: 12px; border-radius: var(--radius);">
+                                    <div style="font-size: 0.85rem; color: var(--text-light);">Beobachtungen</div>
+                                    <div style="font-weight: 500;">${beobCount}</div>
+                                </div>
+                                <div style="background: var(--bg); padding: 12px; border-radius: var(--radius);">
+                                    <div style="font-size: 0.85rem; color: var(--text-light);">Schüler</div>
+                                    <div style="font-weight: 500;">${archive.schueler?.length || 0}</div>
+                                </div>
+                            </div>
+                            
+                            ${zeugnisHtml ? `
+                                <h4 style="margin-bottom: 8px;">Zeugnisnoten</h4>
+                                ${zeugnisHtml}
+                            ` : '<p style="color: var(--text-light);">Keine Zeugnisnoten erfasst.</p>'}
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="exportArchivedSemester('${archive.id}')">
+                                Als JSON exportieren
+                            </button>
+                            <button class="btn btn-primary" onclick="document.getElementById('archive-view-modal').remove()">
+                                Schliessen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        function deleteArchivedSemester(archiveId) {
+            const archive = state.archive.find(a => a.id === archiveId);
+            if (!archive) return;
+            
+            if (!confirm(`Archiviertes Semester "${archive.name}" unwiderruflich löschen?`)) return;
+            
+            state.archive = state.archive.filter(a => a.id !== archiveId);
+            saveState();
+            updateArchiveList();
+            showToast('Archiv gelöscht', 'success');
+        }
+
+        function exportArchivedSemester(archiveId) {
+            const archive = state.archive.find(a => a.id === archiveId);
+            if (!archive) return;
+            
+            const dataStr = JSON.stringify(archive, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `LASSO-Archiv-${archive.name.replace(/[^a-zA-Z0-9]/g, '-')}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            showToast('Export gestartet', 'success');
         }
 
         function toggleKriterium(kritId) {
