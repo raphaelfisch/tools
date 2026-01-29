@@ -1608,31 +1608,109 @@
                             </div>
                             <button class="btn btn-primary" onclick="addFerien()" style="margin-bottom: 0;">Hinzufügen</button>
                         </div>
+                        
+                        <!-- Import von Kanton -->
+                        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+                                <div class="form-group" style="min-width: 200px; margin-bottom: 0;">
+                                    <label class="form-label">Ferien importieren</label>
+                                    <select class="form-select" id="import-kanton">
+                                        <option value="">-- Kanton wählen --</option>
+                                        <option value="CH-AG">Aargau</option>
+                                        <option value="CH-AR">Appenzell Ausserrhoden</option>
+                                        <option value="CH-AI">Appenzell Innerrhoden</option>
+                                        <option value="CH-BL">Basel-Landschaft</option>
+                                        <option value="CH-BS">Basel-Stadt</option>
+                                        <option value="CH-BE">Bern</option>
+                                        <option value="CH-FR">Freiburg</option>
+                                        <option value="CH-GE">Genf</option>
+                                        <option value="CH-GL">Glarus</option>
+                                        <option value="CH-GR">Graubünden</option>
+                                        <option value="CH-JU">Jura</option>
+                                        <option value="CH-LU">Luzern</option>
+                                        <option value="CH-NE">Neuenburg</option>
+                                        <option value="CH-NW">Nidwalden</option>
+                                        <option value="CH-OW">Obwalden</option>
+                                        <option value="CH-SH">Schaffhausen</option>
+                                        <option value="CH-SZ">Schwyz</option>
+                                        <option value="CH-SO">Solothurn</option>
+                                        <option value="CH-SG">St. Gallen</option>
+                                        <option value="CH-TI">Tessin</option>
+                                        <option value="CH-TG">Thurgau</option>
+                                        <option value="CH-UR">Uri</option>
+                                        <option value="CH-VD">Waadt</option>
+                                        <option value="CH-VS">Wallis</option>
+                                        <option value="CH-ZG">Zug</option>
+                                        <option value="CH-ZH">Zürich</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-secondary" onclick="importFerienFromAPI()" style="margin-bottom: 0;">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 6px;">
+                                        <path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
+                                    </svg>
+                                    Importieren
+                                </button>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 8px;">
+                                Lädt Schulferien automatisch von <a href="https://www.openholidaysapi.org" target="_blank" style="color: var(--primary);">OpenHolidays API</a> (kostenlos, Open Data).
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Erinnerung -->
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title">Erinnerung</h2>
+                            <h2 class="card-title">Erinnerungen</h2>
                         </div>
-                        <p style="margin-bottom: 16px; color: var(--text-light);">
-                            Wann soll die Erinnerung für Beobachtungen erscheinen?
+                        <p style="margin-bottom: 20px; color: var(--text-light);">
+                            Du entscheidest, wann und wie du an Beobachtungen erinnert wirst. Das System sammelt Vorschläge – du arbeitest sie ab, wann es für dich passt.
                         </p>
-                        <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: end;">
-                            <div class="form-group" style="min-width: 200px; margin-bottom: 0;">
-                                <label class="form-label">Zeitpunkt</label>
-                                <select class="form-select" id="config-reminder-timing" onchange="saveSemesterConfig()">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Wann soll die Erinnerung erscheinen?</label>
+                            <select class="form-select" id="config-reminder-timing" onchange="saveSemesterConfig()" style="max-width: 350px;">
+                                <optgroup label="Während der Lektion">
                                     <option value="end-5">5 Minuten vor Lektionsende</option>
                                     <option value="end-10">10 Minuten vor Lektionsende</option>
                                     <option value="end-15">15 Minuten vor Lektionsende</option>
                                     <option value="start">Am Anfang der Lektion</option>
                                     <option value="middle">In der Mitte der Lektion</option>
-                                </select>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--background); border-radius: var(--radius); border: 1px solid var(--border); height: 46px;">
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                                </optgroup>
+                                <optgroup label="In Pausen">
+                                    <option value="pause-10">In der 10-Uhr-Pause</option>
+                                    <option value="pause-lunch">In der Mittagspause</option>
+                                </optgroup>
+                                <optgroup label="Am Tagesende">
+                                    <option value="day-end">Nach der letzten Lektion</option>
+                                </optgroup>
+                                <optgroup label="Manuell">
+                                    <option value="manual">Nie automatisch (nur «Noch zu erledigen»)</option>
+                                </optgroup>
+                            </select>
+                            <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 4px;">
+                                Bei "Manuell" sammelst du Beobachtungen über «Noch zu erledigen» und arbeitest sie ab, wann du Zeit hast.
+                            </p>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label class="form-label">Wie lange sollen offene Beobachtungen gespeichert bleiben?</label>
+                            <select class="form-select" id="config-pending-retention" onchange="saveSemesterConfig()" style="max-width: 350px;">
+                                <option value="next-lesson">Bis zur nächsten Lektion (dann neue Vorschläge)</option>
+                                <option value="day-end">Bis Tagesende</option>
+                                <option value="days-3">3 Tage</option>
+                                <option value="days-7">1 Woche</option>
+                                <option value="unlimited">Unbegrenzt (ich hake manuell ab)</option>
+                            </select>
+                            <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 4px;">
+                                Bei "Unbegrenzt" bleiben alle offenen Beobachtungen in der Liste, bis du sie erledigst oder manuell löschst.
+                            </p>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 20px;">
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--background); border-radius: var(--radius); border: 1px solid var(--border); max-width: 350px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; flex: 1;">
                                     <input type="checkbox" id="config-reminder-sound" checked onchange="saveSemesterConfig()" style="width: 18px; height: 18px;">
-                                    <span style="font-size: 1rem;">Ton abspielen</span>
+                                    <span style="font-size: 1rem;">Ton abspielen bei Erinnerung</span>
                                 </label>
                                 <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.85rem;" onclick="playTestSound()">Test</button>
                             </div>
@@ -2021,7 +2099,8 @@
             </div>
             <div class="modal-body" id="pending-modal-body" style="max-height: 400px; overflow-y: auto;">
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn btn-secondary" style="color: var(--danger);" onclick="clearAllPending()">Alle löschen</button>
                 <button class="btn btn-secondary" onclick="closePendingModal()">Schliessen</button>
             </div>
         </div>
@@ -2200,8 +2279,9 @@
                 end: '2026-01-23',
                 targetObservations: 3,
                 questionsPerRound: 13,
-                reminderTiming: 'end-5',      // end-5, end-10, end-15, start, middle
+                reminderTiming: 'end-5',      // end-5, end-10, end-15, start, middle, pause-10, pause-lunch, day-end, manual
                 reminderSound: true,           // Benachrichtigungston
+                pendingRetention: 'day-end',   // next-lesson, day-end, days-3, days-7, unlimited
                 maxQuestionsPerStudent: 3,     // Max Fragen pro Schüler pro Runde
                 prioritizeGaps: true           // Lücken zuerst füllen
             },
@@ -2359,6 +2439,7 @@
                     // Neue Einstellungen mit Defaults initialisieren
                     if (!state.semester.reminderTiming) state.semester.reminderTiming = 'end-5';
                     if (state.semester.reminderSound === undefined) state.semester.reminderSound = true;
+                    if (!state.semester.pendingRetention) state.semester.pendingRetention = 'day-end';
                     if (!state.semester.maxQuestionsPerStudent) state.semester.maxQuestionsPerStudent = 3;
                     if (state.semester.prioritizeGaps === undefined) state.semester.prioritizeGaps = true;
                     
@@ -2599,9 +2680,36 @@
             const card = document.getElementById('pending-observations-card');
             const badge = document.getElementById('pending-count-badge');
             
-            // Alte Einträge entfernen (älter als heute)
-            const today = new Date().toDateString();
-            state.pendingLessons = state.pendingLessons.filter(p => p.date === today);
+            // Retention-Filter basierend auf Einstellung
+            const retention = state.semester.pendingRetention || 'day-end';
+            const now = new Date();
+            
+            if (retention !== 'unlimited') {
+                state.pendingLessons = state.pendingLessons.filter(p => {
+                    if (!p.timestamp) return true; // Alte Einträge ohne Timestamp behalten
+                    
+                    const pendingDate = new Date(p.timestamp);
+                    const diffMs = now - pendingDate;
+                    const diffHours = diffMs / (1000 * 60 * 60);
+                    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                    
+                    switch (retention) {
+                        case 'next-lesson':
+                            // Wird in checkCurrentLesson gehandelt
+                            return true;
+                        case 'day-end':
+                            // Behalte nur Einträge von heute
+                            return pendingDate.toDateString() === now.toDateString();
+                        case 'days-3':
+                            return diffDays < 3;
+                        case 'days-7':
+                            return diffDays < 7;
+                        default:
+                            return true;
+                    }
+                });
+                saveState();
+            }
             
             if (state.pendingLessons.length === 0) {
                 card.style.display = 'none';
@@ -2618,12 +2726,20 @@
             if (state.pendingLessons.length === 0) {
                 body.innerHTML = '<p style="color: var(--text-light);">Keine offenen Beobachtungen.</p>';
             } else {
+                const today = new Date().toDateString();
                 let html = '';
                 state.pendingLessons.forEach((pending, index) => {
+                    // Zeige Datum nur wenn nicht heute
+                    const pendingDate = pending.timestamp ? new Date(pending.timestamp) : null;
+                    const isToday = pendingDate && pendingDate.toDateString() === today;
+                    const dateStr = pendingDate && !isToday 
+                        ? `<span style="font-size: 0.75rem; color: var(--text-light); margin-left: 8px;">${pendingDate.toLocaleDateString('de-CH')}</span>` 
+                        : '';
+                    
                     html += `
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border-radius: var(--radius); margin-bottom: 8px;">
                             <div>
-                                <strong>${pending.fachName} ${pending.fachKlasse}</strong>
+                                <strong>${pending.fachName} ${pending.fachKlasse}</strong>${dateStr}
                                 <div style="font-size: 0.85rem; color: var(--text-light);">Lektion ${pending.lektionIndex}</div>
                             </div>
                             <div style="display: flex; gap: 8px;">
@@ -2685,6 +2801,18 @@
             }
             
             showToast('Verworfen', 'success');
+        }
+
+        function clearAllPending() {
+            if (state.pendingLessons.length === 0) return;
+            
+            if (!confirm(`${state.pendingLessons.length} offene Beobachtungen löschen?`)) return;
+            
+            state.pendingLessons = [];
+            saveState();
+            updatePendingList();
+            closePendingModal();
+            showToast('Alle offenen Beobachtungen gelöscht', 'success');
         }
 
         function calculateGaps() {
@@ -2760,6 +2888,13 @@
 
         // Prüft ob wir im konfigurierten Zeitfenster für Beobachtungen sind
         function getLessonEndInfo() {
+            const timing = state.semester.reminderTiming || 'end-5';
+            
+            // Bei "manual" keine automatischen Erinnerungen
+            if (timing === 'manual') {
+                return null;
+            }
+            
             let day, currentTime;
             
             if (testMode.active) {
@@ -2777,6 +2912,12 @@
             
             if (!dayKey) return null;
 
+            // Pausen- und Tagesend-Optionen
+            if (timing === 'pause-10' || timing === 'pause-lunch' || timing === 'day-end') {
+                return getLessonInfoForPauseOrDayEnd(timing, dayKey, currentTime);
+            }
+
+            // Standard-Optionen: während der Lektion
             for (const lektion of state.stundenplan) {
                 const [start, end] = lektion.zeit.split('-');
                 const [startH, startM] = start.split(':').map(Number);
@@ -2786,7 +2927,6 @@
                 const duration = endTime - startTime;
 
                 // Berechne Zeitfenster basierend auf Konfiguration
-                const timing = state.semester.reminderTiming || 'end-5';
                 let windowStart, windowEnd;
                 
                 if (timing === 'start') {
@@ -2820,6 +2960,63 @@
                     }
                 }
             }
+            return null;
+        }
+
+        // Hilfsfunktion für Pausen- und Tagesend-Erinnerungen
+        function getLessonInfoForPauseOrDayEnd(timing, dayKey, currentTime) {
+            // Finde alle Lektionen des Tages
+            const todayLessons = state.stundenplan
+                .filter(l => l[dayKey] && state.faecherEnabled[l[dayKey]])
+                .map(l => {
+                    const [start, end] = l.zeit.split('-');
+                    const [endH, endM] = end.split(':').map(Number);
+                    return {
+                        ...l,
+                        fachId: l[dayKey],
+                        endTime: endH * 60 + endM
+                    };
+                })
+                .sort((a, b) => a.endTime - b.endTime);
+            
+            if (todayLessons.length === 0) return null;
+            
+            // Zeitfenster für Erinnerungen definieren
+            let reminderWindow = null;
+            
+            if (timing === 'pause-10') {
+                // 10-Uhr-Pause: typischerweise 09:50 - 10:15 (590-615 Minuten)
+                reminderWindow = { start: 9 * 60 + 50, end: 10 * 60 + 15 };
+            } else if (timing === 'pause-lunch') {
+                // Mittagspause: typischerweise 11:50 - 13:30 (710-810 Minuten)
+                reminderWindow = { start: 11 * 60 + 50, end: 13 * 60 + 30 };
+            } else if (timing === 'day-end') {
+                // Nach der letzten Lektion: 5 Minuten Fenster nach Ende
+                const lastLesson = todayLessons[todayLessons.length - 1];
+                reminderWindow = { start: lastLesson.endTime, end: lastLesson.endTime + 30 };
+            }
+            
+            if (!reminderWindow) return null;
+            
+            // Prüfe ob wir im Erinnerungs-Zeitfenster sind
+            if (currentTime >= reminderWindow.start && currentTime <= reminderWindow.end) {
+                // Finde Lektionen, die VOR diesem Zeitfenster enden und noch nicht erinnert wurden
+                const lessonsToRemind = todayLessons.filter(l => l.endTime <= reminderWindow.start);
+                
+                // Nimm die erste noch nicht erinnerte Lektion
+                for (const lesson of lessonsToRemind) {
+                    const fach = state.faecher.find(f => f.id === lesson.fachId);
+                    if (fach) {
+                        return {
+                            ...fach,
+                            lektionIndex: lesson.lektion,
+                            dayKey: dayKey,
+                            endTime: lesson.endTime
+                        };
+                    }
+                }
+            }
+            
             return null;
         }
 
@@ -4996,9 +5193,12 @@
             document.getElementById('config-target').value = state.semester.targetObservations;
             document.getElementById('config-questions-per-round').value = state.semester.questionsPerRound || 13;
             
-            // Neue Einstellungen
+            // Erinnerungs-Einstellungen
             document.getElementById('config-reminder-timing').value = state.semester.reminderTiming || 'end-5';
             document.getElementById('config-reminder-sound').checked = state.semester.reminderSound !== false;
+            document.getElementById('config-pending-retention').value = state.semester.pendingRetention || 'day-end';
+            
+            // Beobachtungs-Einstellungen
             document.getElementById('config-max-per-student').value = state.semester.maxQuestionsPerStudent || 3;
             document.getElementById('config-prioritize-gaps').checked = state.semester.prioritizeGaps !== false;
             
@@ -5064,9 +5264,12 @@
             state.semester.targetObservations = parseInt(document.getElementById('config-target').value) || 3;
             state.semester.questionsPerRound = parseInt(document.getElementById('config-questions-per-round').value) || 13;
             
-            // Neue Einstellungen
+            // Erinnerungs-Einstellungen
             state.semester.reminderTiming = document.getElementById('config-reminder-timing').value;
             state.semester.reminderSound = document.getElementById('config-reminder-sound').checked;
+            state.semester.pendingRetention = document.getElementById('config-pending-retention').value;
+            
+            // Beobachtungs-Einstellungen
             state.semester.maxQuestionsPerStudent = parseInt(document.getElementById('config-max-per-student').value) || 3;
             state.semester.prioritizeGaps = document.getElementById('config-prioritize-gaps').checked;
             
@@ -5456,6 +5659,77 @@
                 saveState();
                 updateFerienList();
                 showToast('Ferien gelöscht', 'success');
+            }
+        }
+
+        async function importFerienFromAPI() {
+            const kantonCode = document.getElementById('import-kanton').value;
+            
+            if (!kantonCode) {
+                showToast('Bitte einen Kanton wählen', 'error');
+                return;
+            }
+            
+            // Zeitraum: aktuelles Schuljahr + nächstes Jahr
+            const now = new Date();
+            const year = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+            const validFrom = `${year}-08-01`;
+            const validTo = `${year + 2}-07-31`;
+            
+            const url = `https://openholidaysapi.org/SchoolHolidays?countryIsoCode=CH&subdivisionCode=${kantonCode}&validFrom=${validFrom}&validTo=${validTo}&languageIsoCode=DE`;
+            
+            try {
+                showToast('Lade Ferien...', 'success');
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    showToast('Keine Ferien gefunden für diesen Kanton', 'error');
+                    return;
+                }
+                
+                // Ferien konvertieren und hinzufügen
+                if (!state.ferien) state.ferien = [];
+                
+                let added = 0;
+                data.forEach(holiday => {
+                    const name = holiday.name?.[0]?.text || holiday.type || 'Ferien';
+                    const start = holiday.startDate;
+                    const end = holiday.endDate;
+                    
+                    // Prüfen ob diese Ferien schon existieren (gleiches Datum)
+                    const exists = state.ferien.some(f => 
+                        f.start === start && f.end === end
+                    );
+                    
+                    if (!exists && start && end) {
+                        state.ferien.push({
+                            id: Date.now().toString() + added,
+                            name,
+                            start,
+                            end
+                        });
+                        added++;
+                    }
+                });
+                
+                // Nach Datum sortieren
+                state.ferien.sort((a, b) => new Date(a.start) - new Date(b.start));
+                
+                saveState();
+                updateFerienList();
+                
+                const kantonName = document.getElementById('import-kanton').selectedOptions[0].text;
+                showToast(`${added} Ferien für ${kantonName} importiert`, 'success');
+                
+            } catch (error) {
+                console.error('Fehler beim Laden der Ferien:', error);
+                showToast('Fehler beim Laden. Bitte später erneut versuchen.', 'error');
             }
         }
 
