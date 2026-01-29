@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PferdeMatch – Finde dein Traumpferd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-cream: #F7F4EF;
+            --color-earth: #8B7355;
+            --color-earth-light: #A89078;
+            --color-earth-dark: #5C4D3C;
+            --color-forest: #4A5D4A;
+            --color-gold: #C9A962;
+            --color-gold-light: #E8D5A3;
+            --color-reject: #C45C5C;
+            --color-accept: #5CAC7D;
+            --color-text: #2C2416;
+            --color-text-light: #6B5D4D;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Outfit', system-ui, sans-serif;
+            --shadow-soft: 0 4px 20px rgba(92, 77, 60, 0.15);
+            --shadow-card: 0 8px 40px rgba(92, 77, 60, 0.2);
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: var(--font-body);
+            background: var(--color-cream);
+            color: var(--color-text);
+            height: 100%;
+            overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 115, 85, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(74, 93, 74, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* Original Header Style */
+        .header {
+            background: linear-gradient(135deg, var(--color-earth-dark) 0%, var(--color-earth) 100%);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-soft);
+            height: 60px;
+        }
+        .logo { display: flex; align-items: center; gap: 0.6rem; }
+        .logo-icon {
+            width: 42px; height: 42px;
+            background: var(--color-gold);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+        }
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 1.6rem; font-weight: 700;
+            color: var(--color-cream);
+            letter-spacing: 0.02em;
+        }
+        .header-controls { display: flex; gap: 0.75rem; align-items: center; }
+        .btn {
+            font-family: var(--font-body);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            border: none; cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.15);
+            color: var(--color-cream);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.25); }
+        .btn-primary { background: var(--color-gold); color: var(--color-earth-dark); }
+        .btn-primary:hover { background: var(--color-gold-light); transform: translateY(-1px); }
+        .demo-toggle { display: flex; align-items: center; gap: 0.5rem; color: var(--color-cream); font-size: 0.85rem; }
+        .toggle-switch {
+            position: relative; width: 44px; height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px; cursor: pointer;
+            transition: background 0.3s;
+        }
+        .toggle-switch.active { background: var(--color-gold); }
+        .toggle-switch::after {
+            content: '';
+            position: absolute; top: 2px; left: 2px;
+            width: 20px; height: 20px;
+            background: white; border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch.active::after { transform: translateX(20px); }
+        
+        /* Main Layout */
+        .main-container { display: flex; height: calc(100% - 60px); transition: all 0.4s ease; }
+        .main-container.single-view { justify-content: center; }
+        .split-panel {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; padding: 1rem;
+            transition: all 0.4s ease; min-width: 0;
+        }
+        .split-panel.hidden { flex: 0; opacity: 0; overflow: hidden; padding: 0; width: 0; }
+        .split-panel:first-child { border-right: 1px solid rgba(139, 115, 85, 0.2); }
+        .main-container.single-view .split-panel:first-child { border-right: none; }
+        .panel-label {
+            font-family: var(--font-display);
+            font-size: 1.1rem; font-weight: 600;
+            color: var(--color-earth);
+            margin-bottom: 0.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .counter-badge {
+            background: var(--color-earth);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-family: var(--font-body);
+        }
+        
+        /* Phone Frame - Original Style */
+        .phone-frame {
+            width: 100%; max-width: 360px;
+            flex: 1; min-height: 0;
+            background: #1a1a1a;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: var(--shadow-card), inset 0 0 0 2px #333;
+            position: relative;
+            display: flex; flex-direction: column;
+        }
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 18px; left: 50%;
+            transform: translateX(-50%);
+            width: 80px; height: 24px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            z-index: 20;
+        }
+        .phone-screen {
+            width: 100%; flex: 1; min-height: 0;
+            background: var(--color-cream);
+            border-radius: 32px;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            position: relative;
+        }
+        
+        /* In-App Navigation Bar */
+        .app-nav {
+            background: white;
+            padding: 0.5rem 0.75rem;
+            padding-top: 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(139, 115, 85, 0.1);
+            z-index: 10;
+        }
+        .app-nav-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--color-earth-dark);
+        }
+        .app-nav-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            color: var(--color-earth);
+            transition: transform 0.2s;
+        }
+        .app-nav-btn:hover { transform: scale(1.1); }
+        .app-nav-btn.has-filter { color: var(--color-gold); }
+        
+        /* Card Stack */
+        .card-stack {
+            flex: 1; position: relative;
+            padding: 0.6rem;
+            overflow: hidden; min-height: 0;
+        }
+        .profile-card {
+            position: absolute;
+            top: 0.6rem; left: 0.6rem; right: 0.6rem; bottom: 0;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            cursor: grab;
+            display: flex; flex-direction: column;
+        }
+        .profile-card:active { cursor: grabbing; }
+        .profile-card.swiping-left { transform: translateX(-120%) rotate(-15deg); opacity: 0; }
+        .profile-card.swiping-right { transform: translateX(120%) rotate(15deg); opacity: 0; }
+        .profile-card.next { transform: scale(0.95); z-index: -1; }
+        .card-image {
+            height: 55%; flex-shrink: 0;
+            background-size: cover; background-position: center;
+            position: relative;
+        }
+        .card-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 100px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.6));
+        }
+        .card-badge {
+            position: absolute; top: 0.6rem; right: 0.6rem;
+            background: var(--color-gold);
+            color: var(--color-earth-dark);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600; font-size: 0.7rem;
+        }
+        .card-name-overlay {
+            position: absolute;
+            bottom: 0.6rem; left: 0.6rem; right: 0.6rem;
+            color: white; z-index: 2;
+        }
+        .card-name-overlay h3 {
+            font-family: var(--font-display);
+            font-size: 1.4rem; font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+        .card-name-overlay .subtitle {
+            font-size: 0.8rem; opacity: 0.9;
+        }
+        .swipe-indicator {
+            position: absolute; top: 35%; transform: translateY(-50%);
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-family: var(--font-display);
+            font-size: 1.1rem; font-weight: 700;
+            opacity: 0; transition: opacity 0.2s;
+            border: 3px solid; z-index: 5;
+        }
+        .swipe-indicator.like { right: 0.6rem; background: rgba(92, 172, 125, 0.95); border-color: var(--color-accept); color: white; }
+        .swipe-indicator.nope { left: 0.6rem; background: rgba(196, 92, 92, 0.95); border-color: var(--color-reject); color: white; }
+        .profile-card.dragging-right .swipe-indicator.like,
+        .profile-card.dragging-left .swipe-indicator.nope { opacity: 1; }
+        .card-content { padding: 0.6rem; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+        .card-details { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 0.3rem; }
+        .detail-tag { background: var(--color-cream); padding: 0.15rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.7rem; color: var(--color-text-light); }
+        .detail-tag.price { background: var(--color-forest); color: white; font-weight: 600; }
+        .card-description { font-size: 0.75rem; line-height: 1.35; color: var(--color-text-light); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        
+        /* Action Buttons */
+        .action-buttons { display: flex; justify-content: center; align-items: center; gap: 0.75rem; padding: 0.6rem; background: white; border-top: 1px solid rgba(139, 115, 85, 0.1); }
+        .action-btn { border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: var(--shadow-soft); }
+        .action-btn:hover { transform: scale(1.1); }
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn.reject { width: 48px; height: 48px; background: white; color: var(--color-reject); border: 2px solid var(--color-reject); font-size: 1.1rem; }
+        .action-btn.accept { width: 56px; height: 56px; background: var(--color-accept); color: white; border: none; font-size: 1.5rem; }
+        .action-btn.info { width: 40px; height: 40px; background: white; color: var(--color-gold); border: 2px solid var(--color-gold); font-size: 1rem; }
+        
+        /* In-App Screens (Filter, Detail, Chat) */
+        .app-screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--color-cream);
+            z-index: 15;
+            display: flex; flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        .app-screen.active { transform: translateX(0); }
+        .app-screen.slide-up {
+            transform: translateY(100%);
+        }
+        .app-screen.slide-up.active { transform: translateY(0); }
+        
+        /* Filter Screen */
+        .filter-screen .app-nav { background: var(--color-cream); }
+        .filter-content { flex: 1; padding: 1rem; overflow-y: auto; }
+        .filter-section { margin-bottom: 1.25rem; }
+        .filter-section label { display: block; font-weight: 600; color: var(--color-earth-dark); margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .filter-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .filter-chip {
+            padding: 0.4rem 0.7rem;
+            border-radius: 20px;
+            border: 1.5px solid var(--color-earth-light);
+            background: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-chip:hover { border-color: var(--color-earth); }
+        .filter-chip.active { background: var(--color-gold); border-color: var(--color-gold); color: var(--color-earth-dark); font-weight: 500; }
+        .filter-actions { padding: 1rem; display: flex; gap: 0.75rem; border-top: 1px solid rgba(139,115,85,0.1); }
+        .filter-actions .btn { flex: 1; padding: 0.75rem; font-size: 0.9rem; }
+        
+        /* Detail Screen */
+        .detail-screen .detail-image { height: 45%; background-size: cover; background-position: center; position: relative; }
+        .detail-screen .detail-image::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 80px; background: linear-gradient(transparent, rgba(0,0,0,0.4)); }
+        .detail-back {
+            position: absolute; top: 1.5rem; left: 0.75rem;
+            background: rgba(255,255,255,0.9); border: none;
+            width: 36px; height: 36px; border-radius: 50%;
+            font-size: 1.2rem; cursor: pointer; z-index: 5;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .detail-body { flex: 1; padding: 1rem; overflow-y: auto; background: white; border-radius: var(--radius-lg) var(--radius-lg) 0 0; margin-top: -20px; position: relative; }
+        .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+        .detail-name { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--color-earth-dark); }
+        .detail-price { font-size: 1rem; font-weight: 600; color: var(--color-forest); }
+        .detail-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+        .detail-tag { background: var(--color-cream); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--color-text-light); }
+        .detail-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 0.75rem; }
+        .stat-item { text-align: center; padding: 0.5rem; background: var(--color-cream); border-radius: var(--radius-sm); }
+        .stat-value { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--color-earth-dark); }
+        .stat-label { font-size: 0.65rem; color: var(--color-text-light); }
+        .detail-section { margin-bottom: 0.75rem; }
+        .detail-section h4 { font-size: 0.8rem; font-weight: 600; color: var(--color-earth); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .detail-section p { font-size: 0.85rem; line-height: 1.5; color: var(--color-text); }
+        
+        /* Match Overlay - External */
+        .match-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(44, 36, 22, 0.92);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .match-overlay.active { opacity: 1; pointer-events: all; }
+        .match-content { text-align: center; color: var(--color-cream); padding: 1.5rem; }
+        .match-title { font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; color: var(--color-gold); margin-bottom: 0.25rem; animation: matchPulse 1s ease infinite; }
+        .match-subtitle { font-size: 0.95rem; opacity: 0.85; margin-bottom: 1.25rem; }
+        @keyframes matchPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .match-profiles { display: flex; align-items: center; justify-content: center; gap: 1rem; }
+        .match-profile { text-align: center; }
+        .match-profile-img { width: 85px; height: 85px; border-radius: 50%; background-size: cover; background-position: center; border: 3px solid var(--color-gold); }
+        .match-profile-name { font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; margin-top: 0.4rem; }
+        .match-heart { font-size: 2rem; color: var(--color-gold); animation: heartBeat 0.8s ease infinite; }
+        @keyframes heartBeat { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.3); } }
+        .match-actions { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.5rem; }
+        .match-btn { padding: 0.75rem 1.25rem; border-radius: var(--radius-md); font-family: var(--font-body); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; border: none; }
+        .match-btn.primary { background: var(--color-gold); color: var(--color-earth-dark); }
+        .match-btn.secondary { background: transparent; color: var(--color-cream); border: 2px solid rgba(255,255,255,0.5); }
+        
+        /* Chat Screen - In App */
+        .chat-screen { background: white; }
+        .chat-header { background: white; padding: 0.5rem 0.75rem; padding-top: 1.75rem; display: flex; align-items: center; gap: 0.6rem; border-bottom: 1px solid rgba(139,115,85,0.1); }
+        .chat-back { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--color-earth); }
+        .chat-partner-img { width: 36px; height: 36px; border-radius: 50%; background-size: cover; background-position: center; }
+        .chat-partner-info { flex: 1; }
+        .chat-partner-name { font-weight: 600; font-size: 0.9rem; color: var(--color-earth-dark); }
+        .chat-partner-status { font-size: 0.7rem; color: var(--color-accept); }
+        .chat-messages { flex: 1; padding: 0.75rem; overflow-y: auto; background: var(--color-cream); display: flex; flex-direction: column; gap: 0.5rem; }
+        .chat-msg { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 16px; font-size: 0.8rem; line-height: 1.4; }
+        .chat-msg.received { background: white; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .chat-msg.sent { background: var(--color-earth); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-input-area { padding: 0.5rem; background: white; border-top: 1px solid rgba(139,115,85,0.1); display: flex; gap: 0.5rem; }
+        .chat-input { flex: 1; padding: 0.6rem 0.9rem; border: 1px solid var(--color-earth-light); border-radius: 20px; font-size: 0.85rem; font-family: var(--font-body); }
+        .chat-input:focus { outline: none; border-color: var(--color-gold); }
+        .chat-send { background: var(--color-gold); border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 1rem; color: var(--color-earth-dark); }
+        
+        /* Settings Panel */
+        .settings-panel { position: fixed; top: 60px; right: -340px; width: 320px; height: calc(100% - 60px); background: white; box-shadow: -4px 0 20px rgba(0,0,0,0.1); padding: 1.25rem; transition: right 0.3s ease; z-index: 100; overflow-y: auto; }
+        .settings-panel.open { right: 0; }
+        .settings-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--color-earth-dark); margin-bottom: 1.25rem; }
+        .setting-group { margin-bottom: 1.25rem; }
+        .setting-label { font-weight: 500; color: var(--color-text); margin-bottom: 0.4rem; display: block; font-size: 0.9rem; }
+        .setting-option { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(139, 115, 85, 0.1); font-size: 0.9rem; }
+        .close-settings { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--color-text-light); }
+        
+        /* Empty State */
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 1rem; }
+        .empty-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+        .empty-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; color: var(--color-earth); }
+        .empty-text { color: var(--color-text-light); font-size: 0.8rem; }
+        
+        /* Responsive */
+        @media (max-width: 800px) {
+            .split-panel { padding: 0.5rem; }
+            .phone-frame { border-radius: 32px; padding: 10px; }
+            .phone-screen { border-radius: 26px; }
+        }
+        @media (max-width: 650px) {
+            .header { height: 52px; padding: 0.5rem 1rem; }
+            .logo-text { font-size: 1.3rem; }
+            .logo-icon { width: 36px; height: 36px; font-size: 1.1rem; }
+            .demo-toggle span { display: none; }
+            .main-container { height: calc(100% - 52px); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo"><div class="logo-icon">🐴</div><span class="logo-text">PferdeMatch</span></div>
+        <div class="header-controls">
+            <div class="demo-toggle"><span>Splitscreen</span><div class="toggle-switch active" id="splitToggle" onclick="toggleSplitScreen()"></div></div>
+            <button class="btn btn-secondary" onclick="toggleSettings()">⚙️ Einstellungen</button>
+            <button class="btn btn-primary" onclick="resetDemo()">🔄 Demo Reset</button>
+        </div>
+    </header>
+    
+    <main class="main-container" id="mainContainer">
+        <!-- Käufer Panel -->
+        <div class="split-panel" id="buyerPanel">
+            <div class="panel-label">🛒 Käufer-Ansicht <span class="counter-badge" id="buyerCounter">1/20</span></div>
+            <div class="phone-frame">
+                <div class="phone-screen" id="buyerScreen">
+                    <!-- App Navigation -->
+                    <div class="app-nav">
+                        <button class="app-nav-btn" id="buyerFilterBtn" onclick="openFilter('buyer')">🔍</button>
+                        <span class="app-nav-title">Pferde entdecken</span>
+                        <button class="app-nav-btn" onclick="openMatches('buyer')">💬</button>
+                    </div>
+                    <!-- Card Stack -->
+                    <div class="card-stack" id="buyerStack"></div>
+                    <!-- Actions -->
+                    <div class="action-buttons">
+                        <button class="action-btn reject" onclick="swipe('buyer', 'left')">✕</button>
+                        <button class="action-btn info" onclick="openDetail('buyer')">ℹ</button>
+                        <button class="action-btn accept" onclick="swipe('buyer', 'right')">♥</button>
+                    </div>
+                    
+                    <!-- Filter Screen (In-App) -->
+                    <div class="app-screen filter-screen" id="buyerFilterScreen">
+                        <div class="app-nav">
+                            <button class="app-nav-btn" onclick="closeFilter('buyer')">←</button>
+                            <span class="app-nav-title">Filter</span>
+                            <button class="app-nav-btn" onclick="clearFilter('buyer')">↻</button>
+                        </div>
+                        <div class="filter-content">
+                            <div class="filter-section">
+                                <label>Disziplin</label>
+                                <div class="filter-chips" id="buyerDisciplineChips"></div>
+                            </div>
+                            <div class="filter-section">
+                                <label>Preisklasse</label>
+                                <div class="filter-chips" id="buyerPriceChips"></div>
+                            </div>
+                        </div>
+                        <div class="filter-actions">
+                            <button class="btn btn-secondary" onclick="clearFilter('buyer')">Zurücksetzen</button>
+                            <button class="btn btn-primary" onclick="applyFilter('buyer')">Anwenden</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Detail Screen (In-App) -->
+                    <div class="app-screen detail-screen slide-up" id="buyerDetailScreen">
+                        <div class="detail-image" id="buyerDetailImage">
+                            <button class="detail-back" onclick="closeDetail('buyer')">←</button>
+                        </div>
+                        <div class="detail-body" id="buyerDetailBody"></div>
+                    </div>
+                    
+                    <!-- Chat Screen (In-App) -->
+                    <div class="app-screen chat-screen" id="buyerChatScreen">
+                        <div class="chat-header">
+                            <button class="chat-back" onclick="closeChat('buyer')">←</button>
+                            <div class="chat-partner-img" id="buyerChatImg"></div>
+                            <div class="chat-partner-info">
+                                <div class="chat-partner-name" id="buyerChatName"></div>
+                                <div class="chat-partner-status">Online</div>
+                            </div>
+                        </div>
+                        <div class="chat-messages" id="buyerChatMessages"></div>
+                        <div class="chat-input-area">
+                            <input type="text" class="chat-input" id="buyerChatInput" placeholder="Nachricht...">
+                            <button class="chat-send" onclick="sendMessage('buyer')">➤</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Verkäufer Panel -->
+        <div class="split-panel" id="sellerPanel">
+            <div class="panel-label">🏷️ Verkäufer-Ansicht <span class="counter-badge" id="sellerCounter">1/20</span></div>
+            <div class="phone-frame">
+                <div class="phone-screen" id="sellerScreen">
+                    <div class="app-nav">
+                        <button class="app-nav-btn" id="sellerFilterBtn" onclick="openFilter('seller')">🔍</button>
+                        <span class="app-nav-title">Käufer entdecken</span>
+                        <button class="app-nav-btn" onclick="openMatches('seller')">💬</button>
+                    </div>
+                    <div class="card-stack" id="sellerStack"></div>
+                    <div class="action-buttons">
+                        <button class="action-btn reject" onclick="swipe('seller', 'left')">✕</button>
+                        <button class="action-btn info" onclick="openDetail('seller')">ℹ</button>
+                        <button class="action-btn accept" onclick="swipe('seller', 'right')">♥</button>
+                    </div>
+                    
+                    <!-- Filter Screen -->
+                    <div class="app-screen filter-screen" id="sellerFilterScreen">
+                        <div class="app-nav">
+                            <button class="app-nav-btn" onclick="closeFilter('seller')">←</button>
+                            <span class="app-nav-title">Filter</span>
+                            <button class="app-nav-btn" onclick="clearFilter('seller')">↻</button>
+                        </div>
+                        <div class="filter-content">
+                            <div class="filter-section">
+                                <label>Disziplin</label>
+                                <div class="filter-chips" id="sellerDisciplineChips"></div>
+                            </div>
+                            <div class="filter-section">
+                                <label>Erfahrung</label>
+                                <div class="filter-chips" id="sellerExpChips"></div>
+                            </div>
+                        </div>
+                        <div class="filter-actions">
+                            <button class="btn btn-secondary" onclick="clearFilter('seller')">Zurücksetzen</button>
+                            <button class="btn btn-primary" onclick="applyFilter('seller')">Anwenden</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Detail Screen -->
+                    <div class="app-screen detail-screen slide-up" id="sellerDetailScreen">
+                        <div class="detail-image" id="sellerDetailImage">
+                            <button class="detail-back" onclick="closeDetail('seller')">←</button>
+                        </div>
+                        <div class="detail-body" id="sellerDetailBody"></div>
+                    </div>
+                    
+                    <!-- Chat Screen -->
+                    <div class="app-screen chat-screen" id="sellerChatScreen">
+                        <div class="chat-header">
+                            <button class="chat-back" onclick="closeChat('seller')">←</button>
+                            <div class="chat-partner-img" id="sellerChatImg"></div>
+                            <div class="chat-partner-info">
+                                <div class="chat-partner-name" id="sellerChatName"></div>
+                                <div class="chat-partner-status">Online</div>
+                            </div>
+                        </div>
+                        <div class="chat-messages" id="sellerChatMessages"></div>
+                        <div class="chat-input-area">
+                            <input type="text" class="chat-input" id="sellerChatInput" placeholder="Nachricht...">
+                            <button class="chat-send" onclick="sendMessage('seller')">➤</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Match Overlay (External) -->
+    <div class="match-overlay" id="matchOverlay">
+        <div class="match-content">
+            <h2 class="match-title">It's a Match! 🎉</h2>
+            <p class="match-subtitle">Ihr habt gegenseitiges Interesse!</p>
+            <div class="match-profiles">
+                <div class="match-profile"><div class="match-profile-img" id="matchBuyerImg"></div><div class="match-profile-name" id="matchBuyerName"></div></div>
+                <div class="match-heart">💕</div>
+                <div class="match-profile"><div class="match-profile-img" id="matchHorseImg"></div><div class="match-profile-name" id="matchHorseName"></div></div>
+            </div>
+            <div class="match-actions">
+                <button class="match-btn primary" onclick="openChatFromMatch()">💬 Nachricht senden</button>
+                <button class="match-btn secondary" onclick="closeMatch()">Weiter swipen</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <button class="close-settings" onclick="toggleSettings()">×</button>
+        <h3 class="settings-title">Einstellungen</h3>
+        <div class="setting-group">
+            <label class="setting-label">Matching-Modus</label>
+            <div class="setting-option"><span>Beidseitiges Matching</span><div class="toggle-switch active" id="bidirectionalToggle" onclick="toggleBidirectional()"></div></div>
+            <small style="color: var(--color-text-light); font-size: 0.75rem;">Beide müssen liken für ein Match</small>
+        </div>
+        <div class="setting-group">
+            <label class="setting-label">Statistik</label>
+            <div class="setting-option"><span>Käufer Likes</span><span id="buyerLikesCount">0</span></div>
+            <div class="setting-option"><span>Verkäufer Likes</span><span id="sellerLikesCount">0</span></div>
+            <div class="setting-option"><span>Matches</span><span id="matchesCount">0</span></div>
+        </div>
+    </div>
+
+<script>
+// ===== DATA =====
+const disciplines = ['Dressur', 'Springen', 'Vielseitigkeit', 'Western', 'Working Eq.', 'Freizeit', 'Barock', 'Show', 'Trail'];
+const priceRanges = ['< 20k', '20-35k', '35-50k', '> 50k'];
+const experiences = ['Anfänger', 'Wiedereinsteiger', 'Fortgeschritten', 'Amateur', 'Turnierreiterin', 'Profi'];
+
+const horses = [
+    { id: 1, name: "Amadeus", age: 8, breed: "Holsteiner", height: 172, discipline: "Springen", price: 45000, priceDisplay: "45'000 CHF", description: "Talentierter Springhengst mit viel Vermögen. Erfolgreich bis 1.30m, bereit für mehr. Brav im Umgang, schmiedefromm und verladefromm.", image: "https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&h=600&fit=crop", location: "Zürich" },
+    { id: 2, name: "Bella Luna", age: 6, breed: "Westfale", height: 168, discipline: "Dressur", price: 38000, priceDisplay: "38'000 CHF", description: "Elegante Stute mit drei hervorragenden Grundgangarten. Ideal für ambitionierte Amateure.", image: "https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800&h=600&fit=crop", location: "Bern" },
+    { id: 3, name: "Carlos", age: 12, breed: "Andalusier", height: 162, discipline: "Working Eq.", price: 25000, priceDisplay: "25'000 CHF", description: "Wunderschöner PRE mit viel Ausstrahlung. Perfekt für Working Equitation.", image: "https://images.unsplash.com/photo-1534773728080-33d31da27ae5?w=800&h=600&fit=crop", location: "Luzern" },
+    { id: 4, name: "Django", age: 5, breed: "KWPN", height: 175, discipline: "Springen", price: 55000, priceDisplay: "55'000 CHF", description: "Hochtalentiertes Nachwuchspferd mit enormem Potential. Gekört.", image: "https://images.unsplash.com/photo-1509914398892-963f53e6e2f1?w=800&h=600&fit=crop", location: "Basel" },
+    { id: 5, name: "Estrella", age: 9, breed: "Lusitano", height: 160, discipline: "Dressur", price: 32000, priceDisplay: "32'000 CHF", description: "Bildschöne Schimmelstute, ausgebildet bis Klasse M.", image: "https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?w=800&h=600&fit=crop", location: "Tessin" },
+    { id: 6, name: "Fiero", age: 7, breed: "Hannoveraner", height: 170, discipline: "Vielseitigkeit", price: 42000, priceDisplay: "42'000 CHF", description: "Mutiger Wallach für Vielseitigkeit. Geländesicher und springfreudig.", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop", location: "Aargau" },
+    { id: 7, name: "Gina", age: 11, breed: "Oldenburger", height: 167, discipline: "Dressur", price: 28000, priceDisplay: "28'000 CHF", description: "Erfahrene Schulmeisterin bis Klasse S. Perfekt zum Lernen.", image: "https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=800&h=600&fit=crop", location: "Solothurn" },
+    { id: 8, name: "Hurricane", age: 4, breed: "Trakehner", height: 169, discipline: "Dressur", price: 35000, priceDisplay: "35'000 CHF", description: "Junger Hengst mit viel Bewegungsqualität. Top-Abstammung.", image: "https://images.unsplash.com/photo-1551884831-bbf3cdc6469e?w=800&h=600&fit=crop", location: "Thurgau" },
+    { id: 9, name: "Isabella", age: 8, breed: "Friese", height: 165, discipline: "Show", price: 30000, priceDisplay: "30'000 CHF", description: "Traumhaft schöne Friesenstute. Blickfang überall.", image: "https://images.unsplash.com/photo-1557514070-b67e3c4b7f83?w=800&h=600&fit=crop", location: "St. Gallen" },
+    { id: 10, name: "Jupiter", age: 6, breed: "Selle Français", height: 173, discipline: "Springen", price: 48000, priceDisplay: "48'000 CHF", description: "Französischer Springcrack bis 1.35m. Vorsichtig und übersichtlich.", image: "https://images.unsplash.com/photo-1560089000-7433a4ebbd64?w=800&h=600&fit=crop", location: "Genf" },
+    { id: 11, name: "Kontessa", age: 10, breed: "Württemberger", height: 166, discipline: "Freizeit", price: 18000, priceDisplay: "18'000 CHF", description: "Brav, zuverlässig, unerschrocken. Ideal für Familien.", image: "https://images.unsplash.com/photo-1508817628294-5a453fa0b8fb?w=800&h=600&fit=crop", location: "Schaffhausen" },
+    { id: 12, name: "Leonardo", age: 7, breed: "Holsteiner", height: 174, discipline: "Springen", price: 52000, priceDisplay: "52'000 CHF", description: "Imposanter Fuchswallach für die grosse Tour.", image: "https://images.unsplash.com/photo-1477884213360-7e9d7dcc1e48?w=800&h=600&fit=crop", location: "Fribourg" },
+    { id: 13, name: "Mirabelle", age: 5, breed: "Schweizer WB", height: 164, discipline: "Vielseitigkeit", price: 33000, priceDisplay: "33'000 CHF", description: "Schweizer Nachwuchstalent. Mutig und lernwillig.", image: "https://images.unsplash.com/photo-1548687917-ac7ff9b5e7f8?w=800&h=600&fit=crop", location: "Schwyz" },
+    { id: 14, name: "Noblesse", age: 9, breed: "Westfale", height: 170, discipline: "Dressur", price: 40000, priceDisplay: "40'000 CHF", description: "Ausdrucksstarke Dressurkönigin. Platziert bis Klasse S.", image: "https://images.unsplash.com/photo-1485833077787-4ac827ac43bc?w=800&h=600&fit=crop", location: "Zug" },
+    { id: 15, name: "Orlando", age: 13, breed: "Andalusier", height: 158, discipline: "Barock", price: 22000, priceDisplay: "22'000 CHF", description: "Erfahrenes Barockpferd für klassische Reitkunst.", image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&h=600&fit=crop", location: "Wallis" },
+    { id: 16, name: "Primavera", age: 6, breed: "Lusitano", height: 161, discipline: "Working Eq.", price: 36000, priceDisplay: "36'000 CHF", description: "Elegante Stute mit Cowsense. Auch für Dressur geeignet.", image: "https://images.unsplash.com/photo-1517934274943-d1749ff2d7c8?w=800&h=600&fit=crop", location: "Graubünden" },
+    { id: 17, name: "Quarterback Jr", age: 8, breed: "Hannoveraner", height: 171, discipline: "Dressur", price: 58000, priceDisplay: "58'000 CHF", description: "Sohn des berühmten Quarterback. Inter I ausgebildet.", image: "https://images.unsplash.com/photo-1593179528893-8c474a1b9e80?w=800&h=600&fit=crop", location: "Zürich" },
+    { id: 18, name: "Rosalie", age: 7, breed: "Oldenburger", height: 168, discipline: "Springen", price: 44000, priceDisplay: "44'000 CHF", description: "Vorsichtige Stute mit viel Technik. Aktuell 1.25m.", image: "https://images.unsplash.com/photo-1550159930-40066082a4fc?w=800&h=600&fit=crop", location: "Bern" },
+    { id: 19, name: "Santiago", age: 10, breed: "Criollo", height: 148, discipline: "Trail", price: 15000, priceDisplay: "15'000 CHF", description: "Robuster Criollo für Wanderritte. Trittsicher.", image: "https://images.unsplash.com/photo-1496682249456-91b4e6410300?w=800&h=600&fit=crop", location: "Uri" },
+    { id: 20, name: "Toscana", age: 4, breed: "KWPN", height: 169, discipline: "Dressur", price: 38000, priceDisplay: "38'000 CHF", description: "Junge Stute mit viel Potenzial. Drei elastische GGA.", image: "https://images.unsplash.com/photo-1566251037378-5e04e3bec343?w=800&h=600&fit=crop", location: "Luzern" }
+];
+
+const buyers = [
+    { id: 1, name: "Anna Meier", location: "Zürich", budgetMin: 30000, budgetMax: 50000, budgetDisplay: "30-50k CHF", discipline: "Springen", experience: "Fortgeschritten", description: "Suche zuverlässiges Springpferd für Turniere bis 1.20m. Stallplatz vorhanden.", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop" },
+    { id: 2, name: "Thomas Keller", location: "Bern", budgetMin: 20000, budgetMax: 35000, budgetDisplay: "20-35k CHF", discipline: "Freizeit", experience: "Wiedereinsteiger", description: "Nach 10 Jahren Pause suche ich ein braves Freizeitpferd.", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop" },
+    { id: 3, name: "Sarah Lehmann", location: "Luzern", budgetMin: 35000, budgetMax: 60000, budgetDisplay: "35-60k CHF", discipline: "Dressur", experience: "Turnierreiterin", description: "Ambitionierte Dressurreiterin sucht Pferd mit S-Potential.", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop" },
+    { id: 4, name: "Michael Brunner", location: "St. Gallen", budgetMin: 25000, budgetMax: 40000, budgetDisplay: "25-40k CHF", discipline: "Working Eq.", experience: "Fortgeschritten", description: "Begeisterter Working Equitation Reiter sucht passendes Pferd.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop" },
+    { id: 5, name: "Lisa Weber", location: "Basel", budgetMin: 40000, budgetMax: 55000, budgetDisplay: "40-55k CHF", discipline: "Springen", experience: "Profi", description: "Profireiterin sucht Nachwuchspferd für die grosse Tour.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop" },
+    { id: 6, name: "Marco Torriani", location: "Tessin", budgetMin: 15000, budgetMax: 25000, budgetDisplay: "15-25k CHF", discipline: "Western", experience: "Anfänger", description: "Einsteiger sucht braves Westernpferd.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop" },
+    { id: 7, name: "Julia Huber", location: "Aargau", budgetMin: 30000, budgetMax: 45000, budgetDisplay: "30-45k CHF", discipline: "Vielseitigkeit", experience: "Fortgeschritten", description: "Mutige Reiterin sucht Vielseitigkeitspferd für CNC*.", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop" },
+    { id: 8, name: "Peter Studer", location: "Solothurn", budgetMin: 20000, budgetMax: 30000, budgetDisplay: "20-30k CHF", discipline: "Freizeit", experience: "Fortgeschritten", description: "Suche Partner für Ausritte und leichte Dressur.", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop" },
+    { id: 9, name: "Nina Fischer", location: "Thurgau", budgetMin: 25000, budgetMax: 40000, budgetDisplay: "25-40k CHF", discipline: "Dressur", experience: "Amateur", description: "Amateurin sucht Schulmeister bis Klasse M.", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop" },
+    { id: 10, name: "David Roth", location: "Graubünden", budgetMin: 18000, budgetMax: 28000, budgetDisplay: "18-28k CHF", discipline: "Freizeit", experience: "Wiedereinsteiger", description: "Suche trittsicheres Pferd für Bergwanderungen.", image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop" },
+    { id: 11, name: "Sandra Müller", location: "Wallis", budgetMin: 30000, budgetMax: 50000, budgetDisplay: "30-50k CHF", discipline: "Barock", experience: "Fortgeschritten", description: "Suche Barockhengst für klassische Dressur.", image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400&h=400&fit=crop" },
+    { id: 12, name: "Christian Ammann", location: "Fribourg", budgetMin: 35000, budgetMax: 55000, budgetDisplay: "35-55k CHF", discipline: "Springen", experience: "Turnierreiterin", description: "Springreiter sucht Pferd für 1.30m+.", image: "https://images.unsplash.com/photo-1463453091185-61582044d556?w=400&h=400&fit=crop" },
+    { id: 13, name: "Martina Graf", location: "Zug", budgetMin: 40000, budgetMax: 60000, budgetDisplay: "40-60k CHF", discipline: "Dressur", experience: "Profi", description: "Bereiter sucht Rohdiamant mit Grand Prix Potential.", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=400&h=400&fit=crop" },
+    { id: 14, name: "Stefan Koch", location: "Schwyz", budgetMin: 20000, budgetMax: 35000, budgetDisplay: "20-35k CHF", discipline: "Working Eq.", experience: "Amateur", description: "Suche wendiges Pferd für Working Equitation.", image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=400&h=400&fit=crop" },
+    { id: 15, name: "Claudia Zimmermann", location: "Neuenburg", budgetMin: 25000, budgetMax: 40000, budgetDisplay: "25-40k CHF", discipline: "Vielseitigkeit", experience: "Fortgeschritten", description: "Suche mutiges Geländepferd.", image: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&h=400&fit=crop" },
+    { id: 16, name: "René Dubois", location: "Genf", budgetMin: 45000, budgetMax: 65000, budgetDisplay: "45-65k CHF", discipline: "Springen", experience: "Profi", description: "Internationaler Springreiter sucht CSI-Pferd.", image: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=400&h=400&fit=crop" },
+    { id: 17, name: "Monika Petersen", location: "Schaffhausen", budgetMin: 15000, budgetMax: 25000, budgetDisplay: "15-25k CHF", discipline: "Freizeit", experience: "Anfänger", description: "Erstpferd gesucht! Muss brav sein.", image: "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=400&h=400&fit=crop" },
+    { id: 18, name: "Andreas Wirth", location: "Appenzell", budgetMin: 20000, budgetMax: 35000, budgetDisplay: "20-35k CHF", discipline: "Freizeit", experience: "Fortgeschritten", description: "Suche robustes Pferd für Bergausritte.", image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop" },
+    { id: 19, name: "Fabienne Berger", location: "Jura", budgetMin: 30000, budgetMax: 45000, budgetDisplay: "30-45k CHF", discipline: "Dressur", experience: "Amateur", description: "Suche rittiges Pferd für L-M Dressur.", image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=400&fit=crop" },
+    { id: 20, name: "Lukas Egger", location: "Uri", budgetMin: 25000, budgetMax: 40000, budgetDisplay: "25-40k CHF", discipline: "Western", experience: "Fortgeschritten", description: "Suche Quarter für Reining Turniere.", image: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=400&h=400&fit=crop" }
+];
+
+// ===== STATE =====
+let state = {
+    buyerIndex: 0, sellerIndex: 0,
+    buyerLikes: new Set(), sellerLikes: new Set(),
+    matches: [], splitScreen: true, bidirectional: true,
+    filters: { buyer: { discipline: null, price: null }, seller: { discipline: null, experience: null } },
+    filteredHorses: [...horses], filteredBuyers: [...buyers],
+    currentMatch: null
+};
+
+// ===== INIT =====
+function init() {
+    renderCards('buyer'); renderCards('seller');
+    renderFilterChips('buyer'); renderFilterChips('seller');
+    updateCounters(); updateStats();
+}
+
+function renderFilterChips(panel) {
+    if (panel === 'buyer') {
+        document.getElementById('buyerDisciplineChips').innerHTML = disciplines.map(d => 
+            `<span class="filter-chip" data-value="${d}" onclick="toggleChip('buyer','discipline','${d}')">${d}</span>`
+        ).join('');
+        document.getElementById('buyerPriceChips').innerHTML = priceRanges.map(p => 
+            `<span class="filter-chip" data-value="${p}" onclick="toggleChip('buyer','price','${p}')">${p}</span>`
+        ).join('');
+    } else {
+        document.getElementById('sellerDisciplineChips').innerHTML = disciplines.map(d => 
+            `<span class="filter-chip" data-value="${d}" onclick="toggleChip('seller','discipline','${d}')">${d}</span>`
+        ).join('');
+        document.getElementById('sellerExpChips').innerHTML = experiences.map(e => 
+            `<span class="filter-chip" data-value="${e}" onclick="toggleChip('seller','experience','${e}')">${e}</span>`
+        ).join('');
+    }
+}
+
+function toggleChip(panel, type, value) {
+    state.filters[panel][type] = state.filters[panel][type] === value ? null : value;
+    // Update UI
+    const containerId = panel === 'buyer' ? (type === 'discipline' ? 'buyerDisciplineChips' : 'buyerPriceChips') : (type === 'discipline' ? 'sellerDisciplineChips' : 'sellerExpChips');
+    document.querySelectorAll(`#${containerId} .filter-chip`).forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.value === state.filters[panel][type]);
+    });
+}
+
+// ===== RENDER CARDS =====
+function renderCards(panel) {
+    const stack = document.getElementById(panel + 'Stack');
+    const items = panel === 'buyer' ? state.filteredHorses : state.filteredBuyers;
+    const index = panel === 'buyer' ? state.buyerIndex : state.sellerIndex;
+    
+    stack.innerHTML = '';
+    if (index >= items.length) {
+        stack.innerHTML = `<div class="empty-state"><div class="empty-icon">${panel === 'buyer' ? '🐴' : '👤'}</div><div class="empty-title">Keine weiteren ${panel === 'buyer' ? 'Pferde' : 'Käufer'}</div><div class="empty-text">Alle Profile angesehen!</div></div>`;
+        return;
+    }
+    for (let i = Math.min(index + 1, items.length - 1); i >= index; i--) {
+        stack.innerHTML += panel === 'buyer' ? createHorseCard(items[i], i > index) : createBuyerCard(items[i], i > index);
+    }
+    setupSwipeHandlers(panel);
+}
+
+function createHorseCard(h, isNext) {
+    return `<div class="profile-card ${isNext ? 'next' : ''}" data-id="${h.id}">
+        <div class="swipe-indicator like">LIKE</div><div class="swipe-indicator nope">NOPE</div>
+        <div class="card-image" style="background-image:url('${h.image}')">
+            <div class="card-badge">${h.discipline}</div>
+            <div class="card-name-overlay"><h3>${h.name}, ${h.age}J</h3><div class="subtitle">${h.breed} • ${h.height} cm</div></div>
+        </div>
+        <div class="card-content">
+            <div class="card-details"><span class="detail-tag price">${h.priceDisplay}</span><span class="detail-tag">📍 ${h.location}</span></div>
+            <p class="card-description">${h.description}</p>
+        </div></div>`;
+}
+
+function createBuyerCard(b, isNext) {
+    return `<div class="profile-card ${isNext ? 'next' : ''}" data-id="${b.id}">
+        <div class="swipe-indicator like">LIKE</div><div class="swipe-indicator nope">NOPE</div>
+        <div class="card-image" style="background-image:url('${b.image}')">
+            <div class="card-badge">${b.experience}</div>
+            <div class="card-name-overlay"><h3>${b.name}</h3><div class="subtitle">${b.discipline} • ${b.location}</div></div>
+        </div>
+        <div class="card-content">
+            <div class="card-details"><span class="detail-tag price">${b.budgetDisplay}</span><span class="detail-tag">${b.discipline}</span></div>
+            <p class="card-description">${b.description}</p>
+        </div></div>`;
+}
+
+// ===== SWIPE =====
+function setupSwipeHandlers(panel) {
+    const stack = document.getElementById(panel + 'Stack');
+    const card = stack.querySelector('.profile-card:not(.next)');
+    if (!card) return;
+    let startX = 0, currentX = 0, isDragging = false;
+    const start = e => { isDragging = true; startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX; card.style.transition = 'none'; };
+    const move = e => {
+        if (!isDragging) return; e.preventDefault();
+        currentX = (e.type === 'mousemove' ? e.clientX : e.touches[0].clientX) - startX;
+        card.style.transform = `translateX(${currentX}px) rotate(${currentX * 0.04}deg)`;
+        card.classList.toggle('dragging-right', currentX > 50);
+        card.classList.toggle('dragging-left', currentX < -50);
+    };
+    const end = () => {
+        if (!isDragging) return; isDragging = false;
+        card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        if (currentX > 100) swipe(panel, 'right');
+        else if (currentX < -100) swipe(panel, 'left');
+        else { card.style.transform = ''; card.classList.remove('dragging-left', 'dragging-right'); }
+        currentX = 0;
+    };
+    card.addEventListener('mousedown', start);
+    card.addEventListener('touchstart', start, { passive: true });
+    document.addEventListener('mousemove', move);
+    document.addEventListener('touchmove', move, { passive: false });
+    document.addEventListener('mouseup', end);
+    document.addEventListener('touchend', end);
+}
+
+function swipe(panel, direction) {
+    const stack = document.getElementById(panel + 'Stack');
+    const card = stack.querySelector('.profile-card:not(.next)');
+    if (!card) return;
+    const id = parseInt(card.dataset.id);
+    card.classList.add(direction === 'right' ? 'swiping-right' : 'swiping-left');
+    if (direction === 'right') {
+        if (panel === 'buyer') state.buyerLikes.add(id); else state.sellerLikes.add(id);
+        checkForMatch(panel, id);
+    }
+    setTimeout(() => {
+        if (panel === 'buyer') state.buyerIndex++; else state.sellerIndex++;
+        renderCards(panel); updateCounters(); updateStats();
+    }, 300);
+}
+
+function checkForMatch(panel, id) {
+    if (!state.bidirectional) {
+        if (panel === 'buyer') {
+            const horse = horses.find(h => h.id === id);
+            state.matches.push({ buyer: buyers[0], horse });
+            state.currentMatch = { buyer: buyers[0], horse, fromPanel: panel };
+            showMatch(buyers[0], horse);
+        }
+        return;
+    }
+    if (panel === 'buyer' && state.sellerLikes.has(id)) {
+        const horse = horses.find(h => h.id === id);
+        const buyer = state.filteredBuyers[state.sellerIndex - 1] || buyers[0];
+        state.matches.push({ buyer, horse });
+        state.currentMatch = { buyer, horse, fromPanel: panel };
+        showMatch(buyer, horse);
+    } else if (panel === 'seller' && state.buyerLikes.has(id)) {
+        const buyer = buyers.find(b => b.id === id);
+        const horse = state.filteredHorses[state.buyerIndex - 1] || horses[0];
+        state.matches.push({ buyer, horse });
+        state.currentMatch = { buyer, horse, fromPanel: panel };
+        showMatch(buyer, horse);
+    }
+}
+
+// ===== MATCH =====
+function showMatch(buyer, horse) {
+    document.getElementById('matchBuyerImg').style.backgroundImage = `url('${buyer.image}')`;
+    document.getElementById('matchBuyerName').textContent = buyer.name;
+    document.getElementById('matchHorseImg').style.backgroundImage = `url('${horse.image}')`;
+    document.getElementById('matchHorseName').textContent = horse.name;
+    document.getElementById('matchOverlay').classList.add('active');
+    updateStats();
+}
+function closeMatch() { document.getElementById('matchOverlay').classList.remove('active'); }
+
+function openChatFromMatch() {
+    closeMatch();
+    if (!state.currentMatch) return;
+    const panel = state.currentMatch.fromPanel || 'buyer';
+    const { buyer, horse } = state.currentMatch;
+    const chatImg = document.getElementById(panel + 'ChatImg');
+    const chatName = document.getElementById(panel + 'ChatName');
+    const chatMsgs = document.getElementById(panel + 'ChatMessages');
+    
+    if (panel === 'buyer') {
+        chatImg.style.backgroundImage = `url('${buyer.image}')`;
+        chatName.textContent = buyer.name;
+        chatMsgs.innerHTML = `<div class="chat-msg received">Hallo! Ich interessiere mich für ${horse.name}. Ist das Pferd noch verfügbar?</div>`;
+    } else {
+        chatImg.style.backgroundImage = `url('${horse.image}')`;
+        chatName.textContent = horse.name + ' (Verkäufer)';
+        chatMsgs.innerHTML = `<div class="chat-msg received">Danke für Ihr Interesse an ${horse.name}! Wann möchten Sie vorbeikommen?</div>`;
+    }
+    document.getElementById(panel + 'ChatScreen').classList.add('active');
+}
+
+function openMatches(panel) {
+    if (state.matches.length === 0) { alert('Noch keine Matches!'); return; }
+    const lastMatch = state.matches[state.matches.length - 1];
+    state.currentMatch = { ...lastMatch, fromPanel: panel };
+    openChatFromMatch();
+}
+
+function closeChat(panel) { document.getElementById(panel + 'ChatScreen').classList.remove('active'); }
+
+function sendMessage(panel) {
+    const input = document.getElementById(panel + 'ChatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    const msgs = document.getElementById(panel + 'ChatMessages');
+    msgs.innerHTML += `<div class="chat-msg sent">${msg}</div>`;
+    input.value = '';
+    msgs.scrollTop = msgs.scrollHeight;
+    // Auto-reply
+    setTimeout(() => {
+        msgs.innerHTML += `<div class="chat-msg received">Danke für Ihre Nachricht! Ich melde mich bald.</div>`;
+        msgs.scrollTop = msgs.scrollHeight;
+    }, 1000);
+}
+
+// ===== FILTER =====
+function openFilter(panel) { document.getElementById(panel + 'FilterScreen').classList.add('active'); }
+function closeFilter(panel) { document.getElementById(panel + 'FilterScreen').classList.remove('active'); }
+
+function clearFilter(panel) {
+    state.filters[panel] = panel === 'buyer' ? { discipline: null, price: null } : { discipline: null, experience: null };
+    document.querySelectorAll(`#${panel}FilterScreen .filter-chip`).forEach(c => c.classList.remove('active'));
+    applyFilter(panel);
+}
+
+function applyFilter(panel) {
+    const f = state.filters[panel];
+    if (panel === 'buyer') {
+        state.filteredHorses = horses.filter(h => {
+            if (f.discipline && h.discipline !== f.discipline) return false;
+            if (f.price) {
+                if (f.price === '< 20k' && h.price >= 20000) return false;
+                if (f.price === '20-35k' && (h.price < 20000 || h.price > 35000)) return false;
+                if (f.price === '35-50k' && (h.price < 35000 || h.price > 50000)) return false;
+                if (f.price === '> 50k' && h.price <= 50000) return false;
+            }
+            return true;
+        });
+        state.buyerIndex = 0;
+        document.getElementById('buyerFilterBtn').classList.toggle('has-filter', f.discipline || f.price);
+    } else {
+        state.filteredBuyers = buyers.filter(b => {
+            if (f.discipline && b.discipline !== f.discipline) return false;
+            if (f.experience && b.experience !== f.experience) return false;
+            return true;
+        });
+        state.sellerIndex = 0;
+        document.getElementById('sellerFilterBtn').classList.toggle('has-filter', f.discipline || f.experience);
+    }
+    renderCards(panel); updateCounters(); closeFilter(panel);
+}
+
+// ===== DETAIL =====
+function openDetail(panel) {
+    const items = panel === 'buyer' ? state.filteredHorses : state.filteredBuyers;
+    const index = panel === 'buyer' ? state.buyerIndex : state.sellerIndex;
+    if (index >= items.length) return;
+    const item = items[index];
+    
+    document.getElementById(panel + 'DetailImage').style.backgroundImage = `url('${item.image}')`;
+    
+    let html = '';
+    if (panel === 'buyer') {
+        html = `<div class="detail-header"><div class="detail-name">${item.name}</div><div class="detail-price">${item.priceDisplay}</div></div>
+            <div class="detail-tags"><span class="detail-tag">${item.breed}</span><span class="detail-tag">${item.discipline}</span><span class="detail-tag">📍 ${item.location}</span></div>
+            <div class="detail-stats"><div class="stat-item"><div class="stat-value">${item.age}</div><div class="stat-label">Jahre</div></div><div class="stat-item"><div class="stat-value">${item.height}</div><div class="stat-label">cm</div></div><div class="stat-item"><div class="stat-value">${item.discipline}</div><div class="stat-label">Disziplin</div></div></div>
+            <div class="detail-section"><h4>Beschreibung</h4><p>${item.description}</p></div>`;
+    } else {
+        html = `<div class="detail-header"><div class="detail-name">${item.name}</div><div class="detail-price">${item.budgetDisplay}</div></div>
+            <div class="detail-tags"><span class="detail-tag">${item.experience}</span><span class="detail-tag">${item.discipline}</span><span class="detail-tag">📍 ${item.location}</span></div>
+            <div class="detail-section"><h4>Über mich</h4><p>${item.description}</p></div>`;
+    }
+    document.getElementById(panel + 'DetailBody').innerHTML = html;
+    document.getElementById(panel + 'DetailScreen').classList.add('active');
+}
+function closeDetail(panel) { document.getElementById(panel + 'DetailScreen').classList.remove('active'); }
+
+// ===== UTILITIES =====
+function updateCounters() {
+    document.getElementById('buyerCounter').textContent = `${Math.min(state.buyerIndex + 1, state.filteredHorses.length)}/${state.filteredHorses.length}`;
+    document.getElementById('sellerCounter').textContent = `${Math.min(state.sellerIndex + 1, state.filteredBuyers.length)}/${state.filteredBuyers.length}`;
+}
+function updateStats() {
+    document.getElementById('buyerLikesCount').textContent = state.buyerLikes.size;
+    document.getElementById('sellerLikesCount').textContent = state.sellerLikes.size;
+    document.getElementById('matchesCount').textContent = state.matches.length;
+}
+function toggleSplitScreen() {
+    state.splitScreen = !state.splitScreen;
+    document.getElementById('splitToggle').classList.toggle('active');
+    document.getElementById('mainContainer').classList.toggle('single-view');
+    document.getElementById('sellerPanel').classList.toggle('hidden');
+}
+function toggleBidirectional() {
+    state.bidirectional = !state.bidirectional;
+    document.getElementById('bidirectionalToggle').classList.toggle('active');
+}
+function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+function resetDemo() {
+    state.buyerIndex = 0; state.sellerIndex = 0;
+    state.buyerLikes.clear(); state.sellerLikes.clear();
+    state.matches = []; state.filteredHorses = [...horses]; state.filteredBuyers = [...buyers];
+    state.filters = { buyer: { discipline: null, price: null }, seller: { discipline: null, experience: null } };
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    document.getElementById('buyerFilterBtn').classList.remove('has-filter');
+    document.getElementById('sellerFilterBtn').classList.remove('has-filter');
+    renderCards('buyer'); renderCards('seller'); updateCounters(); updateStats();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
