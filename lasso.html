@@ -1212,12 +1212,6 @@
                     </svg>
                     Konfiguration
                 </div>
-                <div class="nav-item" data-screen="export" onclick="showScreen('export')">
-                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                    </svg>
-                    Export / Import
-                </div>
                 <div class="nav-item" data-screen="demo" onclick="showScreen('demo')">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
@@ -1512,7 +1506,8 @@
                     <!-- Tabs -->
                     <div class="tabs" style="margin-bottom: 16px;">
                         <div class="tab active" onclick="showEvalTab('einzelschueler')">Einzelschüler</div>
-                        <div class="tab" onclick="showEvalTab('klassenuebersicht')">Klassenübersicht</div>
+                        <div class="tab" onclick="showEvalTab('zeugnis')">Zeugnis-Übersicht</div>
+                        <div class="tab" onclick="showEvalTab('heatmap')">Lücken</div>
                         <div class="tab" onclick="showEvalTab('archiv')">Archiv</div>
                     </div>
 
@@ -1538,8 +1533,21 @@
                         </div>
                     </div>
 
-                    <!-- Klassenübersicht Tab -->
-                    <div id="eval-tab-klassenuebersicht" style="display: none;">
+                    <!-- Zeugnis-Übersicht Tab (NEU) -->
+                    <div id="eval-tab-zeugnis" style="display: none;">
+                        <p style="margin-bottom: 16px; color: var(--text-light);">
+                            Alle Schüler und Kriterien auf einen Blick – perfekt für die Zeugniszeit. Zeigt den Median aller Beobachtungen pro Kriterium.
+                        </p>
+                        <div class="form-group" style="max-width: 300px;">
+                            <label class="form-label">Fach / Klasse</label>
+                            <select class="form-select" id="zeugnis-fach" onchange="updateZeugnisMatrix()">
+                                <option value="">-- Fach wählen --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Heatmap/Lücken Tab -->
+                    <div id="eval-tab-heatmap" style="display: none;">
                         <p style="margin-bottom: 16px; color: var(--text-light);">
                             Heatmap zeigt auf einen Blick, wo noch Beobachtungen fehlen. Klicke auf Spaltenköpfe zum Sortieren.
                         </p>
@@ -1613,6 +1621,22 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Zeugnis-Matrix Content -->
+                <div id="zeugnis-content" style="display: none;">
+                    <div class="card">
+                        <div class="table-container" style="overflow-x: auto;">
+                            <div id="zeugnis-matrix"></div>
+                        </div>
+                        <div id="zeugnis-legend" style="display: flex; gap: 16px; justify-content: center; margin-top: 16px; font-size: 0.85rem; flex-wrap: wrap;">
+                            <span><span style="display: inline-block; width: 24px; height: 16px; background: #16a34a; border-radius: 3px; vertical-align: middle; margin-right: 6px;"></span>sehr gut</span>
+                            <span><span style="display: inline-block; width: 24px; height: 16px; background: #84cc16; border-radius: 3px; vertical-align: middle; margin-right: 6px;"></span>gut</span>
+                            <span><span style="display: inline-block; width: 24px; height: 16px; background: #f59e0b; border-radius: 3px; vertical-align: middle; margin-right: 6px;"></span>genügend</span>
+                            <span><span style="display: inline-block; width: 24px; height: 16px; background: #ef4444; border-radius: 3px; vertical-align: middle; margin-right: 6px;"></span>nicht genügend</span>
+                            <span><span style="display: inline-block; width: 24px; height: 16px; background: #e5e7eb; border-radius: 3px; vertical-align: middle; margin-right: 6px;"></span>keine Daten</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Config Screen -->
@@ -1620,6 +1644,7 @@
                 <div class="tabs">
                     <div class="tab active" onclick="showConfigTab('semester')">Semester</div>
                     <div class="tab" onclick="showConfigTab('kriterien')">LAS-Kriterien</div>
+                    <div class="tab" onclick="showConfigTab('daten')">Daten-Backup</div>
                 </div>
 
                 <div id="config-semester" class="config-tab">
@@ -1867,39 +1892,65 @@
                         <div id="kriterien-list"></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Export Screen -->
-            <div class="screen" id="screen-export">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                    <div class="card" style="margin-bottom: 0;">
-                        <div class="card-header">
-                            <h2 class="card-title">Daten exportieren</h2>
+                <!-- Daten-Backup Tab -->
+                <div id="config-daten" class="config-tab" style="display:none;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <!-- Export -->
+                        <div class="card" style="margin-bottom: 0;">
+                            <div class="card-header">
+                                <h2 class="card-title">Backup erstellen</h2>
+                            </div>
+                            <p style="margin-bottom: 16px; color: var(--text-light);">
+                                Exportiere alle Daten als JSON-Datei. Enthält Schüler, Fächer, Stundenplan, Beobachtungen, Zeugnisnoten und Archiv.
+                            </p>
+                            <button class="btn btn-primary" onclick="exportData()">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Backup herunterladen
+                            </button>
                         </div>
-                        <p style="margin-bottom: 16px; color: var(--text-light);">
-                            Exportiere alle Daten als JSON-Datei für ein Backup.
-                        </p>
-                        <button class="btn btn-primary" onclick="exportData()">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                            Export (JSON)
-                        </button>
+
+                        <!-- Import -->
+                        <div class="card" style="margin-bottom: 0;">
+                            <div class="card-header">
+                                <h2 class="card-title">Backup wiederherstellen</h2>
+                            </div>
+                            <p style="margin-bottom: 16px; color: var(--text-light);">
+                                Importiere eine zuvor exportierte JSON-Datei. <strong style="color: var(--danger);">Achtung:</strong> Dies überschreibt alle aktuellen Daten!
+                            </p>
+                            <input type="file" id="import-file-config" accept=".json" style="display:none;" onchange="importData(event)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('import-file-config').click()">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                </svg>
+                                Backup laden
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="card" style="margin-bottom: 0;">
+                    <!-- Statistik -->
+                    <div class="card" style="margin-top: 20px;">
                         <div class="card-header">
-                            <h2 class="card-title">Daten importieren</h2>
+                            <h2 class="card-title">Aktuelle Daten</h2>
+                        </div>
+                        <div id="backup-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px;"></div>
+                    </div>
+
+                    <!-- Zurücksetzen -->
+                    <div class="card" style="margin-top: 20px; border-color: var(--danger);">
+                        <div class="card-header">
+                            <h2 class="card-title" style="color: var(--danger);">Alle Daten löschen</h2>
                         </div>
                         <p style="margin-bottom: 16px; color: var(--text-light);">
-                            Importiere eine zuvor exportierte JSON-Datei. <strong>Achtung:</strong> Dies überschreibt alle aktuellen Daten!
+                            Löscht alle Daten unwiderruflich. Dies kann nicht rückgängig gemacht werden!
                         </p>
-                        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
-                        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
+                        <button class="btn" style="background: var(--danger); color: white;" onclick="resetAllData()">
                             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
-                            Import (JSON)
+                            Alle Daten löschen
                         </button>
                     </div>
                 </div>
@@ -3374,15 +3425,34 @@
             document.querySelectorAll('#screen-evaluation .tabs .tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
             
-            // Content umschalten
+            // Tab-Header umschalten
             document.getElementById('eval-tab-einzelschueler').style.display = tabName === 'einzelschueler' ? 'block' : 'none';
-            document.getElementById('eval-tab-klassenuebersicht').style.display = tabName === 'klassenuebersicht' ? 'block' : 'none';
+            document.getElementById('eval-tab-zeugnis').style.display = tabName === 'zeugnis' ? 'block' : 'none';
+            document.getElementById('eval-tab-heatmap').style.display = tabName === 'heatmap' ? 'block' : 'none';
             document.getElementById('eval-tab-archiv').style.display = tabName === 'archiv' ? 'block' : 'none';
+            
+            // Content umschalten
             document.getElementById('evaluation-content').style.display = tabName === 'einzelschueler' ? 'block' : 'none';
-            document.getElementById('heatmap-content').style.display = tabName === 'klassenuebersicht' ? 'block' : 'none';
+            document.getElementById('zeugnis-content').style.display = tabName === 'zeugnis' ? 'block' : 'none';
+            document.getElementById('heatmap-content').style.display = tabName === 'heatmap' ? 'block' : 'none';
+            
+            // Zeugnis-Matrix Dropdown füllen
+            if (tabName === 'zeugnis') {
+                const select = document.getElementById('zeugnis-fach');
+                if (select.options.length <= 1) {
+                    state.faecher.forEach(f => {
+                        if (state.faecherEnabled[f.id] !== false) {
+                            const opt = document.createElement('option');
+                            opt.value = f.id;
+                            opt.textContent = `${f.name} ${f.klasse}`;
+                            select.appendChild(opt);
+                        }
+                    });
+                }
+            }
             
             // Heatmap Dropdown füllen
-            if (tabName === 'klassenuebersicht') {
+            if (tabName === 'heatmap') {
                 const select = document.getElementById('heatmap-fach');
                 if (select.options.length <= 1) {
                     state.faecher.forEach(f => {
@@ -3405,6 +3475,126 @@
                     archiveNameInput.value = state.semester.name || '';
                 }
             }
+        }
+
+        // ========================================
+        // ZEUGNIS-MATRIX
+        // ========================================
+        
+        function updateZeugnisMatrix() {
+            const fachId = document.getElementById('zeugnis-fach').value;
+            const container = document.getElementById('zeugnis-matrix');
+            
+            if (!fachId) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 40px;">Bitte ein Fach wählen.</p>';
+                return;
+            }
+            
+            const fach = state.faecher.find(f => f.id === fachId);
+            if (!fach || fach.schuelerIds.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 40px;">Keine Schüler in diesem Fach.</p>';
+                return;
+            }
+            
+            const enabledKriterien = KRITERIEN.filter(k => state.kriterienEnabled[k.id] !== false);
+            
+            // Schüler sammeln und sortieren
+            const schuelerList = fach.schuelerIds
+                .map(sid => state.schueler.find(s => s.id === sid))
+                .filter(s => s)
+                .sort((a, b) => a.nachname.localeCompare(b.nachname));
+            
+            if (schuelerList.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 40px;">Keine Schüler gefunden.</p>';
+                return;
+            }
+            
+            // Berechne Median für jede Schüler-Kriterium Kombination
+            function getMedianRating(schuelerId, kritId) {
+                const ratings = state.beobachtungen
+                    .filter(b => b.schuelerId === schuelerId && b.fachId === fachId && b.kriterium === kritId)
+                    .map(b => b.rating);
+                
+                if (ratings.length === 0) return null;
+                
+                ratings.sort((a, b) => a - b);
+                const mid = Math.floor(ratings.length / 2);
+                return ratings.length % 2 === 0 
+                    ? (ratings[mid - 1] + ratings[mid]) / 2 
+                    : ratings[mid];
+            }
+            
+            // Farbe basierend auf Bewertung
+            function getRatingColor(rating) {
+                if (rating === null) return '#e5e7eb'; // Grau - keine Daten
+                if (rating >= 3.5) return '#16a34a';   // Dunkelgrün - sehr gut
+                if (rating >= 2.5) return '#84cc16';   // Hellgrün - gut
+                if (rating >= 1.5) return '#f59e0b';   // Orange - genügend
+                return '#ef4444';                       // Rot - nicht genügend
+            }
+            
+            // Rating-Symbol
+            function getRatingSymbol(rating) {
+                if (rating === null) return '–';
+                if (rating >= 3.5) return '●●●●';
+                if (rating >= 2.5) return '●●●';
+                if (rating >= 1.5) return '●●';
+                return '●';
+            }
+            
+            // Tabelle aufbauen
+            const minWidth = 80 + schuelerList.length * 70;
+            let html = `<table class="zeugnis-table" style="min-width: ${minWidth}px; width: 100%; border-collapse: collapse; font-size: 0.85rem;">`;
+            
+            // Header mit Schülernamen
+            html += '<thead><tr>';
+            html += '<th style="text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); position: sticky; left: 0; background: white; z-index: 10; min-width: 140px;">Kriterium</th>';
+            schuelerList.forEach(s => {
+                const shortName = `${s.vorname.charAt(0)}. ${s.nachname}`;
+                html += `<th style="padding: 8px 4px; border-bottom: 2px solid var(--border); text-align: center; white-space: nowrap; font-weight: 500; font-size: 0.8rem;" title="${s.vorname} ${s.nachname}">${shortName}</th>`;
+            });
+            html += '</tr></thead>';
+            
+            html += '<tbody>';
+            
+            // Zeilen nach Kategorie gruppieren
+            const categories = [
+                { prefix: 'L', name: 'Lernverhalten', color: '#dbeafe' },
+                { prefix: 'A', name: 'Arbeitsverhalten', color: '#dcfce7' },
+                { prefix: 'S', name: 'Sozialverhalten', color: '#fef3c7' }
+            ];
+            
+            categories.forEach(cat => {
+                const catKriterien = enabledKriterien.filter(k => k.id.startsWith(cat.prefix));
+                
+                if (catKriterien.length > 0) {
+                    // Kategorie-Header
+                    html += `<tr><td colspan="${schuelerList.length + 1}" style="padding: 8px 12px; background: ${cat.color}; font-weight: 600; border-top: 1px solid var(--border);">${cat.name}</td></tr>`;
+                    
+                    // Kriterien dieser Kategorie
+                    catKriterien.forEach(krit => {
+                        html += '<tr>';
+                        html += `<td style="padding: 6px 12px; border-bottom: 1px solid var(--border); position: sticky; left: 0; background: white; z-index: 5; font-size: 0.8rem;">${krit.id} ${krit.name}</td>`;
+                        
+                        schuelerList.forEach(s => {
+                            const median = getMedianRating(s.id, krit.id);
+                            const color = getRatingColor(median);
+                            const symbol = getRatingSymbol(median);
+                            const tooltip = median !== null ? `Median: ${median.toFixed(1)}` : 'Keine Beobachtungen';
+                            
+                            html += `<td style="padding: 4px; border-bottom: 1px solid var(--border); text-align: center;" title="${s.vorname} ${s.nachname} - ${krit.name}: ${tooltip}">
+                                <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; background: ${color}; color: ${median !== null && median < 2.5 ? 'white' : (median === null ? '#666' : 'white')}; font-size: 0.75rem; letter-spacing: 1px;">${symbol}</span>
+                            </td>`;
+                        });
+                        
+                        html += '</tr>';
+                    });
+                }
+            });
+            
+            html += '</tbody></table>';
+            
+            container.innerHTML = html;
         }
 
         // Sortierrichtung speichern
@@ -4475,6 +4665,46 @@
             
             document.getElementById('config-' + tabName).style.display = 'block';
             event.target.classList.add('active');
+            
+            // Backup-Statistiken laden
+            if (tabName === 'daten') {
+                updateBackupStats();
+            }
+        }
+        
+        function updateBackupStats() {
+            const container = document.getElementById('backup-stats');
+            if (!container) return;
+            
+            const stats = [
+                { label: 'Schüler', value: state.schueler.length, icon: '👤' },
+                { label: 'Fächer', value: state.faecher.length, icon: '📚' },
+                { label: 'Beobachtungen', value: state.beobachtungen.length, icon: '👁' },
+                { label: 'Zeugnisnoten', value: Object.keys(state.zeugnisNoten).length, icon: '📝' },
+                { label: 'Archiv', value: state.archive ? state.archive.length : 0, icon: '📦' }
+            ];
+            
+            container.innerHTML = stats.map(s => `
+                <div style="text-align: center; padding: 16px; background: var(--bg); border-radius: var(--radius);">
+                    <div style="font-size: 1.5rem; margin-bottom: 4px;">${s.icon}</div>
+                    <div style="font-size: 1.5rem; font-weight: 600; color: var(--primary);">${s.value}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-light);">${s.label}</div>
+                </div>
+            `).join('');
+        }
+        
+        function resetAllData() {
+            if (!confirm('⚠️ ACHTUNG: Alle Daten werden unwiderruflich gelöscht!\n\nDies umfasst:\n• Alle Schüler\n• Alle Fächer\n• Alle Beobachtungen\n• Alle Zeugnisnoten\n• Alle archivierten Semester\n\nFortfahren?')) {
+                return;
+            }
+            
+            if (!confirm('Bist du WIRKLICH sicher? Diese Aktion kann NICHT rückgängig gemacht werden!')) {
+                return;
+            }
+            
+            // Alles zurücksetzen
+            localStorage.removeItem('lassoState');
+            location.reload();
         }
 
         // ========================================
