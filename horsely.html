@@ -49,11 +49,14 @@
             width: min(380px, calc(100vw - 32px));
             aspect-ratio: 9 / 19.5;
             max-height: calc(100vh - 40px);
+            max-height: calc(100dvh - 40px);
         }
-        @media (max-height: 700px) {
+        @media (max-height: 700px), (max-width: 500px) {
             .phone-container {
                 width: auto;
-                height: calc(100vh - 40px);
+                height: calc(100vh - 32px);
+                height: calc(100dvh - 32px);
+                max-width: calc(100vw - 24px);
                 aspect-ratio: 9 / 19.5;
             }
         }
