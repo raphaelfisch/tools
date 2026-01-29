@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Horsely – Prototyp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-cream: #F7F4EF;
+            --color-earth: #8B7355;
+            --color-earth-light: #A89078;
+            --color-earth-dark: #5C4D3C;
+            --color-forest: #4A5D4A;
+            --color-gold: #C9A962;
+            --color-gold-light: #E8D5A3;
+            --color-reject: #C45C5C;
+            --color-accept: #5CAC7D;
+            --color-text: #2C2416;
+            --color-text-light: #6B5D4D;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Outfit', system-ui, sans-serif;
+            --shadow-soft: 0 4px 20px rgba(92, 77, 60, 0.15);
+            --shadow-card: 0 8px 40px rgba(92, 77, 60, 0.2);
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: var(--font-body);
+            background: #16213e;
+            color: var(--color-text);
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Demo Header entfernt */
+        
+        /* ==================== PHONE FRAME ==================== */
+        /* Fixed 19.5:9 aspect ratio (modern smartphones like Pixel, iPhone X+) */
+        .phone-container {
+            width: min(380px, calc(100vw - 32px));
+            aspect-ratio: 9 / 19.5;
+            max-height: calc(100vh - 40px);
+        }
+        @media (max-height: 700px) {
+            .phone-container {
+                width: auto;
+                height: calc(100vh - 40px);
+                aspect-ratio: 9 / 19.5;
+            }
+        }
+        .phone-frame {
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
+            border-radius: min(50px, 8%);
+            padding: min(12px, 2.5%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Notch */
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: min(16px, 2%);
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(100px, 28%);
+            height: min(28px, 3.5%);
+            background: #1a1a1a;
+            border-radius: 20px;
+            z-index: 100;
+        }
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: var(--color-cream);
+            border-radius: min(42px, 6%);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* ==================== SCREEN NAVIGATION ==================== */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--color-cream);
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: translateX(30px);
+        }
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(0);
+            z-index: 10;
+        }
+        .screen.back { transform: translateX(-30px); }
+        
+        /* ==================== SPLASH SCREEN ==================== */
+        .splash {
+            background: linear-gradient(160deg, var(--color-earth-dark) 0%, var(--color-earth) 100%);
+            align-items: center;
+            justify-content: center;
+            padding: 8%;
+            text-align: center;
+        }
+        .splash-logo {
+            width: 28%;
+            aspect-ratio: 1;
+            background: var(--color-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 6%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .splash h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 7vw, 2.5rem);
+            font-weight: 700;
+            color: white;
+            margin-bottom: 2%;
+        }
+        .splash p {
+            color: var(--color-gold-light);
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+            margin-bottom: 12%;
+        }
+        .splash-btn {
+            background: var(--color-gold);
+            color: var(--color-earth-dark);
+            border: none;
+            padding: 4% 12%;
+            border-radius: 30px;
+            font-size: clamp(1rem, 4vw, 1.1rem);
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .splash-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(201, 169, 98, 0.4);
+        }
+        .splash-login {
+            color: rgba(255,255,255,0.8);
+            margin-top: 6%;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+        }
+        .splash-login a { color: var(--color-gold); text-decoration: none; font-weight: 500; }
+        
+        /* ==================== ONBOARDING ==================== */
+        .onboarding {
+            padding: 6% 5%;
+            padding-top: calc(6% + 40px);
+        }
+        .progress-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6%;
+        }
+        .progress-dot {
+            height: 6px;
+            background: var(--color-earth-light);
+            border-radius: 3px;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        .progress-dot.active { background: var(--color-gold); flex: 2; }
+        .progress-dot.done { background: var(--color-gold); }
+        .onboarding h2 {
+            font-family: var(--font-display);
+            font-size: clamp(1.4rem, 5.5vw, 1.7rem);
+            font-weight: 700;
+            color: var(--color-earth-dark);
+            margin-bottom: 2%;
+        }
+        .onboarding > p {
+            color: var(--color-text-light);
+            font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+            margin-bottom: 6%;
+            line-height: 1.5;
+        }
+        .form-group { margin-bottom: 4%; }
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: var(--color-earth-dark);
+            margin-bottom: 2%;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+        }
+        .form-input {
+            width: 100%;
+            padding: 3.5% 4%;
+            border: 2px solid var(--color-earth-light);
+            border-radius: var(--radius-md);
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+            font-family: var(--font-body);
+            background: white;
+        }
+        .form-input:focus { outline: none; border-color: var(--color-gold); }
+        
+        /* Role Cards */
+        .role-options { display: flex; flex-direction: column; gap: 3%; margin-bottom: 5%; }
+        .role-card {
+            display: flex;
+            align-items: center;
+            gap: 4%;
+            padding: 4%;
+            border: 2px solid var(--color-earth-light);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .role-card:hover { border-color: var(--color-gold); }
+        .role-card.selected { border-color: var(--color-gold); background: rgba(201, 169, 98, 0.1); }
+        .role-icon {
+            width: 15%;
+            aspect-ratio: 1;
+            background: var(--color-cream);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+        }
+        .role-card.selected .role-icon { background: var(--color-gold); }
+        .role-info h3 {
+            font-family: var(--font-display);
+            font-size: clamp(1rem, 4vw, 1.15rem);
+            font-weight: 600;
+            color: var(--color-earth-dark);
+        }
+        .role-info p { font-size: clamp(0.75rem, 3vw, 0.85rem); color: var(--color-text-light); }
+        
+        /* Chips */
+        .chip-group { display: flex; flex-wrap: wrap; gap: 2%; }
+        .chip {
+            padding: 2.5% 4%;
+            border: 2px solid var(--color-earth-light);
+            border-radius: 20px;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            margin-bottom: 2%;
+        }
+        .chip:hover { border-color: var(--color-earth); }
+        .chip.selected { background: var(--color-gold); border-color: var(--color-gold); color: var(--color-earth-dark); font-weight: 500; }
+        
+        /* Budget */
+        .budget-display {
+            text-align: center;
+            font-family: var(--font-display);
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+            font-weight: 700;
+            color: var(--color-earth-dark);
+            margin-bottom: 3%;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--color-earth-light);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: var(--color-gold);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Buttons */
+        .btn-row { display: flex; gap: 3%; margin-top: auto; }
+        .btn-primary, .btn-secondary {
+            flex: 1;
+            padding: 4%;
+            border-radius: var(--radius-md);
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--color-gold);
+            color: var(--color-earth-dark);
+            border: none;
+        }
+        .btn-primary:hover { background: var(--color-gold-light); }
+        .btn-secondary {
+            background: white;
+            color: var(--color-earth);
+            border: 2px solid var(--color-earth-light);
+        }
+        .btn-skip {
+            background: none;
+            border: none;
+            color: var(--color-text-light);
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            cursor: pointer;
+            margin-top: 4%;
+            font-family: var(--font-body);
+        }
+        
+        /* ==================== MAIN APP ==================== */
+        .app-screen { display: flex; flex-direction: column; }
+        
+        /* Tab Bar */
+        .tab-bar {
+            display: flex;
+            background: white;
+            border-top: 1px solid rgba(139,115,85,0.1);
+            padding: 2% 0;
+        }
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 2%;
+            cursor: pointer;
+            color: var(--color-text-light);
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            font-family: var(--font-body);
+            position: relative;
+        }
+        .tab-item.active { color: var(--color-gold); }
+        .tab-icon { font-size: clamp(1.2rem, 5vw, 1.4rem); }
+        .tab-label { font-size: clamp(0.6rem, 2.5vw, 0.7rem); font-weight: 500; }
+        .tab-badge {
+            position: absolute;
+            top: 0; right: 20%;
+            background: var(--color-reject);
+            color: white;
+            font-size: 0.55rem;
+            padding: 1px 5px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        /* App Header */
+        .app-header {
+            background: white;
+            padding: 3% 4%;
+            padding-top: calc(3% + 35px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(139,115,85,0.1);
+        }
+        .app-header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.1rem, 4.5vw, 1.3rem);
+            font-weight: 700;
+            color: var(--color-earth-dark);
+        }
+        .app-header-btn {
+            background: none;
+            border: none;
+            font-size: clamp(1.1rem, 4.5vw, 1.3rem);
+            cursor: pointer;
+            color: var(--color-earth);
+            padding: 2%;
+        }
+        .app-header-btn.gold { color: var(--color-gold); }
+        
+        /* Tab Content */
+        .tab-content {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .tab-pane {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .tab-pane.active { opacity: 1; pointer-events: all; }
+        
+        /* ==================== SWIPE CARDS ==================== */
+        .card-stack {
+            flex: 1;
+            position: relative;
+            padding: 3%;
+            min-height: 0;
+        }
+        .horse-card {
+            position: absolute;
+            top: 3%; left: 3%; right: 3%; bottom: 0;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: grab;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .horse-card:active { cursor: grabbing; }
+        .horse-card.next { transform: scale(0.95); z-index: -1; }
+        .horse-card.swiping-left { transform: translateX(-120%) rotate(-15deg); opacity: 0; }
+        .horse-card.swiping-right { transform: translateX(120%) rotate(15deg); opacity: 0; }
+        .card-image {
+            height: 58%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .card-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 50%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        }
+        .card-badges {
+            position: absolute;
+            top: 3%; left: 3%; right: 3%;
+            display: flex;
+            justify-content: space-between;
+        }
+        .badge {
+            background: var(--color-gold);
+            color: var(--color-earth-dark);
+            padding: 1.5% 3%;
+            border-radius: var(--radius-sm);
+            font-size: clamp(0.65rem, 2.5vw, 0.75rem);
+            font-weight: 600;
+        }
+        .badge.verified { background: var(--color-accept); color: white; }
+        .card-overlay {
+            position: absolute;
+            bottom: 3%; left: 3%; right: 3%;
+            color: white;
+        }
+        .card-overlay h3 {
+            font-family: var(--font-display);
+            font-size: clamp(1.3rem, 5vw, 1.6rem);
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        .card-overlay p {
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            opacity: 0.9;
+        }
+        .swipe-indicator {
+            position: absolute;
+            top: 25%;
+            padding: 2% 4%;
+            border-radius: var(--radius-md);
+            font-family: var(--font-display);
+            font-size: clamp(1.1rem, 4.5vw, 1.3rem);
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.2s;
+            border: 3px solid;
+            z-index: 5;
+        }
+        .swipe-indicator.like { right: 4%; background: rgba(92,172,125,0.95); border-color: var(--color-accept); color: white; }
+        .swipe-indicator.nope { left: 4%; background: rgba(196,92,92,0.95); border-color: var(--color-reject); color: white; }
+        .horse-card.dragging-right .swipe-indicator.like,
+        .horse-card.dragging-left .swipe-indicator.nope { opacity: 1; }
+        .card-info { padding: 3%; flex: 1; display: flex; flex-direction: column; }
+        .card-tags { display: flex; flex-wrap: wrap; gap: 2%; margin-bottom: 2%; }
+        .tag {
+            background: var(--color-cream);
+            padding: 1% 3%;
+            border-radius: var(--radius-sm);
+            font-size: clamp(0.7rem, 2.8vw, 0.8rem);
+            color: var(--color-text-light);
+        }
+        .tag.price { background: var(--color-forest); color: white; font-weight: 600; }
+        .card-desc {
+            font-size: clamp(0.75rem, 3vw, 0.85rem);
+            line-height: 1.4;
+            color: var(--color-text-light);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4%;
+            padding: 3%;
+            background: white;
+            border-top: 1px solid rgba(139,115,85,0.1);
+        }
+        .action-btn {
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-soft);
+        }
+        .action-btn:hover { transform: scale(1.1); }
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn.reject {
+            width: 14%; aspect-ratio: 1;
+            background: white;
+            color: var(--color-reject);
+            border: 2px solid var(--color-reject);
+            font-size: clamp(1rem, 4vw, 1.2rem);
+        }
+        .action-btn.like {
+            width: 18%; aspect-ratio: 1;
+            background: var(--color-accept);
+            color: white;
+            font-size: clamp(1.3rem, 5vw, 1.6rem);
+        }
+        .action-btn.info {
+            width: 12%; aspect-ratio: 1;
+            background: white;
+            color: var(--color-gold);
+            border: 2px solid var(--color-gold);
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+        }
+        
+        /* ==================== MY HORSES TAB ==================== */
+        .list-scroll { flex: 1; overflow-y: auto; padding: 3%; }
+        .horse-list-item {
+            display: flex;
+            gap: 3%;
+            padding: 3%;
+            background: white;
+            border-radius: var(--radius-md);
+            margin-bottom: 3%;
+            box-shadow: var(--shadow-soft);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .horse-list-item:hover { transform: translateX(4px); }
+        .horse-list-img {
+            width: 22%;
+            aspect-ratio: 1;
+            border-radius: var(--radius-sm);
+            background-size: cover;
+            background-position: center;
+        }
+        .horse-list-info { flex: 1; }
+        .horse-list-info h4 {
+            font-family: var(--font-display);
+            font-size: clamp(1rem, 4vw, 1.1rem);
+            font-weight: 600;
+            color: var(--color-earth-dark);
+        }
+        .horse-list-info .price {
+            color: var(--color-forest);
+            font-weight: 600;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+        }
+        .horse-list-info .requests {
+            display: flex;
+            align-items: center;
+            gap: 2%;
+            margin-top: 2%;
+            font-size: clamp(0.75rem, 2.8vw, 0.8rem);
+            color: var(--color-text-light);
+        }
+        .requests-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--color-reject);
+        }
+        .add-horse-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2%;
+            padding: 4%;
+            background: white;
+            border: 2px dashed var(--color-earth-light);
+            border-radius: var(--radius-md);
+            color: var(--color-earth);
+            font-weight: 500;
+            cursor: pointer;
+            font-size: clamp(0.85rem, 3.2vw, 0.95rem);
+        }
+        .add-horse-btn:hover { border-color: var(--color-gold); color: var(--color-gold); }
+        
+        /* ==================== REQUESTS SCREEN ==================== */
+        .sub-screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--color-cream);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        .sub-screen.active { transform: translateX(0); }
+        .sub-header {
+            background: white;
+            padding: 3% 4%;
+            padding-top: calc(3% + 35px);
+            display: flex;
+            align-items: center;
+            gap: 3%;
+            border-bottom: 1px solid rgba(139,115,85,0.1);
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: clamp(1.2rem, 5vw, 1.4rem);
+            cursor: pointer;
+            color: var(--color-earth);
+        }
+        .sub-header-img {
+            width: 12%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+        }
+        .sub-header h2 {
+            font-family: var(--font-display);
+            font-size: clamp(1rem, 4vw, 1.1rem);
+            font-weight: 600;
+            color: var(--color-earth-dark);
+            flex: 1;
+        }
+        .sub-header .count {
+            background: var(--color-cream);
+            padding: 1.5% 3%;
+            border-radius: 12px;
+            font-size: clamp(0.7rem, 2.8vw, 0.8rem);
+            color: var(--color-text-light);
+        }
+        .request-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 4%;
+            margin-bottom: 3%;
+            box-shadow: var(--shadow-soft);
+        }
+        .request-header {
+            display: flex;
+            align-items: center;
+            gap: 3%;
+            margin-bottom: 3%;
+        }
+        .request-avatar {
+            width: 15%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+        }
+        .request-info h4 {
+            font-weight: 600;
+            color: var(--color-earth-dark);
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+        }
+        .request-info p {
+            font-size: clamp(0.75rem, 2.8vw, 0.8rem);
+            color: var(--color-text-light);
+        }
+        .request-message {
+            font-size: clamp(0.8rem, 3vw, 0.85rem);
+            color: var(--color-text);
+            line-height: 1.5;
+            padding: 3%;
+            background: var(--color-cream);
+            border-radius: var(--radius-sm);
+            margin: 3% 0;
+            font-style: italic;
+        }
+        .request-actions { display: flex; gap: 3%; }
+        .request-btn {
+            flex: 1;
+            padding: 3%;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            transition: all 0.2s;
+        }
+        .request-btn.reject { background: white; border: 2px solid var(--color-reject); color: var(--color-reject); }
+        .request-btn.accept { background: var(--color-accept); border: 2px solid var(--color-accept); color: white; }
+        
+        /* ==================== CHATS TAB ==================== */
+        .chat-list-item {
+            display: flex;
+            gap: 3%;
+            padding: 4%;
+            border-bottom: 1px solid rgba(139,115,85,0.1);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-list-item:hover { background: rgba(139,115,85,0.05); }
+        .chat-avatar {
+            width: 16%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .chat-avatar-badge {
+            position: absolute;
+            bottom: -2px; right: -2px;
+            width: 35%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid white;
+        }
+        .chat-preview { flex: 1; min-width: 0; }
+        .chat-preview h4 {
+            font-weight: 600;
+            color: var(--color-earth-dark);
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+        }
+        .chat-preview .horse-ref {
+            font-size: clamp(0.7rem, 2.8vw, 0.8rem);
+            color: var(--color-gold);
+            margin-bottom: 1%;
+        }
+        .chat-preview p {
+            font-size: clamp(0.8rem, 3vw, 0.85rem);
+            color: var(--color-text-light);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-meta {
+            text-align: right;
+            font-size: clamp(0.65rem, 2.5vw, 0.75rem);
+            color: var(--color-text-light);
+        }
+        .chat-unread {
+            background: var(--color-gold);
+            color: var(--color-earth-dark);
+            width: clamp(18px, 5vw, 22px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(0.6rem, 2.2vw, 0.7rem);
+            font-weight: 600;
+            margin-top: 8%;
+            margin-left: auto;
+        }
+        
+        /* Chat Detail */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4%;
+            background: var(--color-cream);
+            display: flex;
+            flex-direction: column;
+            gap: 3%;
+        }
+        .message {
+            max-width: 80%;
+            padding: 3% 4%;
+            border-radius: 18px;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            line-height: 1.4;
+        }
+        .message.received {
+            background: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .message.sent {
+            background: var(--color-earth);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message-time {
+            font-size: clamp(0.6rem, 2.2vw, 0.65rem);
+            opacity: 0.6;
+            margin-top: 2%;
+        }
+        .chat-input-area {
+            padding: 3%;
+            background: white;
+            border-top: 1px solid rgba(139,115,85,0.1);
+            display: flex;
+            gap: 2%;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 3%;
+            border: 1px solid var(--color-earth-light);
+            border-radius: 25px;
+            font-size: clamp(0.85rem, 3.2vw, 0.9rem);
+            font-family: var(--font-body);
+        }
+        .chat-input:focus { outline: none; border-color: var(--color-gold); }
+        .chat-send {
+            width: 12%;
+            aspect-ratio: 1;
+            background: var(--color-gold);
+            border: none;
+            border-radius: 50%;
+            color: var(--color-earth-dark);
+            font-size: clamp(1rem, 4vw, 1.1rem);
+            cursor: pointer;
+        }
+        
+        /* ==================== PROFILE TAB ==================== */
+        .profile-header {
+            background: white;
+            padding: 6%;
+            padding-top: calc(6% + 40px);
+            text-align: center;
+            border-bottom: 1px solid rgba(139,115,85,0.1);
+        }
+        .profile-avatar {
+            width: 25%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            margin: 0 auto 4%;
+            border: 3px solid var(--color-gold);
+        }
+        .profile-header h2 {
+            font-family: var(--font-display);
+            font-size: clamp(1.3rem, 5vw, 1.5rem);
+            font-weight: 700;
+            color: var(--color-earth-dark);
+        }
+        .profile-header .location {
+            color: var(--color-text-light);
+            font-size: clamp(0.85rem, 3.2vw, 0.9rem);
+        }
+        .profile-verified {
+            display: inline-flex;
+            align-items: center;
+            gap: 2%;
+            background: rgba(92, 172, 125, 0.1);
+            color: var(--color-accept);
+            padding: 1.5% 4%;
+            border-radius: 20px;
+            font-size: clamp(0.75rem, 2.8vw, 0.8rem);
+            font-weight: 500;
+            margin-top: 3%;
+        }
+        .profile-menu { padding: 3%; }
+        .profile-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 4%;
+            padding: 4%;
+            background: white;
+            border-radius: var(--radius-md);
+            margin-bottom: 2%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .profile-menu-item:hover { transform: translateX(4px); }
+        .profile-menu-icon {
+            width: 12%;
+            aspect-ratio: 1;
+            background: var(--color-cream);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+        }
+        .profile-menu-text { flex: 1; }
+        .profile-menu-text h4 {
+            font-weight: 500;
+            color: var(--color-earth-dark);
+            font-size: clamp(0.9rem, 3.5vw, 0.95rem);
+        }
+        .profile-menu-text p {
+            font-size: clamp(0.75rem, 2.8vw, 0.8rem);
+            color: var(--color-text-light);
+        }
+        .profile-menu-arrow { color: var(--color-text-light); font-size: 1.2rem; }
+        
+        /* ==================== OVERLAYS ==================== */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(44, 36, 22, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s;
+        }
+        .overlay.active { opacity: 1; pointer-events: all; }
+        .match-content { text-align: center; padding: 8%; color: white; }
+        .match-content h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 8vw, 2.5rem);
+            font-weight: 700;
+            color: var(--color-gold);
+            margin-bottom: 2%;
+            animation: pulse 1s ease infinite;
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .match-content > p {
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+            opacity: 0.8;
+            margin-bottom: 8%;
+        }
+        .match-profiles {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5%;
+            margin-bottom: 8%;
+        }
+        .match-profile { text-align: center; }
+        .match-profile-img {
+            width: clamp(70px, 22vw, 90px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid var(--color-gold);
+            margin-bottom: 8%;
+        }
+        .match-profile-name {
+            font-size: clamp(0.85rem, 3.2vw, 0.95rem);
+            font-weight: 500;
+        }
+        .match-heart {
+            font-size: clamp(1.8rem, 7vw, 2.5rem);
+            color: var(--color-gold);
+            animation: heartbeat 0.8s ease infinite;
+        }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.3); } }
+        .match-actions { display: flex; flex-direction: column; gap: 3%; }
+        .match-btn {
+            padding: 4% 8%;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+            cursor: pointer;
+            font-family: var(--font-body);
+            border: none;
+        }
+        .match-btn.primary { background: var(--color-gold); color: var(--color-earth-dark); }
+        .match-btn.secondary { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.5); }
+        
+        /* Detail Overlay */
+        .detail-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--color-cream);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        .detail-overlay.active { transform: translateY(0); }
+        .detail-image {
+            height: 45%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .detail-close {
+            position: absolute;
+            top: calc(3% + 35px);
+            left: 3%;
+            width: clamp(32px, 10vw, 40px);
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50%;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .detail-body {
+            flex: 1;
+            background: white;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            margin-top: -5%;
+            padding: 5%;
+            overflow-y: auto;
+            position: relative;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4%;
+        }
+        .detail-header h2 {
+            font-family: var(--font-display);
+            font-size: clamp(1.4rem, 5.5vw, 1.7rem);
+            font-weight: 700;
+            color: var(--color-earth-dark);
+        }
+        .detail-header .price {
+            font-size: clamp(1.1rem, 4.5vw, 1.25rem);
+            font-weight: 600;
+            color: var(--color-forest);
+        }
+        .detail-tags { display: flex; flex-wrap: wrap; gap: 2%; margin-bottom: 4%; }
+        .detail-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3%;
+            margin-bottom: 4%;
+        }
+        .stat {
+            text-align: center;
+            padding: 3%;
+            background: var(--color-cream);
+            border-radius: var(--radius-sm);
+        }
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: clamp(1.1rem, 4.5vw, 1.3rem);
+            font-weight: 700;
+            color: var(--color-earth-dark);
+        }
+        .stat-label {
+            font-size: clamp(0.6rem, 2.5vw, 0.7rem);
+            color: var(--color-text-light);
+        }
+        .detail-section { margin-bottom: 4%; }
+        .detail-section h4 {
+            font-size: clamp(0.75rem, 3vw, 0.85rem);
+            font-weight: 600;
+            color: var(--color-earth);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2%;
+        }
+        .detail-section p {
+            font-size: clamp(0.85rem, 3.2vw, 0.95rem);
+            line-height: 1.6;
+            color: var(--color-text);
+        }
+        .detail-footer {
+            padding: 4%;
+            background: white;
+            border-top: 1px solid rgba(139,115,85,0.1);
+        }
+        .detail-like-btn {
+            width: 100%;
+            background: var(--color-accept);
+            color: white;
+            border: none;
+            padding: 4%;
+            border-radius: var(--radius-md);
+            font-size: clamp(1rem, 4vw, 1.1rem);
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-body);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2%;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10%;
+            text-align: center;
+        }
+        .empty-state .icon { font-size: clamp(3rem, 12vw, 4rem); margin-bottom: 4%; }
+        .empty-state h3 {
+            font-family: var(--font-display);
+            font-size: clamp(1.1rem, 4.5vw, 1.3rem);
+            font-weight: 600;
+            color: var(--color-earth-dark);
+            margin-bottom: 2%;
+        }
+        .empty-state p {
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            color: var(--color-text-light);
+        }
+        
+        /* Filter Overlay */
+        .filter-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--color-cream);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        .filter-overlay.active { transform: translateX(0); }
+        .filter-body { flex: 1; overflow-y: auto; padding: 4%; }
+        .filter-section { margin-bottom: 5%; }
+        .filter-section label {
+            display: block;
+            font-weight: 600;
+            color: var(--color-earth-dark);
+            margin-bottom: 3%;
+            font-size: clamp(0.85rem, 3.2vw, 0.95rem);
+        }
+        .filter-footer {
+            padding: 4%;
+            background: white;
+            border-top: 1px solid rgba(139,115,85,0.1);
+            display: flex;
+            gap: 3%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Phone -->
+    <div class="phone-container">
+        <div class="phone-frame">
+            <div class="phone-screen">
+                
+                <!-- ========== SPLASH ========== -->
+                <div class="screen splash active" id="splash">
+                    <div class="splash-logo">🐴</div>
+                    <h1>Horsely</h1>
+                    <p>Finde dein Traumpferd</p>
+                    <button class="splash-btn" onclick="navigate('register')">Jetzt starten</button>
+                    <p class="splash-login">Bereits dabei? <a href="#" onclick="skipToApp(); return false;">Anmelden</a></p>
+                </div>
+                
+                <!-- ========== REGISTER ========== -->
+                <div class="screen onboarding" id="register">
+                    <div class="progress-bar">
+                        <div class="progress-dot active"></div>
+                        <div class="progress-dot"></div>
+                        <div class="progress-dot"></div>
+                        <div class="progress-dot"></div>
+                    </div>
+                    <h2>Willkommen!</h2>
+                    <p>Erstelle dein Konto in wenigen Schritten.</p>
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-input" value="Max Mustermann" id="inputName">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">E-Mail</label>
+                        <input type="email" class="form-input" value="max@beispiel.ch">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Land</label>
+                        <input type="text" class="form-input" value="Schweiz" id="inputLocation">
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn-primary" onclick="navigate('role')">Weiter</button>
+                    </div>
+                </div>
+                
+                <!-- ========== ROLE ========== -->
+                <div class="screen onboarding" id="role">
+                    <div class="progress-bar">
+                        <div class="progress-dot done"></div>
+                        <div class="progress-dot active"></div>
+                        <div class="progress-dot"></div>
+                        <div class="progress-dot"></div>
+                    </div>
+                    <h2>Was möchtest du?</h2>
+                    <p>Du kannst später jederzeit wechseln.</p>
+                    <div class="role-options">
+                        <div class="role-card" onclick="selectRole(this)">
+                            <div class="role-icon">🔍</div>
+                            <div class="role-info">
+                                <h3>Pferd suchen</h3>
+                                <p>Finde dein Traumpferd</p>
+                            </div>
+                        </div>
+                        <div class="role-card" onclick="selectRole(this)">
+                            <div class="role-icon">🏷️</div>
+                            <div class="role-info">
+                                <h3>Pferd verkaufen</h3>
+                                <p>Finde den perfekten Käufer</p>
+                            </div>
+                        </div>
+                        <div class="role-card selected" onclick="selectRole(this)">
+                            <div class="role-icon">🔄</div>
+                            <div class="role-info">
+                                <h3>Beides</h3>
+                                <p>Volle Flexibilität</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn-secondary" onclick="navigate('register')">Zurück</button>
+                        <button class="btn-primary" onclick="navigate('profile')">Weiter</button>
+                    </div>
+                </div>
+                
+                <!-- ========== PROFILE SETUP ========== -->
+                <div class="screen onboarding" id="profile">
+                    <div class="progress-bar">
+                        <div class="progress-dot done"></div>
+                        <div class="progress-dot done"></div>
+                        <div class="progress-dot active"></div>
+                        <div class="progress-dot"></div>
+                    </div>
+                    <h2>Dein Suchprofil</h2>
+                    <p>Hilft uns, passende Pferde zu zeigen.</p>
+                    <div class="form-group">
+                        <label class="form-label">Erfahrung</label>
+                        <div class="chip-group">
+                            <span class="chip" onclick="toggleChip(this)">Anfänger</span>
+                            <span class="chip" onclick="toggleChip(this)">Wiedereinsteiger</span>
+                            <span class="chip selected" onclick="toggleChip(this)">Fortgeschritten</span>
+                            <span class="chip" onclick="toggleChip(this)">Profi</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Disziplin</label>
+                        <div class="chip-group">
+                            <span class="chip selected" onclick="toggleChip(this)">Dressur</span>
+                            <span class="chip" onclick="toggleChip(this)">Springen</span>
+                            <span class="chip" onclick="toggleChip(this)">Vielseitigkeit</span>
+                            <span class="chip" onclick="toggleChip(this)">Western</span>
+                            <span class="chip" onclick="toggleChip(this)">Freizeit</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Budget</label>
+                        <div class="budget-display" id="budgetDisplay">25'000 – 45'000 CHF</div>
+                        <input type="range" min="5000" max="100000" value="35000" oninput="updateBudget(this.value)">
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn-secondary" onclick="navigate('role')">Zurück</button>
+                        <button class="btn-primary" onclick="navigate('verify')">Weiter</button>
+                    </div>
+                </div>
+                
+                <!-- ========== VERIFY ========== -->
+                <div class="screen onboarding" id="verify">
+                    <div class="progress-bar">
+                        <div class="progress-dot done"></div>
+                        <div class="progress-dot done"></div>
+                        <div class="progress-dot done"></div>
+                        <div class="progress-dot active"></div>
+                    </div>
+                    <h2>Verifizierung</h2>
+                    <p>Verifizierte Verkäufer erhalten mehr Anfragen.</p>
+                    <div style="text-align: center; padding: 8% 0;">
+                        <div style="font-size: 3.5rem; margin-bottom: 4%;">🛡️</div>
+                        <p style="color: var(--color-text-light); font-size: 0.9rem; line-height: 1.5;">
+                            Käufer sehen ein ✓ Badge bei deinen Inseraten.
+                        </p>
+                    </div>
+                    <div class="role-options">
+                        <div class="role-card selected">
+                            <div class="role-icon">📱</div>
+                            <div class="role-info">
+                                <h3>SMS-Verifizierung</h3>
+                                <p>Wir senden dir einen Code per SMS</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 5%;">
+                        <label class="form-label">Handynummer</label>
+                        <input type="tel" class="form-input" placeholder="+41 79 123 45 67" value="+41 79 123 45 67">
+                    </div>
+                    <div style="margin-top: auto;">
+                        <button class="btn-primary" onclick="startApp()">Los geht's! 🎉</button>
+                        <button class="btn-skip" onclick="startApp()">Später</button>
+                    </div>
+                </div>
+                
+                <!-- ========== MAIN APP ========== -->
+                <div class="screen app-screen" id="app">
+                    <div class="tab-content">
+                        
+                        <!-- Tab: Search -->
+                        <div class="tab-pane active" id="tabSearch">
+                            <div class="app-header">
+                                <span></span>
+                                <h1>Entdecken</h1>
+                                <span></span>
+                            </div>
+                            <div class="card-stack" id="cardStack"></div>
+                            <div class="action-buttons">
+                                <button class="action-btn reject" onclick="swipe('left')">✕</button>
+                                <button class="action-btn info" onclick="openDetail()">ℹ</button>
+                                <button class="action-btn like" onclick="swipe('right')">♥</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab: My Horses -->
+                        <div class="tab-pane" id="tabHorses">
+                            <div class="app-header">
+                                <span></span>
+                                <h1>Meine Pferde</h1>
+                                <button class="app-header-btn gold">＋</button>
+                            </div>
+                            <div class="list-scroll" id="myHorsesList"></div>
+                            
+                            <!-- Requests Sub-Screen -->
+                            <div class="sub-screen" id="requestsScreen">
+                                <div class="sub-header">
+                                    <button class="back-btn" onclick="closeRequests()">←</button>
+                                    <div class="sub-header-img" id="reqHorseImg"></div>
+                                    <h2 id="reqHorseName">Amadeus</h2>
+                                    <span class="count" id="reqCount">3 Anfragen</span>
+                                </div>
+                                <div class="list-scroll" id="requestsList"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab: Chats -->
+                        <div class="tab-pane" id="tabChats">
+                            <div class="app-header">
+                                <span></span>
+                                <h1>Nachrichten</h1>
+                                <span></span>
+                            </div>
+                            <div class="list-scroll" id="chatsList"></div>
+                            
+                            <!-- Chat Detail Sub-Screen -->
+                            <div class="sub-screen" id="chatScreen">
+                                <div class="sub-header">
+                                    <button class="back-btn" onclick="closeChat()">←</button>
+                                    <div class="sub-header-img" id="chatAvatar"></div>
+                                    <h2 id="chatName">Sarah</h2>
+                                </div>
+                                <div class="chat-messages" id="chatMessages"></div>
+                                <div class="chat-input-area">
+                                    <input type="text" class="chat-input" placeholder="Nachricht..." id="chatInput">
+                                    <button class="chat-send" onclick="sendMessage()">➤</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab: Profile -->
+                        <div class="tab-pane" id="tabProfile">
+                            <div class="profile-header">
+                                <div class="profile-avatar" style="background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop')"></div>
+                                <h2 id="profileName">Max Mustermann</h2>
+                                <p class="location" id="profileLocation">📍 Thurgau</p>
+                                <div class="profile-verified">✓ Verifiziert</div>
+                            </div>
+                            <div class="profile-menu">
+                                <div class="profile-menu-item" onclick="openFilter()">
+                                    <div class="profile-menu-icon">🎯</div>
+                                    <div class="profile-menu-text"><h4>Suchfilter</h4><p>Disziplin, Preis, Alter</p></div>
+                                    <span class="profile-menu-arrow">›</span>
+                                </div>
+                                <div class="profile-menu-item">
+                                    <div class="profile-menu-icon">👤</div>
+                                    <div class="profile-menu-text"><h4>Profil bearbeiten</h4><p>Name, Foto, Kontakt</p></div>
+                                    <span class="profile-menu-arrow">›</span>
+                                </div>
+                                <div class="profile-menu-item">
+                                    <div class="profile-menu-icon">📋</div>
+                                    <div class="profile-menu-text"><h4>Suchprofil</h4><p>Budget, Erfahrung</p></div>
+                                    <span class="profile-menu-arrow">›</span>
+                                </div>
+                                <div class="profile-menu-item">
+                                    <div class="profile-menu-icon">🛡️</div>
+                                    <div class="profile-menu-text"><h4>Verifizierung</h4><p>Abgeschlossen</p></div>
+                                    <span class="profile-menu-arrow">›</span>
+                                </div>
+                                <div class="profile-menu-item">
+                                    <div class="profile-menu-icon">⚙️</div>
+                                    <div class="profile-menu-text"><h4>Einstellungen</h4><p>Benachrichtigungen</p></div>
+                                    <span class="profile-menu-arrow">›</span>
+                                </div>
+                                <div class="profile-menu-item" onclick="restart()">
+                                    <div class="profile-menu-icon">🚪</div>
+                                    <div class="profile-menu-text"><h4>Abmelden</h4><p></p></div>
+                                    <span class="profile-menu-arrow">›</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Bar -->
+                    <div class="tab-bar">
+                        <button class="tab-item active" onclick="switchTab('tabSearch', this)">
+                            <span class="tab-icon">🐴</span>
+                            <span class="tab-label">Entdecken</span>
+                        </button>
+                        <button class="tab-item" onclick="switchTab('tabHorses', this)">
+                            <span class="tab-icon">🏷️</span>
+                            <span class="tab-label">Meine Pferde</span>
+                            <span class="tab-badge">4</span>
+                        </button>
+                        <button class="tab-item" onclick="switchTab('tabChats', this)">
+                            <span class="tab-icon">💬</span>
+                            <span class="tab-label">Chats</span>
+                        </button>
+                        <button class="tab-item" onclick="switchTab('tabProfile', this)">
+                            <span class="tab-icon">👤</span>
+                            <span class="tab-label">Profil</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Match Overlay -->
+                    <div class="overlay" id="matchOverlay">
+                        <div class="match-content">
+                            <h2>It's a Match! 🎉</h2>
+                            <p>Ihr habt gegenseitiges Interesse!</p>
+                            <div class="match-profiles">
+                                <div class="match-profile">
+                                    <div class="match-profile-img" style="background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200')"></div>
+                                    <div class="match-profile-name">Du</div>
+                                </div>
+                                <div class="match-heart">💕</div>
+                                <div class="match-profile">
+                                    <div class="match-profile-img" id="matchHorseImg"></div>
+                                    <div class="match-profile-name" id="matchHorseName">Django</div>
+                                </div>
+                            </div>
+                            <div class="match-actions">
+                                <button class="match-btn primary" onclick="openChatFromMatch()">💬 Nachricht senden</button>
+                                <button class="match-btn secondary" onclick="closeMatch()">Weiter swipen</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detail Overlay -->
+                    <div class="detail-overlay" id="detailOverlay">
+                        <div class="detail-image" id="detailImage">
+                            <button class="detail-close" onclick="closeDetail()">←</button>
+                        </div>
+                        <div class="detail-body" id="detailBody"></div>
+                        <div class="detail-footer">
+                            <button class="detail-like-btn" onclick="likeFromDetail()">♥ Interesse zeigen</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Overlay -->
+                    <div class="filter-overlay" id="filterOverlay">
+                        <div class="sub-header">
+                            <button class="back-btn" onclick="closeFilter()">←</button>
+                            <h2>Filter</h2>
+                            <button class="app-header-btn" onclick="clearFilters()">↻</button>
+                        </div>
+                        <div class="filter-body">
+                            <div class="filter-section">
+                                <label>Disziplin</label>
+                                <div class="chip-group">
+                                    <span class="chip" onclick="toggleChip(this)">Dressur</span>
+                                    <span class="chip" onclick="toggleChip(this)">Springen</span>
+                                    <span class="chip" onclick="toggleChip(this)">Vielseitigkeit</span>
+                                    <span class="chip" onclick="toggleChip(this)">Western</span>
+                                    <span class="chip" onclick="toggleChip(this)">Freizeit</span>
+                                    <span class="chip" onclick="toggleChip(this)">Barock</span>
+                                </div>
+                            </div>
+                            <div class="filter-section">
+                                <label>Preis</label>
+                                <div class="chip-group">
+                                    <span class="chip" onclick="toggleChip(this)">< 20k</span>
+                                    <span class="chip" onclick="toggleChip(this)">20-35k</span>
+                                    <span class="chip" onclick="toggleChip(this)">35-50k</span>
+                                    <span class="chip" onclick="toggleChip(this)">> 50k</span>
+                                </div>
+                            </div>
+                            <div class="filter-section">
+                                <label>Alter</label>
+                                <div class="chip-group">
+                                    <span class="chip" onclick="toggleChip(this)">3-6 J</span>
+                                    <span class="chip" onclick="toggleChip(this)">7-10 J</span>
+                                    <span class="chip" onclick="toggleChip(this)">11-15 J</span>
+                                    <span class="chip" onclick="toggleChip(this)">15+ J</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="filter-footer">
+                            <button class="btn-secondary" onclick="closeFilter()">Abbrechen</button>
+                            <button class="btn-primary" onclick="applyFilter()">Anwenden</button>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+<script>
+// ==================== DATA ====================
+const horses = [
+    { id: 1, name: "Django", age: 5, breed: "KWPN", height: 175, discipline: "Springen", price: "55'000 CHF", desc: "Hochtalentiertes Nachwuchspferd mit enormem Potential. Gekört, erste Turniererfolge. Sehr menschenbezogen.", image: "https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800", location: "Basel", verified: true },
+    { id: 2, name: "Bella Luna", age: 6, breed: "Westfale", height: 168, discipline: "Dressur", price: "38'000 CHF", desc: "Elegante Stute mit drei hervorragenden Grundgangarten. Ideal für ambitionierte Amateure.", image: "https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800", location: "Bern", verified: true },
+    { id: 3, name: "Carlos", age: 12, breed: "Andalusier", height: 162, discipline: "Working Eq.", price: "25'000 CHF", desc: "Wunderschöner PRE mit viel Ausstrahlung. Perfekt für Working Equitation.", image: "https://images.unsplash.com/photo-1534773728080-33d31da27ae5?w=800", location: "Luzern", verified: false },
+    { id: 4, name: "Estrella", age: 9, breed: "Lusitano", height: 160, discipline: "Dressur", price: "32'000 CHF", desc: "Bildschöne Schimmelstute, ausgebildet bis Klasse M. Showtalent.", image: "https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?w=800", location: "Tessin", verified: true },
+    { id: 5, name: "Fiero", age: 7, breed: "Hannoveraner", height: 170, discipline: "Vielseitigkeit", price: "42'000 CHF", desc: "Mutiger Wallach für Vielseitigkeit. Geländesicher, springfreudig.", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800", location: "Aargau", verified: true }
+];
+
+const myHorses = [
+    { id: 101, name: "Amadeus", price: "45'000 CHF", image: "https://images.unsplash.com/photo-1509914398892-963f53e6e2f1?w=400", requests: 3 },
+    { id: 102, name: "Rosalie", price: "44'000 CHF", image: "https://images.unsplash.com/photo-1550159930-40066082a4fc?w=400", requests: 1 }
+];
+
+const requests = [
+    { id: 1, name: "Anna Meier", exp: "Fortgeschritten", budget: "30-50k", disc: "Springen", msg: "Hallo! Amadeus sieht perfekt aus. Wann könnte ich ihn besichtigen?", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200" },
+    { id: 2, name: "Lisa Weber", exp: "Profi", budget: "40-55k", disc: "Springen", msg: "Als Profireiterin suche ich ein Nachwuchspferd. Hat er internationale Abstammung?", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" },
+    { id: 3, name: "Thomas K.", exp: "Wiedereinsteiger", budget: "20-35k", disc: "Freizeit", msg: "Ist Amadeus auch für weniger erfahrene Reiter geeignet?", img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200" }
+];
+
+const chats = [
+    { id: 1, name: "Sarah Lehmann", horse: "Bella Luna", last: "Super, dann bis Samstag!", time: "5 Min", unread: 2, img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200", horseImg: "https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=100" },
+    { id: 2, name: "Michael B.", horse: "Carlos", last: "Können Sie mir Fotos schicken?", time: "gestern", unread: 0, img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200", horseImg: "https://images.unsplash.com/photo-1534773728080-33d31da27ae5?w=100" }
+];
+
+let cardIndex = 0;
+let currentHorse = null;
+
+// ==================== NAVIGATION ====================
+function navigate(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function startApp() {
+    document.getElementById('profileName').textContent = document.getElementById('inputName').value || 'Max Mustermann';
+    document.getElementById('profileLocation').textContent = '📍 ' + (document.getElementById('inputLocation').value || 'Schweiz');
+    navigate('app');
+    renderCards();
+    renderMyHorses();
+    renderChats();
+}
+
+function skipToApp() {
+    navigate('app');
+    renderCards();
+    renderMyHorses();
+    renderChats();
+}
+
+function restart() {
+    cardIndex = 0;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('splash').classList.add('active');
+    switchTab('tabSearch', document.querySelector('.tab-item'));
+}
+
+// ==================== TABS ====================
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+    document.getElementById('requestsScreen').classList.remove('active');
+    document.getElementById('chatScreen').classList.remove('active');
+}
+
+// ==================== ONBOARDING ====================
+function selectRole(el) {
+    document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
+function toggleChip(el) { el.classList.toggle('selected'); }
+
+function updateBudget(val) {
+    const min = Math.max(5, Math.round((val - 10000) / 1000));
+    const max = Math.round((parseInt(val) + 10000) / 1000);
+    document.getElementById('budgetDisplay').textContent = `${min}'000 – ${max}'000 CHF`;
+}
+
+// ==================== CARDS ====================
+function renderCards() {
+    const stack = document.getElementById('cardStack');
+    stack.innerHTML = '';
+    if (cardIndex >= horses.length) {
+        stack.innerHTML = '<div class="empty-state"><div class="icon">🐴</div><h3>Keine weiteren Pferde</h3><p>Du hast alle gesehen!</p></div>';
+        return;
+    }
+    if (cardIndex + 1 < horses.length) stack.innerHTML += createCard(horses[cardIndex + 1], true);
+    stack.innerHTML += createCard(horses[cardIndex], false);
+    currentHorse = horses[cardIndex];
+    setupSwipe();
+}
+
+function createCard(h, isNext) {
+    return `<div class="horse-card ${isNext ? 'next' : ''}" data-id="${h.id}">
+        <div class="swipe-indicator like">LIKE</div>
+        <div class="swipe-indicator nope">NOPE</div>
+        <div class="card-image" style="background-image:url('${h.image}')">
+            <div class="card-badges">
+                <span class="badge">${h.discipline}</span>
+                ${h.verified ? '<span class="badge verified">✓ Verifiziert</span>' : ''}
+            </div>
+            <div class="card-overlay">
+                <h3>${h.name}, ${h.age}J</h3>
+                <p>${h.breed} • ${h.height}cm • ${h.location}</p>
+            </div>
+        </div>
+        <div class="card-info">
+            <div class="card-tags">
+                <span class="tag price">${h.price}</span>
+                <span class="tag">📍 ${h.location}</span>
+            </div>
+            <p class="card-desc">${h.desc}</p>
+        </div>
+    </div>`;
+}
+
+function setupSwipe() {
+    const card = document.querySelector('.horse-card:not(.next)');
+    if (!card) return;
+    let startX = 0, curX = 0, dragging = false;
+    const start = e => { dragging = true; startX = e.touches ? e.touches[0].clientX : e.clientX; card.style.transition = 'none'; };
+    const move = e => {
+        if (!dragging) return;
+        e.preventDefault();
+        curX = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+        card.style.transform = `translateX(${curX}px) rotate(${curX * 0.03}deg)`;
+        card.classList.toggle('dragging-right', curX > 50);
+        card.classList.toggle('dragging-left', curX < -50);
+    };
+    const end = () => {
+        if (!dragging) return;
+        dragging = false;
+        card.style.transition = 'transform 0.3s, opacity 0.3s';
+        if (curX > 100) swipe('right');
+        else if (curX < -100) swipe('left');
+        else { card.style.transform = ''; card.classList.remove('dragging-left', 'dragging-right'); }
+        curX = 0;
+    };
+    card.addEventListener('mousedown', start);
+    card.addEventListener('touchstart', start, { passive: true });
+    document.addEventListener('mousemove', move);
+    document.addEventListener('touchmove', move, { passive: false });
+    document.addEventListener('mouseup', end);
+    document.addEventListener('touchend', end);
+}
+
+function swipe(dir) {
+    const card = document.querySelector('.horse-card:not(.next)');
+    if (!card) return;
+    card.classList.add(dir === 'right' ? 'swiping-right' : 'swiping-left');
+    if (dir === 'right' && Math.random() < 0.35) setTimeout(() => showMatch(currentHorse), 400);
+    setTimeout(() => { cardIndex++; renderCards(); }, 300);
+}
+
+// ==================== MATCH ====================
+function showMatch(horse) {
+    document.getElementById('matchHorseImg').style.backgroundImage = `url('${horse.image}')`;
+    document.getElementById('matchHorseName').textContent = horse.name;
+    document.getElementById('matchOverlay').classList.add('active');
+}
+function closeMatch() { document.getElementById('matchOverlay').classList.remove('active'); }
+function openChatFromMatch() { closeMatch(); switchTab('tabChats', document.querySelectorAll('.tab-item')[2]); }
+
+// ==================== DETAIL ====================
+function openDetail() {
+    if (!currentHorse) return;
+    const h = currentHorse;
+    document.getElementById('detailImage').style.backgroundImage = `url('${h.image}')`;
+    document.getElementById('detailBody').innerHTML = `
+        <div class="detail-header">
+            <div><h2>${h.name}</h2>${h.verified ? '<span class="badge verified" style="font-size:0.7rem">✓</span>' : ''}</div>
+            <div class="price">${h.price}</div>
+        </div>
+        <div class="detail-tags">
+            <span class="tag">${h.breed}</span>
+            <span class="tag">${h.discipline}</span>
+            <span class="tag">📍 ${h.location}</span>
+        </div>
+        <div class="detail-stats">
+            <div class="stat"><div class="stat-value">${h.age}</div><div class="stat-label">Jahre</div></div>
+            <div class="stat"><div class="stat-value">${h.height}</div><div class="stat-label">cm</div></div>
+            <div class="stat"><div class="stat-value">${h.discipline}</div><div class="stat-label">Disziplin</div></div>
+        </div>
+        <div class="detail-section"><h4>Beschreibung</h4><p>${h.desc}</p></div>
+    `;
+    document.getElementById('detailOverlay').classList.add('active');
+}
+function closeDetail() { document.getElementById('detailOverlay').classList.remove('active'); }
+function likeFromDetail() { closeDetail(); swipe('right'); }
+
+// ==================== FILTER ====================
+function openFilter() { document.getElementById('filterOverlay').classList.add('active'); }
+function closeFilter() { document.getElementById('filterOverlay').classList.remove('active'); }
+function clearFilters() { document.querySelectorAll('#filterOverlay .chip').forEach(c => c.classList.remove('selected')); }
+function applyFilter() { closeFilter(); }
+
+// ==================== MY HORSES ====================
+function renderMyHorses() {
+    document.getElementById('myHorsesList').innerHTML = myHorses.map(h => `
+        <div class="horse-list-item" onclick="openRequests(${h.id})">
+            <div class="horse-list-img" style="background-image:url('${h.image}')"></div>
+            <div class="horse-list-info">
+                <h4>${h.name}</h4>
+                <div class="price">${h.price}</div>
+                <div class="requests"><span class="requests-dot"></span>${h.requests} Anfragen</div>
+            </div>
+        </div>
+    `).join('') + '<div class="add-horse-btn">＋ Neues Pferd</div>';
+}
+
+function openRequests(id) {
+    const h = myHorses.find(x => x.id === id);
+    document.getElementById('reqHorseImg').style.backgroundImage = `url('${h.image}')`;
+    document.getElementById('reqHorseName').textContent = h.name;
+    document.getElementById('reqCount').textContent = h.requests + ' Anfragen';
+    document.getElementById('requestsList').innerHTML = requests.map(r => `
+        <div class="request-card" id="req${r.id}">
+            <div class="request-header">
+                <div class="request-avatar" style="background-image:url('${r.img}')"></div>
+                <div class="request-info"><h4>${r.name}</h4><p>${r.exp} • ${r.disc}</p></div>
+            </div>
+            <div class="card-tags"><span class="tag">${r.exp}</span><span class="tag price">${r.budget}</span></div>
+            <div class="request-message">"${r.msg}"</div>
+            <div class="request-actions">
+                <button class="request-btn reject" onclick="rejectReq(${r.id})">✗ Ablehnen</button>
+                <button class="request-btn accept" onclick="acceptReq(${r.id})">✓ Annehmen</button>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('requestsScreen').classList.add('active');
+}
+function closeRequests() { document.getElementById('requestsScreen').classList.remove('active'); }
+function rejectReq(id) { const c = document.getElementById('req'+id); c.style.opacity = '0'; c.style.transform = 'translateX(-100%)'; setTimeout(() => c.remove(), 300); }
+function acceptReq(id) { const c = document.getElementById('req'+id); c.style.opacity = '0'; c.style.transform = 'translateX(100%)'; setTimeout(() => { c.remove(); switchTab('tabChats', document.querySelectorAll('.tab-item')[2]); closeRequests(); }, 300); }
+
+// ==================== CHATS ====================
+function renderChats() {
+    document.getElementById('chatsList').innerHTML = chats.length ? chats.map(c => `
+        <div class="chat-list-item" onclick="openChat(${c.id})">
+            <div class="chat-avatar" style="background-image:url('${c.img}')">
+                <div class="chat-avatar-badge" style="background-image:url('${c.horseImg}')"></div>
+            </div>
+            <div class="chat-preview">
+                <h4>${c.name}</h4>
+                <div class="horse-ref">→ ${c.horse}</div>
+                <p>${c.last}</p>
+            </div>
+            <div class="chat-meta">${c.time}${c.unread ? `<div class="chat-unread">${c.unread}</div>` : ''}</div>
+        </div>
+    `).join('') : '<div class="empty-state"><div class="icon">💬</div><h3>Noch keine Chats</h3><p>Matches erscheinen hier</p></div>';
+}
+
+function openChat(id) {
+    const c = chats.find(x => x.id === id);
+    document.getElementById('chatAvatar').style.backgroundImage = `url('${c.img}')`;
+    document.getElementById('chatName').textContent = c.name + ' → ' + c.horse;
+    document.getElementById('chatMessages').innerHTML = `
+        <div class="message received"><div>Hallo! Ich interessiere mich für ${c.horse}.</div><div class="message-time">10:30</div></div>
+        <div class="message sent"><div>Hallo! Ja, noch verfügbar. Wollen Sie vorbeikommen?</div><div class="message-time">10:45</div></div>
+        <div class="message received"><div>Gerne! Wann passt es?</div><div class="message-time">11:02</div></div>
+        <div class="message sent"><div>Samstag 14 Uhr?</div><div class="message-time">11:15</div></div>
+        <div class="message received"><div>${c.last}</div><div class="message-time">jetzt</div></div>
+    `;
+    document.getElementById('chatScreen').classList.add('active');
+}
+function closeChat() { document.getElementById('chatScreen').classList.remove('active'); }
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    document.getElementById('chatMessages').innerHTML += `<div class="message sent"><div>${msg}</div><div class="message-time">jetzt</div></div>`;
+    input.value = '';
+    document.getElementById('chatMessages').scrollTop = 99999;
+    setTimeout(() => {
+        document.getElementById('chatMessages').innerHTML += `<div class="message received"><div>Danke! Ich melde mich.</div><div class="message-time">jetzt</div></div>`;
+        document.getElementById('chatMessages').scrollTop = 99999;
+    }, 1200);
+}
+</script>
+</body>
+</html>
