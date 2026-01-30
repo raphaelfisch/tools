@@ -1524,7 +1524,7 @@
                     <div class="tab" onclick="showConfigTab('schueler')">Schüler</div>
                     <div class="tab" onclick="showConfigTab('stundenplan')">Stundenplan</div>
                     <div class="tab" onclick="showConfigTab('semester')">Semester</div>
-                    <div class="tab" onclick="showConfigTab('ferien')">Ferien</div>
+                    <div class="tab" onclick="showConfigTab('ferien')">Ferien & Feiertage</div>
                     <div class="tab" onclick="showConfigTab('erinnerungen')">Erinnerungen</div>
                     <div class="tab" onclick="showConfigTab('beobachtungen')">Beobachtungen</div>
                     <div class="tab" onclick="showConfigTab('kriterien')">LAS-Kriterien</div>
@@ -1701,10 +1701,10 @@
                 <div id="config-ferien" class="config-tab" style="display:none;">
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title">Ferien</h2>
+                            <h2 class="card-title">Ferien & Feiertage</h2>
                         </div>
                         <p style="margin-bottom: 16px; color: var(--text-light);">
-                            Während der Ferien werden keine Beobachtungs-Erinnerungen angezeigt.
+                            Während der Ferien und an Feiertagen werden keine Beobachtungs-Erinnerungen angezeigt.
                         </p>
                         <div id="ferien-list"></div>
                         <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
@@ -1727,7 +1727,7 @@
                         <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
                             <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
                                 <div class="form-group" style="min-width: 200px; margin-bottom: 0;">
-                                    <label class="form-label">Ferien importieren</label>
+                                    <label class="form-label">Ferien & Feiertage importieren</label>
                                     <select class="form-select" id="import-kanton">
                                         <option value="">-- Kanton wählen --</option>
                                         <option value="CH-AG">Aargau</option>
@@ -1766,7 +1766,7 @@
                                 </button>
                             </div>
                             <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 8px;">
-                                Lädt Schulferien automatisch von <a href="https://www.openholidaysapi.org" target="_blank" style="color: var(--primary);">OpenHolidays API</a> (kostenlos, Open Data).
+                                Lädt Schulferien und Feiertage automatisch von <a href="https://www.openholidaysapi.org" target="_blank" style="color: var(--primary);">OpenHolidays API</a> (kostenlos, Open Data).
                             </p>
                         </div>
                     </div>
@@ -6599,47 +6599,81 @@
             const validFrom = `${year}-08-01`;
             const validTo = `${year + 2}-07-31`;
             
-            const url = `https://openholidaysapi.org/SchoolHolidays?countryIsoCode=CH&subdivisionCode=${kantonCode}&validFrom=${validFrom}&validTo=${validTo}&languageIsoCode=DE`;
+            const ferienUrl = `https://openholidaysapi.org/SchoolHolidays?countryIsoCode=CH&subdivisionCode=${kantonCode}&validFrom=${validFrom}&validTo=${validTo}&languageIsoCode=DE`;
+            const feiertageUrl = `https://openholidaysapi.org/PublicHolidays?countryIsoCode=CH&subdivisionCode=${kantonCode}&validFrom=${validFrom}&validTo=${validTo}&languageIsoCode=DE`;
             
             try {
-                showToast('Lade Ferien...', 'success');
+                showToast('Lade Ferien & Feiertage...', 'success');
                 
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                // Beide parallel abrufen
+                const [ferienResponse, feiertageResponse] = await Promise.all([
+                    fetch(ferienUrl),
+                    fetch(feiertageUrl)
+                ]);
+                
+                if (!ferienResponse.ok || !feiertageResponse.ok) {
+                    throw new Error(`HTTP Fehler`);
                 }
                 
-                const data = await response.json();
+                const ferienData = await ferienResponse.json();
+                const feiertageData = await feiertageResponse.json();
                 
-                if (!data || data.length === 0) {
-                    showToast('Keine Ferien gefunden für diesen Kanton', 'error');
+                if ((!ferienData || ferienData.length === 0) && (!feiertageData || feiertageData.length === 0)) {
+                    showToast('Keine Daten gefunden für diesen Kanton', 'error');
                     return;
                 }
                 
-                // Ferien konvertieren und hinzufügen
+                // Ferien/Feiertage konvertieren und hinzufügen
                 if (!state.ferien) state.ferien = [];
                 
-                let added = 0;
-                data.forEach(holiday => {
-                    const name = holiday.name?.[0]?.text || holiday.type || 'Ferien';
-                    const start = holiday.startDate;
-                    const end = holiday.endDate;
-                    
-                    // Prüfen ob diese Ferien schon existieren (gleiches Datum)
-                    const exists = state.ferien.some(f => 
-                        f.start === start && f.end === end
-                    );
-                    
-                    if (!exists && start && end) {
-                        state.ferien.push({
-                            id: Date.now().toString() + added,
-                            name,
-                            start,
-                            end
-                        });
-                        added++;
-                    }
-                });
+                let addedFerien = 0;
+                let addedFeiertage = 0;
+                
+                // Schulferien
+                if (ferienData) {
+                    ferienData.forEach(holiday => {
+                        const name = holiday.name?.[0]?.text || holiday.type || 'Ferien';
+                        const start = holiday.startDate;
+                        const end = holiday.endDate;
+                        
+                        const exists = state.ferien.some(f => 
+                            f.start === start && f.end === end
+                        );
+                        
+                        if (!exists && start && end) {
+                            state.ferien.push({
+                                id: Date.now().toString() + addedFerien,
+                                name,
+                                start,
+                                end
+                            });
+                            addedFerien++;
+                        }
+                    });
+                }
+                
+                // Feiertage (start = end für einzelne Tage)
+                if (feiertageData) {
+                    feiertageData.forEach(holiday => {
+                        const name = holiday.name?.[0]?.text || holiday.type || 'Feiertag';
+                        const start = holiday.startDate;
+                        const end = holiday.endDate || start;
+                        
+                        const exists = state.ferien.some(f => 
+                            f.start === start && f.end === end
+                        );
+                        
+                        if (!exists && start) {
+                            state.ferien.push({
+                                id: Date.now().toString() + 'f' + addedFeiertage,
+                                name,
+                                start,
+                                end
+                            });
+                            addedFeiertage++;
+                        }
+                    });
+                }
                 
                 // Nach Datum sortieren
                 state.ferien.sort((a, b) => new Date(a.start) - new Date(b.start));
@@ -6648,10 +6682,10 @@
                 updateFerienList();
                 
                 const kantonName = document.getElementById('import-kanton').selectedOptions[0].text;
-                showToast(`${added} Ferien für ${kantonName} importiert`, 'success');
+                showToast(`${addedFerien} Ferien + ${addedFeiertage} Feiertage für ${kantonName} importiert`, 'success');
                 
             } catch (error) {
-                console.error('Fehler beim Laden der Ferien:', error);
+                console.error('Fehler beim Laden:', error);
                 showToast('Fehler beim Laden. Bitte später erneut versuchen.', 'error');
             }
         }
