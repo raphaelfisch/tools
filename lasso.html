@@ -1257,6 +1257,34 @@
                         </a>
                     </div>
 
+                    <!-- Prognose-Karte -->
+                    <div id="prognose-card" class="card" style="margin-bottom: 16px; display: none;">
+                        <div class="card-header" style="padding-bottom: 8px;">
+                            <h2 class="card-title">📊 Semester-Prognose</h2>
+                        </div>
+                        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <div style="background: var(--background); border-radius: 8px; height: 12px; overflow: hidden; margin-bottom: 8px;">
+                                    <div id="prognose-bar" style="height: 100%; background: var(--primary); transition: width 0.3s;"></div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span id="prognose-status" style="font-weight: 600;"></span>
+                                    <span id="prognose-percent" style="font-size: 1.2rem; font-weight: 700; color: var(--primary);"></span>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-light); min-width: 180px;">
+                                <div id="prognose-text"></div>
+                                <div style="margin-top: 8px;">
+                                    <span id="prognose-days"></span><br>
+                                    <span id="prognose-empfehlung"></span>
+                                </div>
+                            </div>
+                            <a href="#" id="prognose-button" onclick="openPrognoseTarget(); return false;" class="btn btn-secondary" style="white-space: nowrap;">
+                                Einstellungen →
+                            </a>
+                        </div>
+                    </div>
+
                     <div class="card" style="position: relative;">
                         <!-- Ferien-Overlay -->
                         <div id="ferien-overlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.92); z-index: 10; border-radius: var(--radius); display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px;">
@@ -2105,6 +2133,27 @@
         </div>
     </div>
 
+    <!-- Willkommen-zurück Modal -->
+    <div id="welcome-back-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1500; overflow-y: auto;">
+        <div style="max-width: 450px; margin: 100px auto; padding: 24px;">
+            <div class="card" style="margin: 0;">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 12px;">👋</div>
+                    <h2 style="margin-bottom: 16px;">Willkommen zurück!</h2>
+                    <p style="color: var(--text-light); margin-bottom: 8px;">
+                        Du warst <strong id="welcome-days-inactive"></strong> nicht aktiv.
+                    </p>
+                    <p id="welcome-prognose-text" style="color: var(--text-light); margin-bottom: 20px;"></p>
+                    <p id="welcome-empfehlung" style="font-weight: 500; margin-bottom: 24px;"></p>
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="openPrognoseSettings()">Einstellung anpassen</button>
+                        <button class="btn btn-secondary" onclick="closeWelcomeBack()">Später</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Detail Modal -->
     <div class="modal-overlay" id="detail-modal">
         <div class="modal">
@@ -2390,6 +2439,7 @@
                 prioritizeGaps: true           // Lücken zuerst füllen
             },
             isDemo: false,  // Demo-Modus aktiv?
+            lastOpened: null,  // ISO Timestamp des letzten Öffnens
             ferien: [],  // [{id: '...', name: 'Herbstferien', start: '2025-10-05', end: '2025-10-19'}, ...]
             faecher: [],
             schueler: [],
@@ -2446,6 +2496,12 @@
             updateDemoBadge();
             updateClock();
             setInterval(updateClock, 60000);
+            
+            // Willkommen-zurück prüfen (nach längerer Inaktivität)
+            checkWelcomeBack();
+            
+            // Letzten Öffnungszeitpunkt aktualisieren
+            updateLastOpened();
         }
 
         function showOnboarding() {
@@ -2458,6 +2514,7 @@
 
         function startWithDemo() {
             state.isDemo = true;
+            state.lastOpened = new Date().toISOString();
             generateInitialData();
             saveState();
             hideOnboarding();
@@ -2470,6 +2527,7 @@
 
         function startEmpty() {
             state.isDemo = false;
+            state.lastOpened = new Date().toISOString();
             // Leere Struktur, aber Kriterien aktivieren
             KRITERIEN.forEach(k => {
                 state.kriterienEnabled[k.id] = true;
@@ -2610,6 +2668,9 @@
                     
                     // Demo-Flag initialisieren
                     if (state.isDemo === undefined) state.isDemo = false;
+                    
+                    // lastOpened initialisieren (für Willkommen-zurück)
+                    if (!state.lastOpened) state.lastOpened = null;
                     
                     // Fächer-Aktivierung: Standard ist aktiv
                     if (!state.faecherEnabled) state.faecherEnabled = {};
@@ -2785,6 +2846,279 @@
             return total;
         }
 
+        function getTotalObservationsNeeded() {
+            let total = 0;
+            const enabledKriterien = KRITERIEN.filter(k => state.kriterienEnabled[k.id] !== false);
+            
+            state.faecher.forEach(fach => {
+                if (state.faecherEnabled[fach.id] !== false) {
+                    total += fach.schuelerIds.length * enabledKriterien.length * state.semester.targetObservations;
+                }
+            });
+            return total;
+        }
+
+        // ========================================
+        // PROGNOSE-BERECHNUNG
+        // ========================================
+
+        function calculatePrognose() {
+            const now = new Date();
+            const semesterEnd = new Date(state.semester.end);
+            
+            // Bereits erfasste Beobachtungen
+            const erfasst = state.beobachtungen.length;
+            
+            // Benötigte Beobachtungen
+            const benoetigt = getTotalObservationsNeeded();
+            
+            if (benoetigt === 0) {
+                return { percent: 100, status: 'green', daysLeft: 0, empfohlen: state.semester.questionsPerRound };
+            }
+            
+            // Verbleibende Schultage berechnen (ohne Wochenenden und Ferien)
+            let schultage = 0;
+            const checkDate = new Date(now);
+            while (checkDate <= semesterEnd) {
+                const dayOfWeek = checkDate.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Kein Wochenende
+                    // Prüfe ob in Ferien
+                    const inFerien = state.ferien && state.ferien.some(f => {
+                        const start = new Date(f.start);
+                        const end = new Date(f.end);
+                        return checkDate >= start && checkDate <= end;
+                    });
+                    if (!inFerien) {
+                        schultage++;
+                    }
+                }
+                checkDate.setDate(checkDate.getDate() + 1);
+            }
+            
+            // Lektionen pro Tag aus Stundenplan schätzen (Durchschnitt)
+            let lektionenProTag = 0;
+            if (state.stundenplan.length > 0) {
+                const tage = ['mo', 'di', 'mi', 'do', 'fr'];
+                let totalLektionen = 0;
+                tage.forEach(tag => {
+                    state.stundenplan.forEach(lektion => {
+                        if (lektion[tag] && state.faecherEnabled[lektion[tag]] !== false) {
+                            totalLektionen++;
+                        }
+                    });
+                });
+                lektionenProTag = totalLektionen / 5;
+            }
+            
+            // Erreichbare Beobachtungen mit aktuellen Einstellungen
+            const gesamtLektionen = schultage * lektionenProTag;
+            const erreichbar = erfasst + (gesamtLektionen * state.semester.questionsPerRound);
+            
+            // Prognose in Prozent
+            const percent = Math.min(100, Math.round((erreichbar / benoetigt) * 100));
+            
+            // Status bestimmen
+            let status = 'green';
+            if (percent < 60) status = 'red';
+            else if (percent < 90) status = 'yellow';
+            
+            // Empfohlene Fragen pro Runde berechnen
+            const fehlend = benoetigt - erfasst;
+            let empfohlen = state.semester.questionsPerRound;
+            if (gesamtLektionen > 0 && fehlend > 0) {
+                empfohlen = Math.ceil(fehlend / gesamtLektionen);
+                empfohlen = Math.max(empfohlen, state.semester.questionsPerRound); // Nicht weniger als aktuell
+                empfohlen = Math.min(empfohlen, 30); // Max 30
+            }
+            
+            return {
+                percent,
+                status,
+                daysLeft: schultage,
+                erfasst,
+                benoetigt,
+                empfohlen,
+                aktuell: state.semester.questionsPerRound
+            };
+        }
+
+        function updatePrognoseCard() {
+            const card = document.getElementById('prognose-card');
+            if (!card) return;
+            
+            // Nur anzeigen wenn Semester konfiguriert und Daten vorhanden
+            if (!state.semester.end || state.faecher.length === 0 || state.schueler.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+            
+            const now = new Date();
+            const semesterStart = new Date(state.semester.start);
+            const semesterEnd = new Date(state.semester.end);
+            
+            // Prüfe ob Semester noch nicht begonnen hat
+            if (now < semesterStart) {
+                card.style.display = 'block';
+                document.getElementById('prognose-bar').style.width = '0%';
+                document.getElementById('prognose-bar').style.background = 'var(--primary)';
+                document.getElementById('prognose-percent').textContent = '—';
+                document.getElementById('prognose-status').textContent = '📅 Semester startet bald';
+                const startStr = semesterStart.toLocaleDateString('de-CH');
+                document.getElementById('prognose-text').textContent = `Das Semester beginnt am ${startStr}.`;
+                document.getElementById('prognose-days').textContent = '';
+                document.getElementById('prognose-empfehlung').textContent = '';
+                updatePrognoseButton('semester', 'Semester bearbeiten →');
+                return;
+            }
+            
+            // Prüfe ob Semester bereits vorbei
+            if (now > semesterEnd) {
+                card.style.display = 'block';
+                document.getElementById('prognose-bar').style.width = '100%';
+                document.getElementById('prognose-bar').style.background = 'var(--text-light)';
+                document.getElementById('prognose-percent').textContent = '—';
+                document.getElementById('prognose-status').textContent = '⏱️ Semester beendet';
+                document.getElementById('prognose-text').textContent = 'Das Semester-Ende ist überschritten.';
+                document.getElementById('prognose-days').textContent = '';
+                document.getElementById('prognose-empfehlung').textContent = '';
+                updatePrognoseButton('semester', 'Archivieren →');
+                return;
+            }
+            
+            // Prüfe ob Stundenplan vorhanden
+            if (state.stundenplan.length === 0) {
+                card.style.display = 'block';
+                document.getElementById('prognose-bar').style.width = '0%';
+                document.getElementById('prognose-bar').style.background = 'var(--text-light)';
+                document.getElementById('prognose-percent').textContent = '?';
+                document.getElementById('prognose-status').textContent = '⚠️ Stundenplan fehlt';
+                document.getElementById('prognose-text').textContent = 'Für eine Prognose wird ein Stundenplan benötigt.';
+                document.getElementById('prognose-days').textContent = '';
+                document.getElementById('prognose-empfehlung').textContent = '';
+                updatePrognoseButton('stundenplan', 'Stundenplan einrichten →');
+                return;
+            }
+            
+            const prognose = calculatePrognose();
+            card.style.display = 'block';
+            
+            // Fortschrittsbalken
+            const bar = document.getElementById('prognose-bar');
+            bar.style.width = prognose.percent + '%';
+            
+            // Farbe basierend auf Status
+            const colors = { green: '#10b981', yellow: '#f59e0b', red: '#ef4444' };
+            bar.style.background = colors[prognose.status];
+            
+            // Prozent
+            document.getElementById('prognose-percent').textContent = prognose.percent + '%';
+            
+            // Status Text
+            const statusTexts = {
+                green: '🟢 Auf Kurs',
+                yellow: '🟡 Leicht im Rückstand',
+                red: '🔴 Deutlich im Rückstand'
+            };
+            document.getElementById('prognose-status').textContent = statusTexts[prognose.status];
+            
+            // Button für normale Prognose
+            updatePrognoseButton('beobachtungen', 'Einstellungen →');
+            
+            // Prognose Text
+            document.getElementById('prognose-text').textContent = 
+                `Bei aktuellem Tempo erreichst du ca. ${prognose.percent}% deines Beobachtungsziels.`;
+            
+            // Verbleibende Tage
+            document.getElementById('prognose-days').textContent = `Verbleibend: ${prognose.daysLeft} Schultage`;
+            
+            // Empfehlung (nur anzeigen wenn anders als aktuell)
+            const empfehlungEl = document.getElementById('prognose-empfehlung');
+            if (prognose.empfohlen > prognose.aktuell) {
+                empfehlungEl.innerHTML = `<strong>Empfehlung: ${prognose.empfohlen} Fragen/Runde</strong>`;
+                empfehlungEl.style.color = colors[prognose.status];
+            } else {
+                empfehlungEl.textContent = `Aktuell: ${prognose.aktuell} Fragen/Runde`;
+                empfehlungEl.style.color = 'var(--text-light)';
+            }
+        }
+
+        let prognoseButtonTarget = 'beobachtungen';
+
+        function updatePrognoseButton(target, text) {
+            prognoseButtonTarget = target;
+            const btn = document.getElementById('prognose-button');
+            if (btn) btn.textContent = text;
+        }
+
+        function openPrognoseTarget() {
+            showScreen('config');
+            showConfigTab(prognoseButtonTarget);
+        }
+
+        function checkWelcomeBack() {
+            if (!state.lastOpened) return;
+            
+            const lastOpened = new Date(state.lastOpened);
+            const now = new Date();
+            
+            // Zähle nur Schultage (ohne Wochenenden und Ferien)
+            let schultageInaktiv = 0;
+            const checkDate = new Date(lastOpened);
+            checkDate.setDate(checkDate.getDate() + 1); // Ab dem Tag nach letztem Öffnen
+            
+            while (checkDate < now) {
+                const dayOfWeek = checkDate.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Kein Wochenende
+                    // Prüfe ob in Ferien
+                    const inFerien = state.ferien && state.ferien.some(f => {
+                        const start = new Date(f.start);
+                        const end = new Date(f.end);
+                        return checkDate >= start && checkDate <= end;
+                    });
+                    if (!inFerien) {
+                        schultageInaktiv++;
+                    }
+                }
+                checkDate.setDate(checkDate.getDate() + 1);
+            }
+            
+            // Nur anzeigen wenn > 5 Schultage inaktiv und nicht im Demo-Modus
+            if (schultageInaktiv > 5 && !state.isDemo && state.beobachtungen.length > 0) {
+                const prognose = calculatePrognose();
+                
+                const tageText = schultageInaktiv === 1 ? '1 Schultag' : schultageInaktiv + ' Schultage';
+                document.getElementById('welcome-days-inactive').textContent = tageText;
+                document.getElementById('welcome-prognose-text').textContent = 
+                    `Mit deinen aktuellen Einstellungen (${prognose.aktuell} Fragen/Runde) erreichst du voraussichtlich ${prognose.percent}% deines Ziels.`;
+                
+                if (prognose.empfohlen > prognose.aktuell) {
+                    document.getElementById('welcome-empfehlung').textContent = 
+                        `Empfehlung: Erhöhe auf ${prognose.empfohlen} Fragen/Runde`;
+                    document.getElementById('welcome-empfehlung').style.color = prognose.status === 'red' ? 'var(--danger)' : 'var(--warning)';
+                } else {
+                    document.getElementById('welcome-empfehlung').textContent = 'Du bist auf gutem Weg!';
+                    document.getElementById('welcome-empfehlung').style.color = 'var(--success)';
+                }
+                
+                document.getElementById('welcome-back-modal').style.display = 'block';
+            }
+        }
+
+        function closeWelcomeBack() {
+            document.getElementById('welcome-back-modal').style.display = 'none';
+        }
+
+        function openPrognoseSettings() {
+            closeWelcomeBack();
+            showScreen('config');
+            showConfigTab('beobachtungen');
+        }
+
+        function updateLastOpened() {
+            state.lastOpened = new Date().toISOString();
+            saveState();
+        }
+
         function updateDashboard() {
             // Update Semester-Info
             const semesterName = state.semester.name || 'Aktuelles Semester';
@@ -2821,6 +3155,9 @@
             
             // Update pending list
             updatePendingList();
+            
+            // Update Prognose
+            updatePrognoseCard();
             
             // Update Grafiken
             updateFortschrittFaecher();
@@ -6697,11 +7034,35 @@
                     const imported = JSON.parse(e.target.result);
                     state = imported;
                     
+                    // Fehlende Properties initialisieren (für ältere Backups)
+                    if (!state.pendingLessons) state.pendingLessons = [];
+                    if (!state.semester.questionsPerRound) state.semester.questionsPerRound = 13;
+                    if (state.semester.name === undefined) state.semester.name = '';
+                    if (!state.semester.reminderTiming) state.semester.reminderTiming = 'end-5';
+                    if (state.semester.reminderSound === undefined) state.semester.reminderSound = true;
+                    if (!state.semester.pendingRetention) state.semester.pendingRetention = 'day-end';
+                    if (!state.semester.maxQuestionsPerStudent) state.semester.maxQuestionsPerStudent = 3;
+                    if (state.semester.prioritizeGaps === undefined) state.semester.prioritizeGaps = true;
+                    if (!state.indikatorenEnabled) state.indikatorenEnabled = {};
+                    if (!state.customIndikatoren) state.customIndikatoren = {};
+                    if (!state.ferien) state.ferien = [];
+                    if (!state.archive) state.archive = [];
+                    if (state.isDemo === undefined) state.isDemo = false;
+                    if (!state.lastOpened) state.lastOpened = new Date().toISOString();
+                    
                     // Sicherstellen dass faecherEnabled existiert und alle Fächer standardmässig aktiv sind
                     if (!state.faecherEnabled) state.faecherEnabled = {};
                     state.faecher.forEach(f => {
                         if (state.faecherEnabled[f.id] === undefined) {
                             state.faecherEnabled[f.id] = true;
+                        }
+                    });
+                    
+                    // Sicherstellen dass kriterienEnabled existiert
+                    if (!state.kriterienEnabled) state.kriterienEnabled = {};
+                    KRITERIEN.forEach(k => {
+                        if (state.kriterienEnabled[k.id] === undefined) {
+                            state.kriterienEnabled[k.id] = true;
                         }
                     });
                     
