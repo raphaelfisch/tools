@@ -2758,6 +2758,15 @@
 
             state.stundenplan = DEFAULT_STUNDENPLAN;
 
+            // Semester dynamisch setzen (ab heute + 5 Monate)
+            const today = new Date();
+            const semesterEnd = new Date(today);
+            semesterEnd.setMonth(semesterEnd.getMonth() + 5);
+            
+            state.semester.name = 'Demo-Semester';
+            state.semester.start = today.toISOString().split('T')[0];
+            state.semester.end = semesterEnd.toISOString().split('T')[0];
+
             // Enable all Kriterien
             KRITERIEN.forEach(k => {
                 state.kriterienEnabled[k.id] = true;
