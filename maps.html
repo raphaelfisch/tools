@@ -3,741 +3,582 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swisstopo Zeitreise – Kartenvergleich</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Swisstopo Zeitreise</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #1a1a1e;
-    --surface: #252529;
-    --surface-hover: #2e2e34;
-    --border: #3a3a42;
-    --text: #e8e6e1;
-    --text-muted: #9a9890;
-    --accent: #d64045;
-    --accent-glow: rgba(214, 64, 69, 0.3);
-    --swiss: #d64045;
-  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-- { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+–bg: #111113;
+–panel: #1c1c20;
+–panel-border: #2a2a30;
+–text: #eae8e3;
+–text-dim: #8a887f;
+–red: #e24a4f;
+–blue: #4a9de2;
+}
 
-body {
-font-family: ‘DM Sans’, sans-serif;
+html, body {
+height: 100%;
+overflow: hidden;
+font-family: ‘DM Sans’, -apple-system, BlinkMacSystemFont, sans-serif;
 background: var(–bg);
 color: var(–text);
-height: 100vh;
-overflow: hidden;
+-webkit-text-size-adjust: 100%;
+-webkit-tap-highlight-color: transparent;
+}
+
+/* ── Layout ── */
+.app {
 display: flex;
 flex-direction: column;
+height: 100%;
+height: 100dvh;
 }
 
-/* Header */
-header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 12px 24px;
-background: var(–surface);
-border-bottom: 1px solid var(–border);
-z-index: 1000;
+/* ── Top bar ── */
+.topbar {
 flex-shrink: 0;
-}
-
-.logo-area {
 display: flex;
 align-items: center;
-gap: 14px;
+gap: 10px;
+padding: 8px 12px;
+padding-top: max(8px, env(safe-area-inset-top));
+background: var(–panel);
+border-bottom: 1px solid var(–panel-border);
+z-index: 900;
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
 }
 
-.swiss-cross {
-width: 32px;
-height: 32px;
-background: var(–swiss);
-border-radius: 4px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 20px;
-font-weight: 700;
-color: white;
-flex-shrink: 0;
-}
+.topbar::-webkit-scrollbar { display: none; }
 
-.title {
-font-family: ‘Instrument Serif’, serif;
-font-size: 22px;
-letter-spacing: -0.3px;
-color: var(–text);
-}
-
-.title span {
-color: var(–text-muted);
-font-style: italic;
-font-weight: 400;
-}
-
-/* Controls bar */
-.controls-bar {
-display: flex;
-align-items: center;
-gap: 12px;
-padding: 10px 24px;
-background: var(–bg);
-border-bottom: 1px solid var(–border);
-flex-shrink: 0;
-flex-wrap: wrap;
-z-index: 1000;
-}
-
-.control-group {
+.brand {
 display: flex;
 align-items: center;
 gap: 8px;
+flex-shrink: 0;
 }
 
-.control-label {
-font-size: 11px;
-text-transform: uppercase;
-letter-spacing: 1.2px;
-color: var(–text-muted);
-font-weight: 500;
+.swiss-icon {
+width: 26px; height: 26px;
+background: var(–red);
+border-radius: 3px;
+display: grid;
+place-items: center;
+font-weight: 800;
+font-size: 16px;
+color: #fff;
+line-height: 1;
+}
+
+.brand-text {
+font-size: 15px;
+font-weight: 600;
 white-space: nowrap;
 }
+
+.sep { width: 1px; height: 22px; background: var(–panel-border); flex-shrink: 0; }
+
+.ctrl {
+display: flex;
+align-items: center;
+gap: 5px;
+flex-shrink: 0;
+}
+
+.tag {
+font-size: 9px;
+font-weight: 700;
+text-transform: uppercase;
+letter-spacing: 0.8px;
+padding: 2px 6px;
+border-radius: 3px;
+white-space: nowrap;
+}
+
+.tag-l { background: rgba(74,157,226,0.2); color: var(–blue); border: 1px solid rgba(74,157,226,0.25); }
+.tag-r { background: rgba(226,74,79,0.2); color: var(–red); border: 1px solid rgba(226,74,79,0.25); }
 
 select {
 appearance: none;
-background: var(–surface);
-border: 1px solid var(–border);
+-webkit-appearance: none;
+background: var(–bg);
+border: 1px solid var(–panel-border);
 color: var(–text);
-padding: 7px 32px 7px 12px;
-border-radius: 6px;
-font-family: ‘DM Sans’, sans-serif;
-font-size: 13px;
+padding: 5px 26px 5px 8px;
+border-radius: 5px;
+font: 500 12px/1.2 ‘DM Sans’, sans-serif;
 cursor: pointer;
-background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘12’ fill=’%239a9890’%3E%3Cpath d=‘M6 8.5L1 3.5h10z’/%3E%3C/svg%3E”);
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘10’ height=‘10’ fill=’%238a887f’%3E%3Cpath d=‘M5 7L1 3h8z’/%3E%3C/svg%3E”);
 background-repeat: no-repeat;
-background-position: right 10px center;
-transition: border-color 0.2s;
+background-position: right 8px center;
+min-width: 0;
+max-width: 100px;
 }
 
-select:hover { border-color: var(–accent); }
-select:focus { outline: none; border-color: var(–accent); box-shadow: 0 0 0 2px var(–accent-glow); }
+select:focus { outline: none; border-color: var(–red); }
 
-.divider {
-width: 1px;
-height: 28px;
-background: var(–border);
-margin: 0 4px;
-}
-
-.layer-select-group {
-display: flex;
-align-items: center;
-gap: 6px;
-}
-
-.layer-badge {
-font-size: 10px;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 1px;
-padding: 3px 8px;
-border-radius: 4px;
-white-space: nowrap;
-}
-
-.badge-left {
-background: rgba(69, 150, 214, 0.2);
-color: #6bb8e8;
-border: 1px solid rgba(69, 150, 214, 0.3);
-}
-
-.badge-right {
-background: rgba(214, 64, 69, 0.2);
-color: #e88084;
-border: 1px solid rgba(214, 64, 69, 0.3);
-}
-
-/* Map */
-.map-wrapper {
+/* ── Map area ── */
+.map-area {
 flex: 1;
 position: relative;
-overflow: hidden;
+min-height: 0;
 }
 
-#map {
-width: 100%;
-height: 100%;
-}
+#map { width: 100%; height: 100%; background: #0a0a0c; }
 
-/* Swipe handle */
-.swipe-line {
+/* ── Swipe UI ── */
+.swipe-bar {
 position: absolute;
-top: 0;
-bottom: 0;
+top: 0; bottom: 0;
 width: 3px;
-background: white;
-z-index: 800;
+background: #fff;
+z-index: 700;
 pointer-events: none;
-box-shadow: 0 0 12px rgba(0,0,0,0.5);
+box-shadow: 0 0 8px rgba(0,0,0,0.6);
 left: 50%;
-transform: translateX(-50%);
 }
 
-.swipe-handle {
+.swipe-knob {
 position: absolute;
 top: 50%;
-z-index: 801;
-transform: translate(-50%, -50%);
 left: 50%;
-width: 44px;
-height: 44px;
-background: white;
+z-index: 701;
+width: 40px; height: 40px;
+margin: -20px 0 0 -20px;
+background: #fff;
 border-radius: 50%;
 cursor: ew-resize;
-display: flex;
-align-items: center;
-justify-content: center;
-box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-transition: transform 0.15s ease;
+display: grid;
+place-items: center;
+box-shadow: 0 2px 10px rgba(0,0,0,0.5);
 touch-action: none;
+-webkit-user-select: none;
+user-select: none;
 }
 
-.swipe-handle:hover {
-transform: translate(-50%, -50%) scale(1.12);
-}
+.swipe-knob svg { width: 18px; height: 18px; }
 
-.swipe-handle:active {
-transform: translate(-50%, -50%) scale(1.05);
-}
-
-.swipe-handle svg {
-width: 20px;
-height: 20px;
-fill: #333;
-}
-
-/* Year labels on map */
-.year-label {
+/* ── Year pills on map ── */
+.pill {
 position: absolute;
-top: 16px;
-z-index: 799;
-padding: 6px 14px;
-border-radius: 6px;
-font-size: 15px;
-font-weight: 700;
-font-family: ‘DM Sans’, sans-serif;
-letter-spacing: 0.5px;
+top: 10px;
+z-index: 699;
+padding: 4px 12px;
+border-radius: 5px;
+font: 700 14px/1.3 ‘DM Sans’, sans-serif;
 pointer-events: none;
-backdrop-filter: blur(8px);
 }
 
-.year-label-left {
-left: 16px;
-background: rgba(69, 150, 214, 0.85);
-color: white;
-}
+.pill-l { left: 10px; background: rgba(74,157,226,0.85); color: #fff; }
+.pill-r { right: 10px; background: rgba(226,74,79,0.85); color: #fff; }
 
-.year-label-right {
-right: 16px;
-background: rgba(214, 64, 69, 0.85);
-color: white;
-}
-
-/* Search */
-.search-box {
+/* ── Search ── */
+.search-wrap {
 position: absolute;
-bottom: 24px;
+bottom: 14px;
+bottom: calc(14px + env(safe-area-inset-bottom));
 left: 50%;
 transform: translateX(-50%);
-z-index: 900;
-display: flex;
-align-items: center;
-gap: 0;
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 10px;
-padding: 4px;
-box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-width: min(420px, calc(100vw - 32px));
+z-index: 800;
+width: min(380px, calc(100% - 24px));
 }
 
-.search-box input {
+.search-bar {
+display: flex;
+background: var(–panel);
+border: 1px solid var(–panel-border);
+border-radius: 9px;
+overflow: hidden;
+box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.search-bar input {
 flex: 1;
 background: transparent;
 border: none;
 color: var(–text);
-padding: 8px 14px;
-font-size: 14px;
-font-family: ‘DM Sans’, sans-serif;
+padding: 9px 12px;
+font: 400 13px/1.3 ‘DM Sans’, sans-serif;
 outline: none;
+min-width: 0;
 }
 
-.search-box input::placeholder {
-color: var(–text-muted);
-}
+.search-bar input::placeholder { color: var(–text-dim); }
 
-.search-btn {
-background: var(–accent);
+.search-bar button {
+background: var(–red);
 border: none;
-color: white;
-padding: 8px 16px;
-border-radius: 7px;
+color: #fff;
+padding: 0 14px;
+font: 600 12px/1 ‘DM Sans’, sans-serif;
 cursor: pointer;
-font-size: 13px;
-font-weight: 500;
-font-family: ‘DM Sans’, sans-serif;
-transition: background 0.2s;
+flex-shrink: 0;
 }
 
-.search-btn:hover { background: #c03538; }
-
-.search-results {
+.results-list {
 position: absolute;
-bottom: 100%;
-left: 0;
-right: 0;
-margin-bottom: 4px;
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 10px;
-max-height: 200px;
+bottom: calc(100% + 4px);
+left: 0; right: 0;
+background: var(–panel);
+border: 1px solid var(–panel-border);
+border-radius: 9px;
+max-height: 180px;
 overflow-y: auto;
 display: none;
-box-shadow: 0 -4px 16px rgba(0,0,0,0.3);
 }
 
-.search-results.active { display: block; }
+.results-list.open { display: block; }
 
-.search-result-item {
-padding: 10px 14px;
-font-size: 13px;
-cursor: pointer;
-border-bottom: 1px solid var(–border);
-transition: background 0.15s;
-}
-
-.search-result-item:last-child { border-bottom: none; }
-.search-result-item:hover { background: var(–surface-hover); }
-
-.search-result-item .result-name { font-weight: 500; }
-.search-result-item .result-detail { color: var(–text-muted); font-size: 11px; margin-top: 2px; }
-
-/* Info tooltip */
-.info-hint {
-position: absolute;
-top: 16px;
-left: 50%;
-transform: translateX(-50%);
-z-index: 799;
-background: rgba(0,0,0,0.7);
-color: white;
-padding: 8px 16px;
-border-radius: 8px;
+.result-item {
+padding: 9px 12px;
 font-size: 12px;
-letter-spacing: 0.3px;
-pointer-events: none;
-opacity: 1;
-transition: opacity 1s ease;
-white-space: nowrap;
+cursor: pointer;
+border-bottom: 1px solid var(–panel-border);
 }
 
-.info-hint.hidden { opacity: 0; }
+.result-item:last-child { border-bottom: none; }
+.result-item:hover { background: rgba(255,255,255,0.04); }
+.result-sub { color: var(–text-dim); font-size: 10px; margin-top: 2px; }
 
-/* Loading overlay */
-.loading-overlay {
+/* ── Hint ── */
+.hint {
 position: absolute;
-inset: 0;
-background: rgba(26, 26, 30, 0.6);
-z-index: 850;
-display: none;
-align-items: center;
-justify-content: center;
+top: 50%; left: 50%;
+transform: translate(-50%, 40px);
+z-index: 698;
+background: rgba(0,0,0,0.7);
+color: #fff;
+padding: 6px 14px;
+border-radius: 6px;
+font-size: 11px;
+pointer-events: none;
+white-space: nowrap;
+transition: opacity 0.8s;
 }
 
-.loading-overlay.active { display: flex; }
+.hint.gone { opacity: 0; }
 
-.spinner {
-width: 36px;
-height: 36px;
-border: 3px solid var(–border);
-border-top-color: var(–accent);
-border-radius: 50%;
-animation: spin 0.8s linear infinite;
+/* ── Leaflet overrides ── */
+.leaflet-control-zoom { border: 1px solid var(–panel-border) !important; border-radius: 6px !important; overflow: hidden; }
+.leaflet-control-zoom a {
+background: var(–panel) !important;
+color: var(–text) !important;
+border-color: var(–panel-border) !important;
+width: 30px !important; height: 30px !important;
+line-height: 30px !important;
+font-size: 15px !important;
 }
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Responsive */
-@media (max-width: 680px) {
-header { padding: 10px 14px; }
-.title { font-size: 17px; }
-.controls-bar { padding: 8px 14px; gap: 8px; }
-select { padding: 6px 28px 6px 8px; font-size: 12px; }
-.divider { display: none; }
+.leaflet-control-zoom a:hover { background: var(–bg) !important; }
+.leaflet-control-attribution {
+background: rgba(0,0,0,0.5) !important;
+color: var(–text-dim) !important;
+font-size: 10px !important;
+padding: 2px 6px !important;
 }
+.leaflet-control-attribution a { color: var(–text-dim) !important; }
 
-/* Custom Leaflet styles */
-.leaflet-control-zoom { border: 1px solid var(–border) !important; border-radius: 8px !important; overflow: hidden; }
-.leaflet-control-zoom a { background: var(–surface) !important; color: var(–text) !important; border-color: var(–border) !important; width: 34px !important; height: 34px !important; line-height: 34px !important; font-size: 16px !important; }
-.leaflet-control-zoom a:hover { background: var(–surface-hover) !important; }
+/* Hide Leaflet pane directly – we’ll clip via JS on the container element */
 </style>
 
 </head>
 <body>
-  <header>
-    <div class="logo-area">
-      <div class="swiss-cross">+</div>
-      <div class="title">Zeitreise <span>Kartenvergleich</span></div>
-    </div>
-  </header>
+<div class="app">
 
-  <div class="controls-bar">
-    <div class="control-group">
-      <span class="control-label">Typ</span>
+  <!-- Top bar -->
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="swiss-icon">+</div>
+      <span class="brand-text">Zeitreise</span>
+    </div>
+    <div class="sep"></div>
+    <div class="ctrl">
       <select id="layerType">
-        <option value="zeitreihen">Landeskarten (Zeitreihen)</option>
-        <option value="swissimage">Luftbilder (SWISSIMAGE)</option>
+        <option value="zeitreihen">Landeskarten</option>
+        <option value="swissimage">Luftbilder</option>
       </select>
     </div>
-    <div class="divider"></div>
-    <div class="control-group layer-select-group">
-      <span class="layer-badge badge-left">Links</span>
-      <select id="yearLeft"></select>
+    <div class="sep"></div>
+    <div class="ctrl">
+      <span class="tag tag-l">L</span>
+      <select id="selL"></select>
     </div>
-    <div class="control-group layer-select-group">
-      <span class="layer-badge badge-right">Rechts</span>
-      <select id="yearRight"></select>
+    <div class="ctrl">
+      <span class="tag tag-r">R</span>
+      <select id="selR"></select>
     </div>
   </div>
 
-  <div class="map-wrapper">
+  <!-- Map -->
+
+  <div class="map-area" id="mapArea">
     <div id="map"></div>
-    <div class="swipe-line" id="swipeLine"></div>
-    <div class="swipe-handle" id="swipeHandle">
-      <svg viewBox="0 0 24 24"><path d="M8 5l-5 7 5 7M16 5l5 7-5 7"/><line x1="3" y1="12" x2="21" y2="12" stroke="#333" stroke-width="2" fill="none"/></svg>
-    </div>
-    <div class="year-label year-label-left" id="labelLeft"></div>
-    <div class="year-label year-label-right" id="labelRight"></div>
-    <div class="info-hint" id="infoHint">Schieberegler ziehen um Karten zu vergleichen</div>
 
 ```
-<div class="search-box">
-  <input type="text" id="searchInput" placeholder="Ort suchen (z.B. Bern, Zürich, Matterhorn...)" autocomplete="off" />
-  <div class="search-results" id="searchResults"></div>
-  <button class="search-btn" id="searchBtn">Suchen</button>
+<div class="swipe-bar" id="bar"></div>
+<div class="swipe-knob" id="knob">
+  <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.4" stroke-linecap="round">
+    <polyline points="9,6 4,12 9,18"/><polyline points="15,6 20,12 15,18"/>
+  </svg>
+</div>
+
+<div class="pill pill-l" id="pillL"></div>
+<div class="pill pill-r" id="pillR"></div>
+
+<div class="hint" id="hint">← Schieberegler ziehen →</div>
+
+<div class="search-wrap">
+  <div class="results-list" id="results"></div>
+  <div class="search-bar">
+    <input id="searchIn" type="text" placeholder="Ort suchen…" autocomplete="off" />
+    <button id="searchBtn">Suchen</button>
+  </div>
 </div>
 ```
 
   </div>
 
+</div>
+
 <script>
-// ============================================================
-// Configuration
-// ============================================================
+/* ==============================================================
+   CONFIG
+============================================================== */
+const YEARS_Z = [];
+for (let y = 1844; y <= 2024; y++) YEARS_Z.push(y + '1231');
 
-const TIMESTAMPS_ZEITREIHEN = [
-  '18611231','18641231','18651231','18681231','18701231','18711231',
-  '18721231','18751231','18761231','18781231','18791231','18801231',
-  '18811231','18821231','18831231','18841231','18851231','18861231',
-  '18871231','18881231','18891231','18901231','18911231','18921231',
-  '18931231','18941231','18951231','18961231','18971231','18981231',
-  '18991231','19001231','19011231','19021231','19031231','19041231',
-  '19051231','19061231','19071231','19081231','19091231','19101231',
-  '19111231','19121231','19131231','19141231','19151231','19161231',
-  '19171231','19181231','19191231','19201231','19211231','19221231',
-  '19231231','19241231','19251231','19261231','19271231','19281231',
-  '19291231','19301231','19311231','19321231','19331231','19341231',
-  '19351231','19361231','19371231','19381231','19391231','19401231',
-  '19411231','19421231','19431231','19441231','19451231','19461231',
-  '19471231','19481231','19491231','19501231','19511231','19521231',
-  '19531231','19541231','19551231','19561231','19571231','19581231',
-  '19591231','19601231','19611231','19621231','19631231','19641231',
-  '19651231','19661231','19671231','19681231','19691231','19701231',
-  '19711231','19721231','19731231','19741231','19751231','19761231',
-  '19771231','19781231','19791231','19801231','19811231','19821231',
-  '19831231','19841231','19851231','19861231','19871231','19881231',
-  '19891231','19901231','19911231','19921231','19931231','19941231',
-  '19951231','19961231','19971231','19981231','19991231','20001231',
-  '20011231','20021231','20031231','20041231','20051231','20061231',
-  '20071231','20081231','20091231','20101231','20111231','20121231',
-  '20131231','20141231','20151231','20161231','20171231','20181231',
-  '20191231','20201231','20211231','20221231','20231231','20241231'
-];
+const YEARS_S = [];
+for (let y = 1926; y <= 2024; y++) YEARS_S.push(y + '1231');
 
-const TIMESTAMPS_SWISSIMAGE = [
-  '19261231','19271231','19281231','19291231','19301231',
-  '19311231','19321231','19331231','19341231','19351231',
-  '19361231','19371231','19381231','19391231','19401231',
-  '19411231','19421231','19431231','19441231','19451231',
-  '19461231','19471231','19481231','19491231','19501231',
-  '19511231','19521231','19531231','19541231','19551231',
-  '19561231','19571231','19581231','19591231','19601231',
-  '19611231','19621231','19631231','19641231','19651231',
-  '19661231','19671231','19681231','19691231','19701231',
-  '19711231','19721231','19731231','19741231','19751231',
-  '19761231','19771231','19781231','19791231','19801231',
-  '19811231','19821231','19831231','19841231','19851231',
-  '19861231','19871231','19881231','19891231','19901231',
-  '19911231','19921231','19931231','19941231','19951231',
-  '19961231','19971231','19981231','19991231','20001231',
-  '20011231','20021231','20031231','20041231','20051231',
-  '20061231','20071231','20081231','20091231','20101231',
-  '20111231','20121231','20131231','20141231','20151231',
-  '20161231','20171231','20181231','20191231','20201231',
-  '20211231','20221231','20231231','20241231'
-];
-
-function tsToYear(ts) { return ts.substring(0, 4); }
-
-function getLayerUrl(type, timestamp) {
-  if (type === 'zeitreihen') {
-    return `https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.zeitreihen/default/${timestamp}/3857/{z}/{x}/{y}.png`;
-  } else {
-    return `https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage-product/default/${timestamp}/3857/{z}/{x}/{y}.jpeg`;
-  }
+/* Reduced sets for the dropdowns – show every ~5 years for clarity,
+   but also include first/last. Full list overwhelms mobile. */
+function thinList(arr) {
+  const out = [];
+  arr.forEach((ts, i) => {
+    const y = +ts.substring(0, 4);
+    if (i === 0 || i === arr.length - 1 || y % 5 === 0) out.push(ts);
+  });
+  return out;
 }
 
-// ============================================================
-// Map setup
-// ============================================================
+function tsYear(ts) { return ts.substring(0, 4); }
 
+/* WMTS URL builder – uses the public XYZ-style URL in EPSG:3857 */
+function tileUrl(type, ts) {
+  const layer = type === 'zeitreihen'
+    ? 'ch.swisstopo.zeitreihen'
+    : 'ch.swisstopo.swissimage-product';
+  const fmt = type === 'zeitreihen' ? 'png' : 'jpeg';
+  // Use wmts{0-4} subdomain for EPSG:3857 tiles
+  return `https://wmts.geo.admin.ch/1.0.0/${layer}/default/${ts}/3857/{z}/{x}/{y}.${fmt}`;
+}
+
+/* ==============================================================
+   POPULATE SELECTS
+============================================================== */
+const selL = document.getElementById('selL');
+const selR = document.getElementById('selR');
+const layerType = document.getElementById('layerType');
+let curType = 'zeitreihen';
+
+function fillSelects() {
+  const full = curType === 'zeitreihen' ? YEARS_Z : YEARS_S;
+  const list = thinList(full);
+  [selL, selR].forEach(sel => {
+    sel.innerHTML = list.map(ts =>
+      `<option value="${ts}">${tsYear(ts)}</option>`
+    ).join('');
+  });
+  // Defaults
+  const defL = curType === 'zeitreihen' ? '19001231' : '19461231';
+  const defR = list[list.length - 1];
+  if (list.includes(defL)) selL.value = defL; else selL.selectedIndex = 0;
+  selR.value = defR;
+}
+
+/* ==============================================================
+   MAP
+============================================================== */
 const map = L.map('map', {
-  center: [46.95, 7.45], // Bern
+  center: [46.948, 7.448],
   zoom: 14,
-  zoomControl: true,
-  attributionControl: true
+  zoomControl: false,
+  attributionControl: true,
+  maxBounds: [[45.5, 5.8], [48.0, 10.7]],
+  maxBoundsViscosity: 0.8
 });
 
 L.control.zoom({ position: 'topright' }).addTo(map);
-map.zoomControl.remove();
-
-// Attribution
 map.attributionControl.setPrefix('');
 map.attributionControl.addAttribution('© <a href="https://www.swisstopo.ch/" target="_blank">swisstopo</a>');
 
-let layerLeft = null;
-let layerRight = null;
-let currentType = 'zeitreihen';
+/* Create two custom panes so we can clip them independently */
+map.createPane('leftPane');
+map.createPane('rightPane');
+map.getPane('leftPane').style.zIndex = 400;
+map.getPane('rightPane').style.zIndex = 401;
 
-// ============================================================
-// Populate selects
-// ============================================================
+let layerL = null, layerR = null;
 
-const yearLeftEl = document.getElementById('yearLeft');
-const yearRightEl = document.getElementById('yearRight');
-const layerTypeEl = document.getElementById('layerType');
-const labelLeftEl = document.getElementById('labelLeft');
-const labelRightEl = document.getElementById('labelRight');
+function buildLayers() {
+  if (layerL) { map.removeLayer(layerL); layerL = null; }
+  if (layerR) { map.removeLayer(layerR); layerR = null; }
 
-function populateYears() {
-  const timestamps = currentType === 'zeitreihen' ? TIMESTAMPS_ZEITREIHEN : TIMESTAMPS_SWISSIMAGE;
-  yearLeftEl.innerHTML = '';
-  yearRightEl.innerHTML = '';
+  const tsL = selL.value;
+  const tsR = selR.value;
 
-  timestamps.forEach(ts => {
-    const year = tsToYear(ts);
-    yearLeftEl.innerHTML += `<option value="${ts}">${year}</option>`;
-    yearRightEl.innerHTML += `<option value="${ts}">${year}</option>`;
-  });
-
-  // Smart defaults: pick an old and a recent year
-  const oldIdx = currentType === 'zeitreihen' ? 0 : 0;
-  const newIdx = timestamps.length - 1;
-
-  // Try to set a nice spread
-  const defaultOld = currentType === 'zeitreihen' ? '19001231' : '19461231';
-  const defaultNew = timestamps[newIdx];
-
-  if (timestamps.includes(defaultOld)) {
-    yearLeftEl.value = defaultOld;
-  } else {
-    yearLeftEl.value = timestamps[oldIdx];
-  }
-  yearRightEl.value = defaultNew;
-}
-
-// ============================================================
-// Layer management with clip
-// ============================================================
-
-let swipeX = 0.5; // 0..1 fraction
-
-function createLayers() {
-  if (layerLeft) map.removeLayer(layerLeft);
-  if (layerRight) map.removeLayer(layerRight);
-
-  const tsLeft = yearLeftEl.value;
-  const tsRight = yearRightEl.value;
-
-  layerLeft = L.tileLayer(getLayerUrl(currentType, tsLeft), {
-    maxZoom: 20,
+  layerL = L.tileLayer(tileUrl(curType, tsL), {
+    pane: 'leftPane',
+    maxZoom: 19,
     minZoom: 7,
-    tileSize: 256,
-    attribution: ''
+    tileSize: 256
   }).addTo(map);
 
-  layerRight = L.tileLayer(getLayerUrl(currentType, tsRight), {
-    maxZoom: 20,
+  layerR = L.tileLayer(tileUrl(curType, tsR), {
+    pane: 'rightPane',
+    maxZoom: 19,
     minZoom: 7,
-    tileSize: 256,
-    attribution: ''
+    tileSize: 256
   }).addTo(map);
 
-  labelLeftEl.textContent = tsToYear(tsLeft);
-  labelRightEl.textContent = tsToYear(tsRight);
+  document.getElementById('pillL').textContent = tsYear(tsL);
+  document.getElementById('pillR').textContent = tsYear(tsR);
 
-  applyClip();
+  clip();
 }
 
-function applyClip() {
-  if (!layerLeft || !layerRight) return;
-  const container = map.getContainer();
-  const w = container.offsetWidth;
-  const px = Math.round(swipeX * w);
+/* ==============================================================
+   SWIPE / CLIP
+============================================================== */
+let ratio = 0.5;
 
-  // Clip left layer: show only left of line
-  const leftPane = layerLeft.getContainer();
-  if (leftPane) {
-    leftPane.style.clipPath = `inset(0 ${w - px}px 0 0)`;
-  }
+function clip() {
+  const area = document.getElementById('mapArea');
+  const w = area.offsetWidth;
+  const px = Math.round(ratio * w);
 
-  // Clip right layer: show only right of line
-  const rightPane = layerRight.getContainer();
-  if (rightPane) {
-    rightPane.style.clipPath = `inset(0 0 0 ${px}px)`;
-  }
+  const lp = map.getPane('leftPane');
+  const rp = map.getPane('rightPane');
+  if (lp) lp.style.clipPath = `inset(0 ${w - px}px 0 0)`;
+  if (rp) rp.style.clipPath = `inset(0 0 0 ${px}px)`;
 
-  // Update swipe UI
-  const swipeLine = document.getElementById('swipeLine');
-  const swipeHandle = document.getElementById('swipeHandle');
-  swipeLine.style.left = px + 'px';
-  swipeLine.style.transform = 'none';
-  swipeHandle.style.left = px + 'px';
-  swipeHandle.style.transform = 'translate(-50%, -50%)';
+  document.getElementById('bar').style.left = px + 'px';
+  document.getElementById('knob').style.left = px + 'px';
 }
 
-// ============================================================
-// Swipe interaction
-// ============================================================
-
-const swipeHandle = document.getElementById('swipeHandle');
+/* Drag logic */
+const knob = document.getElementById('knob');
 let dragging = false;
 
-function startDrag(e) {
+function onStart(e) {
   dragging = true;
   e.preventDefault();
-  document.getElementById('infoHint').classList.add('hidden');
+  document.getElementById('hint').classList.add('gone');
+  map.dragging.disable();
 }
 
-function doDrag(e) {
+function onMove(e) {
   if (!dragging) return;
-  const container = map.getContainer();
-  const rect = container.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  let x = (clientX - rect.left) / rect.width;
-  x = Math.max(0.02, Math.min(0.98, x));
-  swipeX = x;
-  applyClip();
+  const area = document.getElementById('mapArea');
+  const rect = area.getBoundingClientRect();
+  const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+  ratio = Math.max(0.03, Math.min(0.97, (cx - rect.left) / rect.width));
+  clip();
 }
 
-function endDrag() {
+function onEnd() {
+  if (!dragging) return;
   dragging = false;
+  map.dragging.enable();
 }
 
-swipeHandle.addEventListener('mousedown', startDrag);
-swipeHandle.addEventListener('touchstart', startDrag, { passive: false });
-document.addEventListener('mousemove', doDrag);
-document.addEventListener('touchmove', doDrag, { passive: false });
-document.addEventListener('mouseup', endDrag);
-document.addEventListener('touchend', endDrag);
+knob.addEventListener('mousedown', onStart);
+knob.addEventListener('touchstart', onStart, { passive: false });
+window.addEventListener('mousemove', onMove);
+window.addEventListener('touchmove', onMove, { passive: false });
+window.addEventListener('mouseup', onEnd);
+window.addEventListener('touchend', onEnd);
 
-// Reapply clip on move/zoom/resize
-map.on('move zoom resize', applyClip);
-window.addEventListener('resize', applyClip);
+map.on('move zoom viewreset resize', clip);
+window.addEventListener('resize', clip);
 
-// Also reapply after tiles load
-map.on('layeradd', () => {
-  setTimeout(applyClip, 50);
-  setTimeout(applyClip, 200);
-  setTimeout(applyClip, 500);
+// Extra clip calls after layer tiles load
+const scheduleClip = () => {
+  clip();
+  setTimeout(clip, 100);
+  setTimeout(clip, 300);
+  setTimeout(clip, 700);
+};
+map.on('layeradd moveend zoomend', scheduleClip);
+
+/* ==============================================================
+   EVENTS
+============================================================== */
+layerType.addEventListener('change', () => {
+  curType = layerType.value;
+  fillSelects();
+  buildLayers();
 });
 
-// ============================================================
-// Event handlers
-// ============================================================
+selL.addEventListener('change', buildLayers);
+selR.addEventListener('change', buildLayers);
 
-layerTypeEl.addEventListener('change', () => {
-  currentType = layerTypeEl.value;
-  populateYears();
-  createLayers();
-});
-
-yearLeftEl.addEventListener('change', createLayers);
-yearRightEl.addEventListener('change', createLayers);
-
-// ============================================================
-// Search (using geo.admin.ch search API)
-// ============================================================
-
-const searchInput = document.getElementById('searchInput');
+/* ==============================================================
+   SEARCH (geo.admin.ch)
+============================================================== */
+const searchIn = document.getElementById('searchIn');
 const searchBtn = document.getElementById('searchBtn');
-const searchResults = document.getElementById('searchResults');
+const resultsList = document.getElementById('results');
 
-async function doSearch() {
-  const q = searchInput.value.trim();
+async function search() {
+  const q = searchIn.value.trim();
   if (!q) return;
   try {
-    const res = await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&limit=6`);
-    const data = await res.json();
-    searchResults.innerHTML = '';
-    if (data.results && data.results.length > 0) {
-      data.results.forEach(r => {
-        const attrs = r.attrs;
+    const r = await fetch(
+      `https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&limit=5`
+    );
+    const d = await r.json();
+    resultsList.innerHTML = '';
+    if (d.results && d.results.length) {
+      d.results.forEach(item => {
+        const a = item.attrs;
         const div = document.createElement('div');
-        div.className = 'search-result-item';
-        div.innerHTML = `<div class="result-name">${attrs.label.replace(/<[^>]*>/g, '')}</div><div class="result-detail">${attrs.detail || ''}</div>`;
-        div.addEventListener('click', () => {
-          map.setView([attrs.lat, attrs.lon], 15);
-          searchResults.classList.remove('active');
-          searchInput.value = attrs.label.replace(/<[^>]*>/g, '');
-        });
-        searchResults.appendChild(div);
+        div.className = 'result-item';
+        const name = (a.label || '').replace(/<[^>]*>/g, '');
+        div.innerHTML = `<div>${name}</div><div class="result-sub">${a.detail || ''}</div>`;
+        div.onclick = () => {
+          map.setView([a.lat, a.lon], 15);
+          resultsList.classList.remove('open');
+          searchIn.value = name;
+        };
+        resultsList.appendChild(div);
       });
-      searchResults.classList.add('active');
+      resultsList.classList.add('open');
     } else {
-      searchResults.classList.remove('active');
+      resultsList.classList.remove('open');
     }
   } catch (err) {
-    console.error('Search error:', err);
+    console.error(err);
   }
 }
 
-searchBtn.addEventListener('click', doSearch);
-searchInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') doSearch();
-});
-
-// Close results on outside click
+searchBtn.addEventListener('click', search);
+searchIn.addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
 document.addEventListener('click', e => {
-  if (!e.target.closest('.search-box')) {
-    searchResults.classList.remove('active');
-  }
+  if (!e.target.closest('.search-wrap')) resultsList.classList.remove('open');
 });
 
-// ============================================================
-// Init
-// ============================================================
-
-populateYears();
-createLayers();
-
-// Hide info hint after 5s
-setTimeout(() => {
-  document.getElementById('infoHint').classList.add('hidden');
-}, 5000);
+/* ==============================================================
+   INIT
+============================================================== */
+fillSelects();
+buildLayers();
+setTimeout(() => document.getElementById('hint').classList.add('gone'), 4000);
 </script>
 
 </body>
