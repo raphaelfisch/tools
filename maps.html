@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swisstopo Zeitreise – Kartenvergleich</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a1e;
+    --surface: #252529;
+    --surface-hover: #2e2e34;
+    --border: #3a3a42;
+    --text: #e8e6e1;
+    --text-muted: #9a9890;
+    --accent: #d64045;
+    --accent-glow: rgba(214, 64, 69, 0.3);
+    --swiss: #d64045;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+font-family: ‘DM Sans’, sans-serif;
+background: var(–bg);
+color: var(–text);
+height: 100vh;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+
+/* Header */
+header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 12px 24px;
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+z-index: 1000;
+flex-shrink: 0;
+}
+
+.logo-area {
+display: flex;
+align-items: center;
+gap: 14px;
+}
+
+.swiss-cross {
+width: 32px;
+height: 32px;
+background: var(–swiss);
+border-radius: 4px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 20px;
+font-weight: 700;
+color: white;
+flex-shrink: 0;
+}
+
+.title {
+font-family: ‘Instrument Serif’, serif;
+font-size: 22px;
+letter-spacing: -0.3px;
+color: var(–text);
+}
+
+.title span {
+color: var(–text-muted);
+font-style: italic;
+font-weight: 400;
+}
+
+/* Controls bar */
+.controls-bar {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 10px 24px;
+background: var(–bg);
+border-bottom: 1px solid var(–border);
+flex-shrink: 0;
+flex-wrap: wrap;
+z-index: 1000;
+}
+
+.control-group {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.control-label {
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 1.2px;
+color: var(–text-muted);
+font-weight: 500;
+white-space: nowrap;
+}
+
+select {
+appearance: none;
+background: var(–surface);
+border: 1px solid var(–border);
+color: var(–text);
+padding: 7px 32px 7px 12px;
+border-radius: 6px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 13px;
+cursor: pointer;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘12’ fill=’%239a9890’%3E%3Cpath d=‘M6 8.5L1 3.5h10z’/%3E%3C/svg%3E”);
+background-repeat: no-repeat;
+background-position: right 10px center;
+transition: border-color 0.2s;
+}
+
+select:hover { border-color: var(–accent); }
+select:focus { outline: none; border-color: var(–accent); box-shadow: 0 0 0 2px var(–accent-glow); }
+
+.divider {
+width: 1px;
+height: 28px;
+background: var(–border);
+margin: 0 4px;
+}
+
+.layer-select-group {
+display: flex;
+align-items: center;
+gap: 6px;
+}
+
+.layer-badge {
+font-size: 10px;
+font-weight: 700;
+text-transform: uppercase;
+letter-spacing: 1px;
+padding: 3px 8px;
+border-radius: 4px;
+white-space: nowrap;
+}
+
+.badge-left {
+background: rgba(69, 150, 214, 0.2);
+color: #6bb8e8;
+border: 1px solid rgba(69, 150, 214, 0.3);
+}
+
+.badge-right {
+background: rgba(214, 64, 69, 0.2);
+color: #e88084;
+border: 1px solid rgba(214, 64, 69, 0.3);
+}
+
+/* Map */
+.map-wrapper {
+flex: 1;
+position: relative;
+overflow: hidden;
+}
+
+#map {
+width: 100%;
+height: 100%;
+}
+
+/* Swipe handle */
+.swipe-line {
+position: absolute;
+top: 0;
+bottom: 0;
+width: 3px;
+background: white;
+z-index: 800;
+pointer-events: none;
+box-shadow: 0 0 12px rgba(0,0,0,0.5);
+left: 50%;
+transform: translateX(-50%);
+}
+
+.swipe-handle {
+position: absolute;
+top: 50%;
+z-index: 801;
+transform: translate(-50%, -50%);
+left: 50%;
+width: 44px;
+height: 44px;
+background: white;
+border-radius: 50%;
+cursor: ew-resize;
+display: flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+transition: transform 0.15s ease;
+touch-action: none;
+}
+
+.swipe-handle:hover {
+transform: translate(-50%, -50%) scale(1.12);
+}
+
+.swipe-handle:active {
+transform: translate(-50%, -50%) scale(1.05);
+}
+
+.swipe-handle svg {
+width: 20px;
+height: 20px;
+fill: #333;
+}
+
+/* Year labels on map */
+.year-label {
+position: absolute;
+top: 16px;
+z-index: 799;
+padding: 6px 14px;
+border-radius: 6px;
+font-size: 15px;
+font-weight: 700;
+font-family: ‘DM Sans’, sans-serif;
+letter-spacing: 0.5px;
+pointer-events: none;
+backdrop-filter: blur(8px);
+}
+
+.year-label-left {
+left: 16px;
+background: rgba(69, 150, 214, 0.85);
+color: white;
+}
+
+.year-label-right {
+right: 16px;
+background: rgba(214, 64, 69, 0.85);
+color: white;
+}
+
+/* Search */
+.search-box {
+position: absolute;
+bottom: 24px;
+left: 50%;
+transform: translateX(-50%);
+z-index: 900;
+display: flex;
+align-items: center;
+gap: 0;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 4px;
+box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+width: min(420px, calc(100vw - 32px));
+}
+
+.search-box input {
+flex: 1;
+background: transparent;
+border: none;
+color: var(–text);
+padding: 8px 14px;
+font-size: 14px;
+font-family: ‘DM Sans’, sans-serif;
+outline: none;
+}
+
+.search-box input::placeholder {
+color: var(–text-muted);
+}
+
+.search-btn {
+background: var(–accent);
+border: none;
+color: white;
+padding: 8px 16px;
+border-radius: 7px;
+cursor: pointer;
+font-size: 13px;
+font-weight: 500;
+font-family: ‘DM Sans’, sans-serif;
+transition: background 0.2s;
+}
+
+.search-btn:hover { background: #c03538; }
+
+.search-results {
+position: absolute;
+bottom: 100%;
+left: 0;
+right: 0;
+margin-bottom: 4px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 10px;
+max-height: 200px;
+overflow-y: auto;
+display: none;
+box-shadow: 0 -4px 16px rgba(0,0,0,0.3);
+}
+
+.search-results.active { display: block; }
+
+.search-result-item {
+padding: 10px 14px;
+font-size: 13px;
+cursor: pointer;
+border-bottom: 1px solid var(–border);
+transition: background 0.15s;
+}
+
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(–surface-hover); }
+
+.search-result-item .result-name { font-weight: 500; }
+.search-result-item .result-detail { color: var(–text-muted); font-size: 11px; margin-top: 2px; }
+
+/* Info tooltip */
+.info-hint {
+position: absolute;
+top: 16px;
+left: 50%;
+transform: translateX(-50%);
+z-index: 799;
+background: rgba(0,0,0,0.7);
+color: white;
+padding: 8px 16px;
+border-radius: 8px;
+font-size: 12px;
+letter-spacing: 0.3px;
+pointer-events: none;
+opacity: 1;
+transition: opacity 1s ease;
+white-space: nowrap;
+}
+
+.info-hint.hidden { opacity: 0; }
+
+/* Loading overlay */
+.loading-overlay {
+position: absolute;
+inset: 0;
+background: rgba(26, 26, 30, 0.6);
+z-index: 850;
+display: none;
+align-items: center;
+justify-content: center;
+}
+
+.loading-overlay.active { display: flex; }
+
+.spinner {
+width: 36px;
+height: 36px;
+border: 3px solid var(–border);
+border-top-color: var(–accent);
+border-radius: 50%;
+animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 680px) {
+header { padding: 10px 14px; }
+.title { font-size: 17px; }
+.controls-bar { padding: 8px 14px; gap: 8px; }
+select { padding: 6px 28px 6px 8px; font-size: 12px; }
+.divider { display: none; }
+}
+
+/* Custom Leaflet styles */
+.leaflet-control-zoom { border: 1px solid var(–border) !important; border-radius: 8px !important; overflow: hidden; }
+.leaflet-control-zoom a { background: var(–surface) !important; color: var(–text) !important; border-color: var(–border) !important; width: 34px !important; height: 34px !important; line-height: 34px !important; font-size: 16px !important; }
+.leaflet-control-zoom a:hover { background: var(–surface-hover) !important; }
+</style>
+
+</head>
+<body>
+  <header>
+    <div class="logo-area">
+      <div class="swiss-cross">+</div>
+      <div class="title">Zeitreise <span>Kartenvergleich</span></div>
+    </div>
+  </header>
+
+  <div class="controls-bar">
+    <div class="control-group">
+      <span class="control-label">Typ</span>
+      <select id="layerType">
+        <option value="zeitreihen">Landeskarten (Zeitreihen)</option>
+        <option value="swissimage">Luftbilder (SWISSIMAGE)</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+    <div class="control-group layer-select-group">
+      <span class="layer-badge badge-left">Links</span>
+      <select id="yearLeft"></select>
+    </div>
+    <div class="control-group layer-select-group">
+      <span class="layer-badge badge-right">Rechts</span>
+      <select id="yearRight"></select>
+    </div>
+  </div>
+
+  <div class="map-wrapper">
+    <div id="map"></div>
+    <div class="swipe-line" id="swipeLine"></div>
+    <div class="swipe-handle" id="swipeHandle">
+      <svg viewBox="0 0 24 24"><path d="M8 5l-5 7 5 7M16 5l5 7-5 7"/><line x1="3" y1="12" x2="21" y2="12" stroke="#333" stroke-width="2" fill="none"/></svg>
+    </div>
+    <div class="year-label year-label-left" id="labelLeft"></div>
+    <div class="year-label year-label-right" id="labelRight"></div>
+    <div class="info-hint" id="infoHint">Schieberegler ziehen um Karten zu vergleichen</div>
+
+```
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="Ort suchen (z.B. Bern, Zürich, Matterhorn...)" autocomplete="off" />
+  <div class="search-results" id="searchResults"></div>
+  <button class="search-btn" id="searchBtn">Suchen</button>
+</div>
+```
+
+  </div>
+
+<script>
+// ============================================================
+// Configuration
+// ============================================================
+
+const TIMESTAMPS_ZEITREIHEN = [
+  '18611231','18641231','18651231','18681231','18701231','18711231',
+  '18721231','18751231','18761231','18781231','18791231','18801231',
+  '18811231','18821231','18831231','18841231','18851231','18861231',
+  '18871231','18881231','18891231','18901231','18911231','18921231',
+  '18931231','18941231','18951231','18961231','18971231','18981231',
+  '18991231','19001231','19011231','19021231','19031231','19041231',
+  '19051231','19061231','19071231','19081231','19091231','19101231',
+  '19111231','19121231','19131231','19141231','19151231','19161231',
+  '19171231','19181231','19191231','19201231','19211231','19221231',
+  '19231231','19241231','19251231','19261231','19271231','19281231',
+  '19291231','19301231','19311231','19321231','19331231','19341231',
+  '19351231','19361231','19371231','19381231','19391231','19401231',
+  '19411231','19421231','19431231','19441231','19451231','19461231',
+  '19471231','19481231','19491231','19501231','19511231','19521231',
+  '19531231','19541231','19551231','19561231','19571231','19581231',
+  '19591231','19601231','19611231','19621231','19631231','19641231',
+  '19651231','19661231','19671231','19681231','19691231','19701231',
+  '19711231','19721231','19731231','19741231','19751231','19761231',
+  '19771231','19781231','19791231','19801231','19811231','19821231',
+  '19831231','19841231','19851231','19861231','19871231','19881231',
+  '19891231','19901231','19911231','19921231','19931231','19941231',
+  '19951231','19961231','19971231','19981231','19991231','20001231',
+  '20011231','20021231','20031231','20041231','20051231','20061231',
+  '20071231','20081231','20091231','20101231','20111231','20121231',
+  '20131231','20141231','20151231','20161231','20171231','20181231',
+  '20191231','20201231','20211231','20221231','20231231','20241231'
+];
+
+const TIMESTAMPS_SWISSIMAGE = [
+  '19261231','19271231','19281231','19291231','19301231',
+  '19311231','19321231','19331231','19341231','19351231',
+  '19361231','19371231','19381231','19391231','19401231',
+  '19411231','19421231','19431231','19441231','19451231',
+  '19461231','19471231','19481231','19491231','19501231',
+  '19511231','19521231','19531231','19541231','19551231',
+  '19561231','19571231','19581231','19591231','19601231',
+  '19611231','19621231','19631231','19641231','19651231',
+  '19661231','19671231','19681231','19691231','19701231',
+  '19711231','19721231','19731231','19741231','19751231',
+  '19761231','19771231','19781231','19791231','19801231',
+  '19811231','19821231','19831231','19841231','19851231',
+  '19861231','19871231','19881231','19891231','19901231',
+  '19911231','19921231','19931231','19941231','19951231',
+  '19961231','19971231','19981231','19991231','20001231',
+  '20011231','20021231','20031231','20041231','20051231',
+  '20061231','20071231','20081231','20091231','20101231',
+  '20111231','20121231','20131231','20141231','20151231',
+  '20161231','20171231','20181231','20191231','20201231',
+  '20211231','20221231','20231231','20241231'
+];
+
+function tsToYear(ts) { return ts.substring(0, 4); }
+
+function getLayerUrl(type, timestamp) {
+  if (type === 'zeitreihen') {
+    return `https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.zeitreihen/default/${timestamp}/3857/{z}/{x}/{y}.png`;
+  } else {
+    return `https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage-product/default/${timestamp}/3857/{z}/{x}/{y}.jpeg`;
+  }
+}
+
+// ============================================================
+// Map setup
+// ============================================================
+
+const map = L.map('map', {
+  center: [46.95, 7.45], // Bern
+  zoom: 14,
+  zoomControl: true,
+  attributionControl: true
+});
+
+L.control.zoom({ position: 'topright' }).addTo(map);
+map.zoomControl.remove();
+
+// Attribution
+map.attributionControl.setPrefix('');
+map.attributionControl.addAttribution('© <a href="https://www.swisstopo.ch/" target="_blank">swisstopo</a>');
+
+let layerLeft = null;
+let layerRight = null;
+let currentType = 'zeitreihen';
+
+// ============================================================
+// Populate selects
+// ============================================================
+
+const yearLeftEl = document.getElementById('yearLeft');
+const yearRightEl = document.getElementById('yearRight');
+const layerTypeEl = document.getElementById('layerType');
+const labelLeftEl = document.getElementById('labelLeft');
+const labelRightEl = document.getElementById('labelRight');
+
+function populateYears() {
+  const timestamps = currentType === 'zeitreihen' ? TIMESTAMPS_ZEITREIHEN : TIMESTAMPS_SWISSIMAGE;
+  yearLeftEl.innerHTML = '';
+  yearRightEl.innerHTML = '';
+
+  timestamps.forEach(ts => {
+    const year = tsToYear(ts);
+    yearLeftEl.innerHTML += `<option value="${ts}">${year}</option>`;
+    yearRightEl.innerHTML += `<option value="${ts}">${year}</option>`;
+  });
+
+  // Smart defaults: pick an old and a recent year
+  const oldIdx = currentType === 'zeitreihen' ? 0 : 0;
+  const newIdx = timestamps.length - 1;
+
+  // Try to set a nice spread
+  const defaultOld = currentType === 'zeitreihen' ? '19001231' : '19461231';
+  const defaultNew = timestamps[newIdx];
+
+  if (timestamps.includes(defaultOld)) {
+    yearLeftEl.value = defaultOld;
+  } else {
+    yearLeftEl.value = timestamps[oldIdx];
+  }
+  yearRightEl.value = defaultNew;
+}
+
+// ============================================================
+// Layer management with clip
+// ============================================================
+
+let swipeX = 0.5; // 0..1 fraction
+
+function createLayers() {
+  if (layerLeft) map.removeLayer(layerLeft);
+  if (layerRight) map.removeLayer(layerRight);
+
+  const tsLeft = yearLeftEl.value;
+  const tsRight = yearRightEl.value;
+
+  layerLeft = L.tileLayer(getLayerUrl(currentType, tsLeft), {
+    maxZoom: 20,
+    minZoom: 7,
+    tileSize: 256,
+    attribution: ''
+  }).addTo(map);
+
+  layerRight = L.tileLayer(getLayerUrl(currentType, tsRight), {
+    maxZoom: 20,
+    minZoom: 7,
+    tileSize: 256,
+    attribution: ''
+  }).addTo(map);
+
+  labelLeftEl.textContent = tsToYear(tsLeft);
+  labelRightEl.textContent = tsToYear(tsRight);
+
+  applyClip();
+}
+
+function applyClip() {
+  if (!layerLeft || !layerRight) return;
+  const container = map.getContainer();
+  const w = container.offsetWidth;
+  const px = Math.round(swipeX * w);
+
+  // Clip left layer: show only left of line
+  const leftPane = layerLeft.getContainer();
+  if (leftPane) {
+    leftPane.style.clipPath = `inset(0 ${w - px}px 0 0)`;
+  }
+
+  // Clip right layer: show only right of line
+  const rightPane = layerRight.getContainer();
+  if (rightPane) {
+    rightPane.style.clipPath = `inset(0 0 0 ${px}px)`;
+  }
+
+  // Update swipe UI
+  const swipeLine = document.getElementById('swipeLine');
+  const swipeHandle = document.getElementById('swipeHandle');
+  swipeLine.style.left = px + 'px';
+  swipeLine.style.transform = 'none';
+  swipeHandle.style.left = px + 'px';
+  swipeHandle.style.transform = 'translate(-50%, -50%)';
+}
+
+// ============================================================
+// Swipe interaction
+// ============================================================
+
+const swipeHandle = document.getElementById('swipeHandle');
+let dragging = false;
+
+function startDrag(e) {
+  dragging = true;
+  e.preventDefault();
+  document.getElementById('infoHint').classList.add('hidden');
+}
+
+function doDrag(e) {
+  if (!dragging) return;
+  const container = map.getContainer();
+  const rect = container.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  let x = (clientX - rect.left) / rect.width;
+  x = Math.max(0.02, Math.min(0.98, x));
+  swipeX = x;
+  applyClip();
+}
+
+function endDrag() {
+  dragging = false;
+}
+
+swipeHandle.addEventListener('mousedown', startDrag);
+swipeHandle.addEventListener('touchstart', startDrag, { passive: false });
+document.addEventListener('mousemove', doDrag);
+document.addEventListener('touchmove', doDrag, { passive: false });
+document.addEventListener('mouseup', endDrag);
+document.addEventListener('touchend', endDrag);
+
+// Reapply clip on move/zoom/resize
+map.on('move zoom resize', applyClip);
+window.addEventListener('resize', applyClip);
+
+// Also reapply after tiles load
+map.on('layeradd', () => {
+  setTimeout(applyClip, 50);
+  setTimeout(applyClip, 200);
+  setTimeout(applyClip, 500);
+});
+
+// ============================================================
+// Event handlers
+// ============================================================
+
+layerTypeEl.addEventListener('change', () => {
+  currentType = layerTypeEl.value;
+  populateYears();
+  createLayers();
+});
+
+yearLeftEl.addEventListener('change', createLayers);
+yearRightEl.addEventListener('change', createLayers);
+
+// ============================================================
+// Search (using geo.admin.ch search API)
+// ============================================================
+
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const searchResults = document.getElementById('searchResults');
+
+async function doSearch() {
+  const q = searchInput.value.trim();
+  if (!q) return;
+  try {
+    const res = await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&limit=6`);
+    const data = await res.json();
+    searchResults.innerHTML = '';
+    if (data.results && data.results.length > 0) {
+      data.results.forEach(r => {
+        const attrs = r.attrs;
+        const div = document.createElement('div');
+        div.className = 'search-result-item';
+        div.innerHTML = `<div class="result-name">${attrs.label.replace(/<[^>]*>/g, '')}</div><div class="result-detail">${attrs.detail || ''}</div>`;
+        div.addEventListener('click', () => {
+          map.setView([attrs.lat, attrs.lon], 15);
+          searchResults.classList.remove('active');
+          searchInput.value = attrs.label.replace(/<[^>]*>/g, '');
+        });
+        searchResults.appendChild(div);
+      });
+      searchResults.classList.add('active');
+    } else {
+      searchResults.classList.remove('active');
+    }
+  } catch (err) {
+    console.error('Search error:', err);
+  }
+}
+
+searchBtn.addEventListener('click', doSearch);
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+// Close results on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-box')) {
+    searchResults.classList.remove('active');
+  }
+});
+
+// ============================================================
+// Init
+// ============================================================
+
+populateYears();
+createLayers();
+
+// Hide info hint after 5s
+setTimeout(() => {
+  document.getElementById('infoHint').classList.add('hidden');
+}, 5000);
+</script>
+
+</body>
+</html>
