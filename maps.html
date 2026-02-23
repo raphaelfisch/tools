@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -28,11 +27,12 @@
   .br{background:#5a1a1a;color:#ee5a5a}
   select{appearance:none;-webkit-appearance:none;background:#222;color:#eee;border:1px solid #444;padding:4px 20px 4px 6px;border-radius:4px;font-size:11px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' fill='%23999'%3E%3Cpath d='M4 6L0 2h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 5px center}
   select:focus{outline:none;border-color:#e24a4f}
+  .leaflet-top.leaflet-right{top:40px!important}
 
   .mw{flex:1;position:relative;min-height:0}
   #map{width:100%;height:100%}
   #overlay{position:absolute;top:0;left:0;right:0;bottom:0;z-index:600;pointer-events:none;overflow:hidden}
-  #omap{position:absolute;top:0;left:0;width:100%;height:100%}
+  #omap{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
 
   .sl{position:absolute;top:0;bottom:0;width:3px;background:#fff;z-index:700;pointer-events:none;box-shadow:0 0 8px rgba(0,0,0,.6);left:50%}
   .sk{position:absolute;top:50%;left:50%;z-index:701;width:44px;height:44px;margin:-22px 0 0 -22px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.5);cursor:ew-resize;touch-action:none;-webkit-user-select:none;user-select:none}
@@ -42,12 +42,12 @@
   .pl{left:10px;background:rgba(74,157,226,.85)}
   .pr{right:10px;background:rgba(226,74,79,.85)}
 
-  .sb{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:800;width:min(360px,calc(100% - 20px))}
+  .sb{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:1000;width:min(360px,calc(100% - 20px))}
   .si{display:flex;background:#1a1a1e;border:1px solid #333;border-radius:9px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.5)}
-  .si input{flex:1;background:none;border:none;color:#eee;padding:10px 10px;font-size:13px;outline:none;min-width:0}
+  .si input{flex:1;background:none;border:none;color:#eee;padding:10px 10px;font-size:16px;outline:none;min-width:0}
   .si input::placeholder{color:#666}
-  .si button{background:#e24a4f;border:none;color:#fff;padding:0 14px;font:600 12px sans-serif;cursor:pointer;flex-shrink:0}
-  .rl{position:absolute;bottom:calc(100% + 4px);left:0;right:0;background:#1a1a1e;border:1px solid #333;border-radius:9px;max-height:180px;overflow-y:auto;display:none}
+  .si button{background:#e24a4f;border:none;color:#fff;padding:0 14px;font:600 13px sans-serif;cursor:pointer;flex-shrink:0}
+  .rl{position:absolute;bottom:calc(100% + 4px);left:0;right:0;background:#1a1a1e;border:1px solid #333;border-radius:9px;max-height:180px;overflow-y:auto;display:none;z-index:1001}
   .rl.open{display:block}
   .ri{padding:8px 10px;font-size:12px;color:#ddd;cursor:pointer;border-bottom:1px solid #333}
   .ri:last-child{border-bottom:none}
@@ -56,7 +56,6 @@
   .hint{position:absolute;top:50%;left:50%;transform:translate(-50%,30px);z-index:698;background:rgba(0,0,0,.75);color:#fff;padding:6px 14px;border-radius:6px;font-size:11px;pointer-events:none;white-space:nowrap;transition:opacity 1s}
   .hint.gone{opacity:0}
 </style>
-
 </head>
 <body>
 <div class="app">
@@ -99,27 +98,38 @@
 // ============================================================
 var LAYERS = [
   // Current maps
-  { label: 'Aktuell (Farbe)',      layer: 'ch.swisstopo.pixelkarte-farbe', format: 'jpeg', timestamp: 'current', maxNativeZoom: 27 },
-  { label: 'Aktuell (Luftbild)',   layer: 'ch.swisstopo.swissimage',       format: 'jpeg', timestamp: 'current', maxNativeZoom: 28 },
-  // Historic Zeitreihen - curated decades
-  { label: 'Zeitreihen 2020',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20201231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 2015',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20151231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 2010',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20101231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 2005',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20051231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 2000',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20001231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1995',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19951231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1990',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19901231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1985',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19851231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1980',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19801231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1970',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19701231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1960',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19601231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1950',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19501231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1940',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19401231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1930',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19301231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1920',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19201231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1900',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19001231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1880',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '18801231', maxNativeZoom: 26 },
-  { label: 'Zeitreihen 1864',      layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '18641231', maxNativeZoom: 26 },
+  { label: 'Karte aktuell',        layer: 'ch.swisstopo.pixelkarte-farbe', format: 'jpeg', timestamp: 'current', maxNativeZoom: 27 },
+  { label: 'Luftbild aktuell',     layer: 'ch.swisstopo.swissimage',       format: 'jpeg', timestamp: 'current', maxNativeZoom: 28 },
+  // Historic maps
+  { label: 'Karte 2020',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20201231', maxNativeZoom: 26 },
+  { label: 'Karte 2015',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20151231', maxNativeZoom: 26 },
+  { label: 'Karte 2010',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20101231', maxNativeZoom: 26 },
+  { label: 'Karte 2005',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20051231', maxNativeZoom: 26 },
+  { label: 'Karte 2000',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '20001231', maxNativeZoom: 26 },
+  { label: 'Karte 1995',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19951231', maxNativeZoom: 26 },
+  { label: 'Karte 1990',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19901231', maxNativeZoom: 26 },
+  { label: 'Karte 1985',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19851231', maxNativeZoom: 26 },
+  { label: 'Karte 1980',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19801231', maxNativeZoom: 26 },
+  { label: 'Karte 1970',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19701231', maxNativeZoom: 26 },
+  { label: 'Karte 1960',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19601231', maxNativeZoom: 26 },
+  { label: 'Karte 1950',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19501231', maxNativeZoom: 26 },
+  { label: 'Karte 1940',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19401231', maxNativeZoom: 26 },
+  { label: 'Karte 1930',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19301231', maxNativeZoom: 26 },
+  { label: 'Karte 1920',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19201231', maxNativeZoom: 26 },
+  { label: 'Karte 1900',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19001231', maxNativeZoom: 26 },
+  { label: 'Karte 1880',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '18801231', maxNativeZoom: 26 },
+  { label: 'Karte 1864',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '18641231', maxNativeZoom: 26 },
+  // Historic aerial images (SWISSIMAGE product)
+  { label: 'Luftbild 2020',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20201231', maxNativeZoom: 28 },
+  { label: 'Luftbild 2015',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20151231', maxNativeZoom: 28 },
+  { label: 'Luftbild 2010',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20101231', maxNativeZoom: 28 },
+  { label: 'Luftbild 2005',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20051231', maxNativeZoom: 28 },
+  { label: 'Luftbild 2000',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20001231', maxNativeZoom: 28 },
+  { label: 'Luftbild 1990',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19901231', maxNativeZoom: 28 },
+  { label: 'Luftbild 1980',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19801231', maxNativeZoom: 28 },
+  { label: 'Luftbild 1970',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19701231', maxNativeZoom: 28 },
+  { label: 'Luftbild 1960',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19601231', maxNativeZoom: 28 },
+  { label: 'Luftbild 1946',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19461231', maxNativeZoom: 28 },
 ];
 
 // ============================================================
@@ -128,20 +138,32 @@ var LAYERS = [
 var selL = document.getElementById('selL');
 var selR = document.getElementById('selR');
 
-LAYERS.forEach(function(item, i) {
-  selL.innerHTML += '<option value="' + i + '">' + item.label + '</option>';
-  selR.innerHTML += '<option value="' + i + '">' + item.label + '</option>';
-});
+function fillSelects() {
+  var maps = '';
+  var aerials = '';
+  LAYERS.forEach(function(item, i) {
+    var opt = '<option value="' + i + '">' + item.label + '</option>';
+    if (item.label.indexOf('Luftbild') === 0) {
+      aerials += opt;
+    } else {
+      maps += opt;
+    }
+  });
+  var html = '<optgroup label="Karten">' + maps + '</optgroup><optgroup label="Luftbilder">' + aerials + '</optgroup>';
+  selL.innerHTML = html;
+  selR.innerHTML = html;
+}
+fillSelects();
 
 // Default: Left = Zeitreihen 1900, Right = Aktuell (Farbe)
-selL.value = LAYERS.findIndex(function(l) { return l.timestamp === '19001231'; });
-selR.value = 0; // Aktuell (Farbe)
+selL.value = LAYERS.findIndex(function(l) { return l.label === 'Karte 1900'; });
+selR.value = 0; // Karte aktuell
 
 // ============================================================
 // TWO MAPS
 // ============================================================
 var mapR = L.map('map', { crs: L.CRS.EPSG2056, zoomControl: false });
-L.control.zoom({ position: 'bottomright' }).addTo(mapR);
+L.control.zoom({ position: 'topright' }).addTo(mapR);
 
 var mapL = L.map('omap', {
   crs: L.CRS.EPSG2056, zoomControl: false, attributionControl: false,
@@ -288,6 +310,5 @@ build();
 clip();
 setTimeout(function() { document.getElementById('hint').classList.add('gone'); }, 4000);
 </script>
-
 </body>
 </html>
