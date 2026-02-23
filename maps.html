@@ -17,7 +17,7 @@
   html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#111;overflow:hidden}
   .app{display:flex;flex-direction:column;height:100vh;height:100dvh}
 
-  .bar{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:6px 10px;padding-top:max(6px,env(safe-area-inset-top));background:#1a1a1e;color:#eee;border-bottom:1px solid #333;overflow-x:auto;z-index:900;font-size:12px;scrollbar-width:none}
+  .bar{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 10px;padding-top:max(6px,env(safe-area-inset-top));background:#1a1a1e;color:#eee;border-bottom:1px solid #333;overflow-x:auto;z-index:900;font-size:12px;scrollbar-width:none}
   .bar::-webkit-scrollbar{display:none}
   .logo{font-weight:700;color:#e24a4f;margin-right:4px;white-space:nowrap}
   .vr{width:1px;height:18px;background:#444;flex-shrink:0}
@@ -29,6 +29,8 @@
   select:focus{outline:none;border-color:#e24a4f}
   .leaflet-top.leaflet-right{top:40px!important}
 
+  .info-note{flex-shrink:0;padding:4px 10px;background:#151517;color:#888;font-size:10px;border-bottom:1px solid #222;z-index:900;text-align:center}
+  .info-note span{color:#aaa}
   .mw{flex:1;position:relative;min-height:0}
   #map{width:100%;height:100%}
   #overlay{position:absolute;top:0;left:0;right:0;bottom:0;z-index:600;pointer-events:none;overflow:hidden}
@@ -60,8 +62,6 @@
 <body>
 <div class="app">
   <div class="bar">
-    <div class="logo">+ Zeitreise</div>
-    <div class="vr"></div>
     <div class="g">
       <span class="badge bl">Links</span>
       <select id="selL"></select>
@@ -71,6 +71,8 @@
       <select id="selR"></select>
     </div>
   </div>
+
+  <div class="info-note">ℹ︎ <span>Es wird jeweils die nächste verfügbare Kartenausgabe bzw. Luftaufnahme für die gewählte Region angezeigt. Die Jahreszahlen sind Richtwerte.</span></div>
 
   <div class="mw" id="mw">
     <div id="map"></div>
@@ -97,7 +99,7 @@
 // and the config needed to create the L.tileLayer.swiss layer.
 // ============================================================
 var LAYERS = [
-  // Current maps
+  // Current
   { label: 'Karte aktuell',        layer: 'ch.swisstopo.pixelkarte-farbe', format: 'jpeg', timestamp: 'current', maxNativeZoom: 27 },
   { label: 'Luftbild aktuell',     layer: 'ch.swisstopo.swissimage',       format: 'jpeg', timestamp: 'current', maxNativeZoom: 28 },
   // Historic maps
@@ -119,18 +121,18 @@ var LAYERS = [
   { label: 'Karte 1900',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '19001231', maxNativeZoom: 26 },
   { label: 'Karte 1880',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '18801231', maxNativeZoom: 26 },
   { label: 'Karte 1864',           layer: 'ch.swisstopo.zeitreihen', format: 'png', timestamp: '18641231', maxNativeZoom: 26 },
-  // Historic aerial images (SWISSIMAGE product)
+  // Historic aerial images – coverage varies by region!
   { label: 'Luftbild 2020',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20201231', maxNativeZoom: 28 },
-  { label: 'Luftbild 2015',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20151231', maxNativeZoom: 28 },
   { label: 'Luftbild 2010',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20101231', maxNativeZoom: 28 },
-  { label: 'Luftbild 2005',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20051231', maxNativeZoom: 28 },
   { label: 'Luftbild 2000',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '20001231', maxNativeZoom: 28 },
   { label: 'Luftbild 1990',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19901231', maxNativeZoom: 28 },
   { label: 'Luftbild 1980',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19801231', maxNativeZoom: 28 },
   { label: 'Luftbild 1970',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19701231', maxNativeZoom: 28 },
-  { label: 'Luftbild 1960',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19601231', maxNativeZoom: 28 },
   { label: 'Luftbild 1946',        layer: 'ch.swisstopo.swissimage-product', format: 'jpeg', timestamp: '19461231', maxNativeZoom: 28 },
 ];
+
+// Index where Luftbilder start
+var LUFTBILD_START = 20;
 
 // ============================================================
 // SELECTS
@@ -149,7 +151,7 @@ function fillSelects() {
       maps += opt;
     }
   });
-  var html = '<optgroup label="Karten">' + maps + '</optgroup><optgroup label="Luftbilder">' + aerials + '</optgroup>';
+  var html = '<optgroup label="Karten">' + maps + '</optgroup><optgroup label="Luftbilder (Abdeckung variiert)">' + aerials + '</optgroup>';
   selL.innerHTML = html;
   selR.innerHTML = html;
 }
