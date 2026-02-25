@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promotionsrechner</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 15px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 12px 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 12px;
+        }
+        .card h2 {
+            margin: 0 0 10px 0;
+            color: #34495e;
+            font-size: 1em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card h2 .step-number {
+            background: #3498db;
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .section-result {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .section-result .label {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: normal;
+        }
+        .section-result .value {
+            background: #ecf0f1;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+            min-width: 45px;
+            text-align: center;
+        }
+        .section-result .value.has-value {
+            background: #27ae60;
+            color: white;
+        }
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .input-group label {
+            font-size: 13px;
+            color: #34495e;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 55px;
+            padding: 6px 8px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .input-group input.valid {
+            border-color: #27ae60;
+            background: #f0f9f4;
+        }
+        .input-group select {
+            padding: 6px 8px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .input-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .niveau-badge {
+            background: #27ae60;
+            color: white;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .niveau-badge.m { background: #3498db; }
+        .niveau-badge.g { background: #e91e63; }
+        .nt-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-right: 5px;
+        }
+
+        /* Ergebnis */
+        .result-card {
+            background: #34495e;
+            color: white;
+        }
+        .result-card h2 {
+            color: white;
+            border-bottom-color: rgba(255,255,255,0.3);
+            margin-bottom: 12px;
+        }
+        .result-display {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .result-value-box {
+            text-align: center;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        .result-value {
+            font-size: 2em;
+            font-weight: 700;
+        }
+        .result-label {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        .result-status {
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .result-status.promoted { background: #27ae60; }
+        .result-status.not-promoted { background: #e74c3c; }
+        .result-status.discussion { background: #f39c12; }
+        .result-status.pending { background: rgba(255,255,255,0.2); }
+        .result-breakdown {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+        .breakdown-item {
+            text-align: center;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            min-width: 65px;
+        }
+        .breakdown-item .number {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .breakdown-item .label {
+            font-size: 9px;
+            opacity: 0.7;
+        }
+
+        .btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .btn:hover { background: #c0392b; }
+
+        .detail-calc {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+        <h1 style="margin: 0; font-size: 1.4em;">Promotionsrechner</h1>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 13px; color: #34495e; font-weight: 500;">Abteilung</span>
+                <select id="abteilung" onchange="berechne()" style="padding: 6px 10px; border: 2px solid #bdc3c7; border-radius: 6px; font-size: 13px; height: 34px;">
+                    <option value="E">E</option>
+                    <option value="G">G</option>
+                </select>
+            </div>
+            <button class="btn" onclick="resetAll()" style="height: 34px; margin: 0; line-height: 1;">🔄 Zurücksetzen</button>
+        </div>
+    </div>
+
+    <!-- Bereich 1: Deutsch -->
+    <div class="card">
+        <h2>
+            <span class="step-number">1</span>
+            Deutsch
+            <div class="section-result">
+                <span class="label">Drittel:</span>
+                <span class="value" id="result-deutsch">–</span>
+            </div>
+        </h2>
+        <div class="input-row">
+            <div class="input-group">
+                <label>Note</label>
+                <input type="number" id="deutsch" min="1" max="6" step="0.5" placeholder="–" oninput="berechne()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Bereich 2: Mathematik -->
+    <div class="card">
+        <h2>
+            <span class="step-number">2</span>
+            Mathematik
+            <div class="section-result">
+                <span class="label">Drittel:</span>
+                <span class="value" id="result-mathe">–</span>
+            </div>
+        </h2>
+        <div class="input-row">
+            <div class="input-group">
+                <label>Mathe</label>
+                <input type="number" id="mathematik" min="1" max="6" step="0.5" placeholder="–" oninput="berechne()">
+            </div>
+            <div class="input-group">
+                <label>Geometrie</label>
+                <input type="number" id="geometrie" min="1" max="6" step="0.5" placeholder="–" oninput="berechne()">
+            </div>
+            <div class="input-group">
+                <label>Niveau</label>
+                <select id="matheNiveau" onchange="berechne()">
+                    <option value="e">e (+0.6)</option>
+                    <option value="m">m (±0)</option>
+                    <option value="g">g (-0.6)</option>
+                </select>
+            </div>
+        </div>
+        <div class="detail-calc" id="detail-mathe">–</div>
+    </div>
+
+    <!-- Bereich 3: NT + RZG -->
+    <div class="card">
+        <h2>
+            <span class="step-number">3</span>
+            RZG + NT
+            <div class="section-result">
+                <span class="label">Drittel:</span>
+                <span class="value" id="result-nt">–</span>
+            </div>
+        </h2>
+        <div class="input-row">
+            <span class="nt-label">RZG:</span>
+            <div class="input-group">
+                <input type="number" id="rzg" min="1" max="6" step="0.5" placeholder="–" oninput="berechne()">
+            </div>
+            <span class="nt-label" style="margin-left: 15px;">NT:</span>
+            <div class="input-group">
+                <label>Phy</label>
+                <input type="number" id="physik" min="1" max="6" step="0.5" placeholder="–" oninput="berechne()">
+            </div>
+            <div class="input-group">
+                <label>Che</label>
+                <input type="number" id="chemie" min="1" max="6" step="0.5" placeholder="–" oninput="berechne()">
+            </div>
+            <div class="input-group">
+                <label>Bio</label>
+                <input type="number" id="biologie" min="1" max="6" step="0.5" placeholder="–" oninput="berechne()">
+            </div>
+        </div>
+        <div class="detail-calc" id="detail-nt">–</div>
+    </div>
+
+    <!-- Ergebnis -->
+    <div class="card result-card">
+        <h2>Promotionsschnitt</h2>
+        <div class="result-display">
+            <div class="result-value-box">
+                <div class="result-value" id="resultValue">–</div>
+                <div class="result-label">Schnitt</div>
+            </div>
+            <div class="result-status pending" id="resultStatus">Noten eingeben</div>
+            <div class="result-breakdown">
+                <div class="breakdown-item">
+                    <div class="number" id="bd-deutsch">–</div>
+                    <div class="label">D</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="number" id="bd-mathe">–</div>
+                    <div class="label">M</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="number" id="bd-nt">–</div>
+                    <div class="label">RZG+NT</div>
+                </div>
+            </div>
+        </div>
+        <div class="detail-calc" id="kriterien-info" style="color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.1); margin-top: 10px;">–</div>
+    </div>
+
+    <script>
+        const niveauBonus = { 'e': 0.6, 'm': 0, 'g': -0.6 };
+
+        function getVal(id) {
+            const v = parseFloat(document.getElementById(id).value);
+            return (!isNaN(v) && v >= 1 && v <= 6) ? v : null;
+        }
+
+        function setResult(id, value) {
+            const el = document.getElementById(id);
+            if (value !== null) {
+                el.textContent = value.toFixed(2);
+                el.classList.add('has-value');
+            } else {
+                el.textContent = '–';
+                el.classList.remove('has-value');
+            }
+        }
+
+        function berechne() {
+            const bonus = niveauBonus[document.getElementById('matheNiveau').value];
+
+            // Bereich 1: Deutsch
+            const deutsch = getVal('deutsch');
+            setResult('result-deutsch', deutsch);
+            document.getElementById('bd-deutsch').textContent = deutsch ? deutsch.toFixed(1) : '–';
+
+            // Bereich 2: Mathematik (Schnitt + Bonus)
+            const mathe = getVal('mathematik');
+            const geo = getVal('geometrie');
+            let matheBereich = null;
+            let matheSchnitt = null;
+            if (mathe !== null && geo !== null) {
+                matheSchnitt = (mathe + geo) / 2;
+                matheBereich = Math.min(6, Math.max(1, matheSchnitt + bonus));
+            }
+            setResult('result-mathe', matheBereich);
+            document.getElementById('bd-mathe').textContent = matheBereich ? matheBereich.toFixed(2) : '–';
+            document.getElementById('detail-mathe').textContent = matheBereich !== null ? 
+                `(${mathe} + ${geo}) ÷ 2 = ${matheSchnitt.toFixed(2)} ${bonus >= 0 ? '+' : ''}${bonus} = ${matheBereich.toFixed(2)}` : '–';
+
+            // Bereich 3: RZG + NT
+            const rzg = getVal('rzg');
+            const ntFaecher = [getVal('physik'), getVal('chemie'), getVal('biologie')].filter(v => v !== null);
+            let ntBereich = null;
+            let ntSchnitt = null;
+            if (ntFaecher.length > 0 && rzg !== null) {
+                ntSchnitt = ntFaecher.reduce((a, b) => a + b, 0) / ntFaecher.length;
+                ntBereich = (ntSchnitt + rzg) / 2;
+            }
+            setResult('result-nt', ntBereich);
+            document.getElementById('bd-nt').textContent = ntBereich ? ntBereich.toFixed(2) : '–';
+            document.getElementById('detail-nt').textContent = ntBereich !== null ? 
+                `RZG: ${rzg}, NT: ${ntSchnitt.toFixed(2)} → (${rzg} + ${ntSchnitt.toFixed(2)}) ÷ 2 = ${ntBereich.toFixed(2)}` : '–';
+
+            // Gesamtergebnis
+            const resultValue = document.getElementById('resultValue');
+            const resultStatus = document.getElementById('resultStatus');
+            const abteilung = document.getElementById('abteilung').value;
+            
+            // Kriterien anzeigen
+            const kriterienInfo = document.getElementById('kriterien-info');
+            if (abteilung === 'E') {
+                kriterienInfo.textContent = '<3.8 nicht promoviert, 3.8–4.0 Diskussion, ≥4.0 promoviert';
+            } else {
+                kriterienInfo.textContent = '>5.0 Aufstieg?, sonst promoviert';
+            }
+
+            if (deutsch !== null && matheBereich !== null && ntBereich !== null) {
+                const schnitt = (deutsch + matheBereich + ntBereich) / 3;
+                resultValue.textContent = schnitt.toFixed(2);
+
+                if (abteilung === 'E') {
+                    if (schnitt >= 4.0) {
+                        resultStatus.textContent = '✓ Promoviert';
+                        resultStatus.className = 'result-status promoted';
+                    } else if (schnitt >= 3.8) {
+                        resultStatus.textContent = '⚠ Diskussion';
+                        resultStatus.className = 'result-status discussion';
+                    } else {
+                        resultStatus.textContent = '✗ Nicht promoviert';
+                        resultStatus.className = 'result-status not-promoted';
+                    }
+                } else {
+                    if (schnitt > 5.0) {
+                        resultStatus.textContent = '⬆ Aufstieg?';
+                        resultStatus.className = 'result-status discussion';
+                    } else {
+                        resultStatus.textContent = '✓ Promoviert';
+                        resultStatus.className = 'result-status promoted';
+                    }
+                }
+            } else {
+                resultValue.textContent = '–';
+                resultStatus.textContent = 'Alle Bereiche ausfüllen';
+                resultStatus.className = 'result-status pending';
+            }
+        }
+
+        function resetAll() {
+            ['deutsch', 'mathematik', 'geometrie', 'rzg', 'physik', 'chemie', 'biologie'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('abteilung').value = 'E';
+            document.getElementById('matheNiveau').value = 'e';
+            berechne();
+        }
+
+        berechne();
+    </script>
+</body>
+</html>
