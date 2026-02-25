@@ -1,0 +1,2373 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promotionsrechner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 15px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #34495e;
+            font-size: 1em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        .compact-card {
+            padding: 10px 15px;
+        }
+        .compact-card h2 {
+            margin: 0;
+            padding: 0;
+            border: none;
+            font-size: 0.95em;
+        }
+        .step1-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .drop-zone-mini {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+        .drop-zone-mini:hover {
+            border-color: #3498db;
+            background: #e8f4fd;
+        }
+        .drop-zone-mini .drop-icon {
+            font-size: 1.2em;
+        }
+        .file-status-row {
+            display: flex;
+            gap: 8px;
+        }
+        .file-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #bdc3c7;
+            font-size: 12px;
+        }
+        .file-status.loaded {
+            background: #d5f4e6;
+            border-left-color: #27ae60;
+        }
+        .status-icon { font-size: 1em; }
+        .status-name { font-weight: bold; }
+        .status-info { color: #7f8c8d; margin-left: auto; }
+        .file-status.loaded .status-info { color: #27ae60; }
+        .step3-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .step3-row .global-stats {
+            display: flex;
+            gap: 6px;
+            margin: 0;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        .action-buttons .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .step2-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .step2-header h2 {
+            margin: 0;
+            padding: 0;
+            border: none;
+            font-size: 0.95em;
+        }
+        .noten-input-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+        .pdf-drop-zone {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px;
+            border: 2px dashed #3498db;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        .pdf-drop-zone:hover, .pdf-drop-zone.drag-over {
+            background: #e8f4fd;
+            border-color: #2980b9;
+        }
+        .pdf-status { font-size: 12px; color: #27ae60; }
+        .tab {
+            padding: 6px 10px;
+            background: #ecf0f1;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .tab:hover { background: #bdc3c7; }
+        .tab.active { background: #3498db; color: white; }
+        .tab.has-data { background: #27ae60; color: white; }
+        .tab.has-data.active { background: #1e8449; }
+        .tab-content {
+            display: none;
+            border: 2px solid #3498db;
+            border-radius: 0 6px 6px 6px;
+            padding: 10px;
+            background: white;
+        }
+        .tab-content.active { display: block; }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin: 3px;
+            transition: background 0.3s;
+        }
+        .btn:hover { background: #2980b9; }
+        .btn-success { background: #27ae60; }
+        .btn-success:hover { background: #219a52; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-secondary { background: #95a5a6; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .btn-settings { background: #9b59b6; }
+        .btn-settings:hover { background: #8e44ad; }
+        .btn-small { padding: 5px 10px; font-size: 12px; }
+        .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            table-layout: fixed;
+        }
+        th, td {
+            padding: 4px 3px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        th {
+            background: #34495e;
+            color: white;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+        }
+        tr:hover { background: #f8f9fa; }
+        .promoted { background: #d5f4e6 !important; }
+        .not-promoted { background: #fce4e4 !important; }
+        .discussion { background: #fff9e6 !important; }
+        .result-container { overflow-x: auto; }
+        .stat-box {
+            background: #ecf0f1;
+            padding: 5px 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        select, input[type="text"] {
+            padding: 2px 4px;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .editable { width: 32px; text-align: center; }
+        .info-box {
+            background: #e8f4fd;
+            border-left: 3px solid #3498db;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .global-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .global-stat {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+        .global-stat .number { font-size: 22px; font-weight: bold; }
+        .global-stat .label { font-size: 11px; opacity: 0.9; }
+        .global-stat.green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .global-stat.red { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); }
+        .global-stat.yellow { background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 1.2em; }
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(90vh - 140px);
+        }
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .modal-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .modal-tab {
+            padding: 8px 16px;
+            background: #ecf0f1;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .modal-tab:hover { background: #bdc3c7; }
+        .modal-tab.active { background: #9b59b6; color: white; }
+        .modal-tab-content { display: none; }
+        .modal-tab-content.active { display: block; }
+        .config-info {
+            background: #e8f4fd;
+            border-left: 3px solid #3498db;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            border-radius: 0 6px 6px 0;
+        }
+        .config-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .config-name input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #9b59b6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* Fachbereich Editor Styles */
+        .fachbereich-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .fachbereich-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .fachbereich-header input[type="text"] {
+            background: rgba(255,255,255,0.9);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            width: 150px;
+        }
+        .fachbereich-header .gewicht-input {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+        .fachbereich-header .gewicht-input input {
+            width: 60px;
+            text-align: center;
+            background: white;
+            border: none;
+            padding: 4px;
+            border-radius: 3px;
+        }
+        .fachbereich-header .btn-remove-fb {
+            margin-left: auto;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .fachbereich-header .btn-remove-fb:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .fachbereich-body {
+            padding: 15px;
+            background: #fafafa;
+        }
+        .niveau-bonus-section {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+        }
+        .niveau-bonus-section label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .niveau-bonus-grid {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .niveau-bonus-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .niveau-bonus-item input[type="number"] {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .faecher-section {
+            margin-top: 10px;
+        }
+        .faecher-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: #555;
+        }
+        .fach-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .fach-row select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-width: 140px;
+        }
+        .fach-row .gewicht-mini {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .fach-row .gewicht-mini input {
+            width: 50px;
+            padding: 4px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .fach-row .pflicht-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+        .fach-row .btn-remove-fach {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .untergruppe-container {
+            border: 2px dashed #9b59b6;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            background: #f9f5ff;
+        }
+        .untergruppe-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .untergruppe-header input[type="text"] {
+            padding: 5px 10px;
+            border: 1px solid #9b59b6;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .untergruppe-header .gewicht-mini input {
+            border-color: #9b59b6;
+        }
+        .untergruppe-info {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+        .add-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .add-buttons .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .formel-preview {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+        .formel-preview h4 {
+            margin: 0 0 10px 0;
+            color: #3498db;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 12px;
+            border-radius: 0 6px 6px 0;
+        }
+
+        /* Grenzen Tab */
+        .grenzen-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .grenzen-table th, .grenzen-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ecf0f1;
+        }
+        .grenzen-table th {
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+        }
+        .grenzen-table input[type="number"] {
+            width: 70px;
+            padding: 6px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+        }
+        .grenzen-table input[type="text"] {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+        }
+        .grenzen-table select {
+            padding: 6px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+        }
+        .btn-add-row { margin-top: 10px; }
+        .btn-remove-row {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        <span>🎓 Promotionsrechner</span>
+        <div class="header-buttons">
+            <button class="btn btn-settings" onclick="openSettings()">⚙️ Einstellungen</button>
+        </div>
+    </h1>
+
+    <!-- Stammdaten Upload -->
+    <div class="card compact-card">
+        <div class="step1-row">
+            <h2>📥 Schritt 1: Stammdaten hochladen</h2>
+            <div class="drop-zone-mini" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <span class="drop-icon">📂</span>
+                <span>Klassenliste, E-Schüler</span>
+                <input type="file" id="fileInput" multiple accept=".xlsx,.xls" onchange="handleFiles(this.files)" style="display: none;">
+            </div>
+            <div class="file-status-row">
+                <div class="file-status" id="status-klassenliste">
+                    <span class="status-icon">⏳</span>
+                    <span class="status-name">Klassenliste</span>
+                    <span class="status-info" id="info-klassenliste">–</span>
+                </div>
+                <div class="file-status" id="status-eschueler">
+                    <span class="status-icon">⏳</span>
+                    <span class="status-name">E-Schüler</span>
+                    <span class="status-info" id="info-eschueler">–</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Noten Tabs -->
+    <div class="card">
+        <div class="step2-header">
+            <h2>📋 Schritt 2: Noten einfügen</h2>
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('SN1a')">SN1a</button>
+                <button class="tab" onclick="showTab('SN1b')">SN1b</button>
+                <button class="tab" onclick="showTab('SN1c')">SN1c</button>
+                <button class="tab" onclick="showTab('SN1d')">SN1d</button>
+                <button class="tab" onclick="showTab('SN2a')">SN2a</button>
+                <button class="tab" onclick="showTab('SN2b')">SN2b</button>
+                <button class="tab" onclick="showTab('SN2c')">SN2c</button>
+                <button class="tab" onclick="showTab('SN2d')">SN2d</button>
+                <button class="tab" onclick="showTab('SN3a')">SN3a</button>
+                <button class="tab" onclick="showTab('SN3b')">SN3b</button>
+                <button class="tab" onclick="showTab('SN3c')">SN3c</button>
+                <button class="tab" onclick="showTab('SN3d')">SN3d</button>
+            </div>
+            <div class="noten-input-area">
+                <div class="pdf-drop-zone" id="pdfDropZone" 
+                     onclick="document.getElementById('pdfInput').click()"
+                     ondrop="handlePdfDrop(event)" 
+                     ondragover="event.preventDefault(); this.classList.add('drag-over')"
+                     ondragleave="this.classList.remove('drag-over')">
+                    <span>📄 PDF(s) hierher ziehen</span>
+                    <span class="pdf-status" id="pdfStatus"></span>
+                </div>
+                <input type="file" id="pdfInput" accept=".pdf" multiple onchange="handlePdfUpload(this)" style="display: none;">
+            </div>
+        </div>
+
+        <div id="tab-SN1a" class="tab-content active"></div>
+        <div id="tab-SN1b" class="tab-content"></div>
+        <div id="tab-SN1c" class="tab-content"></div>
+        <div id="tab-SN1d" class="tab-content"></div>
+        <div id="tab-SN2a" class="tab-content"></div>
+        <div id="tab-SN2b" class="tab-content"></div>
+        <div id="tab-SN2c" class="tab-content"></div>
+        <div id="tab-SN2d" class="tab-content"></div>
+        <div id="tab-SN3a" class="tab-content"></div>
+        <div id="tab-SN3b" class="tab-content"></div>
+        <div id="tab-SN3c" class="tab-content"></div>
+        <div id="tab-SN3d" class="tab-content"></div>
+    </div>
+
+    <!-- Ergebnisse -->
+    <div class="card compact-card">
+        <div class="step3-row">
+            <h2>📊 Schritt 3: Übersicht & Export</h2>
+            <div class="global-stats" id="globalStats"></div>
+            <div class="action-buttons">
+                <button class="btn btn-success" onclick="exportAllExcel()" id="exportBtn" disabled>📥 Excel</button>
+                <button class="btn" onclick="saveToJson()">💾 Speichern</button>
+                <button class="btn" onclick="document.getElementById('loadJsonInput').click()">📂 Laden</button>
+                <input type="file" id="loadJsonInput" accept=".json" onchange="loadFromJson(this)" style="display: none;">
+                <button class="btn btn-secondary btn-small" onclick="exportConfigOnly()">⚙️ Konfig</button>
+                <button class="btn btn-secondary btn-small" onclick="document.getElementById('loadConfigInput').click()">⚙️ Import</button>
+                <input type="file" id="loadConfigInput" accept=".json" onchange="importConfigOnly(this)" style="display: none;">
+                <button class="btn btn-danger" onclick="clearAll()">🗑️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>⚙️ Berechnungs-Einstellungen</h3>
+                <button class="modal-close" onclick="closeSettings()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="config-name">
+                    <label><strong>Konfigurationsname:</strong></label>
+                    <input type="text" id="configName" placeholder="z.B. Sek Niederwil">
+                </div>
+
+                <div class="modal-tabs">
+                    <button class="modal-tab active" onclick="showModalTab('formel')">🧮 Formel-Editor</button>
+                    <button class="modal-tab" onclick="showModalTab('abteilungE')">🎯 Grenzen Abt. E</button>
+                    <button class="modal-tab" onclick="showModalTab('abteilungG')">🎯 Grenzen Abt. G</button>
+                </div>
+
+                <!-- Formel-Editor Tab -->
+                <div class="modal-tab-content active" id="tab-formel">
+                    <div class="config-info">
+                        Definieren Sie die Fachbereiche und deren Gewichtung für den Promotionsschnitt. 
+                        Die Summe aller Fachbereich-Gewichte muss 100% ergeben.
+                    </div>
+                    
+                    <div id="fachbereicheContainer"></div>
+                    
+                    <button class="btn btn-small" onclick="addFachbereich()">+ Fachbereich hinzufügen</button>
+                    
+                    <div class="formel-preview" id="formelPreview">
+                        <h4>📋 Formel-Vorschau</h4>
+                        <div id="formelText"></div>
+                    </div>
+                </div>
+
+                <!-- Abteilung E Tab -->
+                <div class="modal-tab-content" id="tab-abteilungE">
+                    <div class="config-info">
+                        Promotionsgrenzen für Abteilung E. Schnitt &lt; Grenze = Status.
+                    </div>
+                    <table class="grenzen-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 140px;">Status</th>
+                                <th style="width: 100px;">Schnitt &lt;</th>
+                                <th style="width: 80px;">Farbe</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="grenzenBodyE"></tbody>
+                    </table>
+                    <button class="btn btn-small btn-add-row" onclick="addGrenzeRow('E')">+ Kategorie</button>
+                </div>
+
+                <!-- Abteilung G Tab -->
+                <div class="modal-tab-content" id="tab-abteilungG">
+                    <div class="config-info">
+                        Promotionsgrenzen für Abteilung G. Schnitt &gt; Grenze = Status.
+                    </div>
+                    <table class="grenzen-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 140px;">Status</th>
+                                <th style="width: 100px;">Schnitt &gt;</th>
+                                <th style="width: 80px;">Farbe</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="grenzenBodyG"></tbody>
+                    </table>
+                    <button class="btn btn-small btn-add-row" onclick="addGrenzeRow('G')">+ Kategorie</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="resetToDefaults()">↩️ Standard</button>
+                <div>
+                    <button class="btn" onclick="closeSettings()">Abbrechen</button>
+                    <button class="btn btn-success" onclick="saveSettings()">✓ Übernehmen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // FÄCHERLISTE (fest definiert)
+        // ============================================
+        
+        const FAECHER_LISTE = {
+            // Sprachen
+            deutsch: { name: 'Deutsch', kuerzel: 'D', kategorie: 'Sprachen' },
+            franzoesisch: { name: 'Französisch', kuerzel: 'F', kategorie: 'Sprachen' },
+            englisch: { name: 'Englisch', kuerzel: 'E', kategorie: 'Sprachen' },
+            italienisch: { name: 'Italienisch', kuerzel: 'It', kategorie: 'Sprachen' },
+            // Mathematik
+            mathematik: { name: 'Mathematik', kuerzel: 'M', kategorie: 'Mathematik' },
+            geometrie: { name: 'Geometrie', kuerzel: 'Gm', kategorie: 'Mathematik' },
+            // Natur und Technik
+            physik: { name: 'Physik', kuerzel: 'Phy', kategorie: 'Natur und Technik' },
+            chemie: { name: 'Chemie', kuerzel: 'Che', kategorie: 'Natur und Technik' },
+            biologie: { name: 'Biologie', kuerzel: 'Bio', kategorie: 'Natur und Technik' },
+            // NMG (Natur, Mensch, Gesellschaft)
+            rzg: { name: 'Räume, Zeiten, Gesellschaften', kuerzel: 'RZG', kategorie: 'NMG' },
+            erg: { name: 'Ethik, Religionen, Gemeinschaft', kuerzel: 'ERG', kategorie: 'NMG' },
+            // Gestalten
+            bildnerisch: { name: 'Bildnerisches Gestalten', kuerzel: 'BG', kategorie: 'Gestalten' },
+            textil: { name: 'Textiles Gestalten', kuerzel: 'TexG', kategorie: 'Gestalten' },
+            technisch: { name: 'Technisches Gestalten', kuerzel: 'TG', kategorie: 'Gestalten' },
+            musik: { name: 'Musik', kuerzel: 'Mu', kategorie: 'Gestalten' },
+            // Weitere
+            sport: { name: 'Bewegung und Sport', kuerzel: 'BS', kategorie: 'Weitere' },
+            wah: { name: 'Wirtschaft, Arbeit, Haushalt', kuerzel: 'WAH', kategorie: 'Weitere' },
+            beruf: { name: 'Berufliche Orientierung', kuerzel: 'BO', kategorie: 'Weitere' },
+            mi: { name: 'Medien und Informatik', kuerzel: 'MI', kategorie: 'Weitere' }
+        };
+
+        // ============================================
+        // STANDARD-KONFIGURATION
+        // ============================================
+        
+        const defaultConfig = {
+            name: 'Standard',
+            fachbereiche: [
+                {
+                    id: 'fb1',
+                    name: 'Sprachen',
+                    gewicht: 33.33,
+                    niveauBonus: { aktiv: false, e: 0, m: 0, g: 0 },
+                    faecher: [
+                        { fach: 'deutsch', gewicht: 100, pflicht: true }
+                    ],
+                    untergruppen: []
+                },
+                {
+                    id: 'fb2',
+                    name: 'Mathematik',
+                    gewicht: 33.33,
+                    niveauBonus: { aktiv: true, e: 0.6, m: 0, g: -0.6 },
+                    faecher: [
+                        { fach: 'mathematik', gewicht: 50, pflicht: true },
+                        { fach: 'geometrie', gewicht: 50, pflicht: true }
+                    ],
+                    untergruppen: []
+                },
+                {
+                    id: 'fb3',
+                    name: 'NMG',
+                    gewicht: 33.34,
+                    niveauBonus: { aktiv: false, e: 0, m: 0, g: 0 },
+                    faecher: [
+                        { fach: 'rzg', gewicht: 50, pflicht: true }
+                    ],
+                    untergruppen: [
+                        {
+                            id: 'ug1',
+                            name: 'Natur und Technik',
+                            gewicht: 50,
+                            faecher: [
+                                { fach: 'physik' },
+                                { fach: 'chemie' },
+                                { fach: 'biologie' }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            grenzenE: [
+                { grenze: 3.8, status: 'nicht promoviert', farbe: 'red' },
+                { grenze: 4.0, status: 'Diskussion', farbe: 'yellow' },
+                { grenze: 6.1, status: 'promoviert', farbe: 'green' }
+            ],
+            grenzenG: [
+                { grenze: 5.0, status: 'promoviert', farbe: 'green', operator: '<=' },
+                { grenze: 6.1, status: 'Aufstieg?', farbe: 'yellow', operator: '>' }
+            ]
+        };
+
+        let config = JSON.parse(JSON.stringify(defaultConfig));
+        let tempConfig = null;
+
+        // ============================================
+        // DATENSTRUKTUREN
+        // ============================================
+        
+        const CLASSES = ['SN1a', 'SN1b', 'SN1c', 'SN1d', 'SN2a', 'SN2b', 'SN2c', 'SN2d', 'SN3a', 'SN3b', 'SN3c', 'SN3d'];
+        
+        let stammdaten = {
+            klassenliste: null,
+            eschueler: new Set(),
+            mathee: new Set(),
+            mathem: new Set()
+        };
+        
+        let classData = {};
+        CLASSES.forEach(c => classData[c] = []);
+        
+        let currentTab = 'SN1a';
+
+        // ============================================
+        // LOCALSTORAGE
+        // ============================================
+
+        function loadConfigFromStorage() {
+            const saved = localStorage.getItem('promotionsrechner_config_v3');
+            if (saved) {
+                try {
+                    config = JSON.parse(saved);
+                } catch (e) {
+                    console.warn('Fehler beim Laden der Konfiguration:', e);
+                }
+            }
+        }
+
+        function saveConfigToStorage() {
+            localStorage.setItem('promotionsrechner_config_v3', JSON.stringify(config));
+        }
+
+        // ============================================
+        // MODAL FUNKTIONEN
+        // ============================================
+
+        function openSettings() {
+            tempConfig = JSON.parse(JSON.stringify(config));
+            renderFormelEditor();
+            renderGrenzenTable('E');
+            renderGrenzenTable('G');
+            document.getElementById('configName').value = tempConfig.name || '';
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+            tempConfig = null;
+        }
+
+        function showModalTab(tabName) {
+            document.querySelectorAll('.modal-tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.querySelectorAll('.modal-tab').forEach(t => {
+                if ((tabName === 'formel' && t.textContent.includes('Formel')) ||
+                    (tabName === 'abteilungE' && t.textContent.includes('Abt. E')) ||
+                    (tabName === 'abteilungG' && t.textContent.includes('Abt. G'))) {
+                    t.classList.add('active');
+                }
+            });
+        }
+
+        // ============================================
+        // FORMEL-EDITOR
+        // ============================================
+
+        function renderFormelEditor() {
+            const container = document.getElementById('fachbereicheContainer');
+            container.innerHTML = '';
+            
+            tempConfig.fachbereiche.forEach((fb, fbIdx) => {
+                container.innerHTML += renderFachbereich(fb, fbIdx);
+            });
+            
+            updateFormelPreview();
+        }
+
+        function renderFachbereich(fb, fbIdx) {
+            const niveauBonusHtml = fb.niveauBonus.aktiv ? `
+                <div class="niveau-bonus-grid">
+                    <div class="niveau-bonus-item">
+                        <span>Niveau e:</span>
+                        <input type="number" step="0.1" value="${fb.niveauBonus.e}" 
+                               onchange="updateNiveauBonus(${fbIdx}, 'e', this.value)">
+                    </div>
+                    <div class="niveau-bonus-item">
+                        <span>Niveau m:</span>
+                        <input type="number" step="0.1" value="${fb.niveauBonus.m}" 
+                               onchange="updateNiveauBonus(${fbIdx}, 'm', this.value)">
+                    </div>
+                    <div class="niveau-bonus-item">
+                        <span>Niveau g:</span>
+                        <input type="number" step="0.1" value="${fb.niveauBonus.g}" 
+                               onchange="updateNiveauBonus(${fbIdx}, 'g', this.value)">
+                    </div>
+                </div>
+            ` : '';
+
+            const faecherHtml = fb.faecher.map((f, fIdx) => renderFachRow(fbIdx, fIdx, f, false)).join('');
+            
+            const untergruppenHtml = fb.untergruppen.map((ug, ugIdx) => renderUntergruppe(fbIdx, ugIdx, ug)).join('');
+
+            return `
+                <div class="fachbereich-container" data-fb-idx="${fbIdx}">
+                    <div class="fachbereich-header">
+                        <span>📚</span>
+                        <input type="text" value="${fb.name}" 
+                               onchange="updateFachbereichName(${fbIdx}, this.value)">
+                        <div class="gewicht-input">
+                            <span>Gewicht:</span>
+                            <input type="number" step="0.01" value="${fb.gewicht}" 
+                                   onchange="updateFachbereichGewicht(${fbIdx}, this.value)">
+                            <span>%</span>
+                        </div>
+                        ${tempConfig.fachbereiche.length > 1 ? 
+                            `<button class="btn-remove-fb" onclick="removeFachbereich(${fbIdx})">🗑️</button>` : ''}
+                    </div>
+                    <div class="fachbereich-body">
+                        <div class="niveau-bonus-section">
+                            <label>
+                                <input type="checkbox" ${fb.niveauBonus.aktiv ? 'checked' : ''} 
+                                       onchange="toggleNiveauBonus(${fbIdx}, this.checked)">
+                                ⚡ Niveau-Bonus anwenden
+                            </label>
+                            ${niveauBonusHtml}
+                        </div>
+                        
+                        <div class="faecher-section">
+                            <h4>Einzelfächer:</h4>
+                            <div id="faecher-${fbIdx}">
+                                ${faecherHtml}
+                            </div>
+                            <button class="btn btn-small" onclick="addFach(${fbIdx})">+ Fach</button>
+                        </div>
+                        
+                        <div class="untergruppen-section">
+                            <h4 style="margin-top:15px;">Untergruppen (Durchschnittsberechnung):</h4>
+                            <div id="untergruppen-${fbIdx}">
+                                ${untergruppenHtml}
+                            </div>
+                            <button class="btn btn-small btn-secondary" onclick="addUntergruppe(${fbIdx})">+ Untergruppe</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFachRow(fbIdx, fIdx, fach, isUntergruppe, ugIdx = null) {
+            const fachOptions = Object.entries(FAECHER_LISTE).map(([key, val]) => 
+                `<option value="${key}" ${fach.fach === key ? 'selected' : ''}>${val.name}</option>`
+            ).join('');
+            
+            const gewichtHtml = !isUntergruppe ? `
+                <div class="gewicht-mini">
+                    <input type="number" value="${fach.gewicht || 100}" step="1" min="0" max="100"
+                           onchange="updateFachGewicht(${fbIdx}, ${fIdx}, this.value)">
+                    <span>%</span>
+                </div>
+            ` : '';
+            
+            const onChangeHandler = isUntergruppe 
+                ? `updateUntergruppeFach(${fbIdx}, ${ugIdx}, ${fIdx}, 'fach', this.value)`
+                : `updateFach(${fbIdx}, ${fIdx}, 'fach', this.value)`;
+            
+            const removeHandler = isUntergruppe
+                ? `removeUntergruppeFach(${fbIdx}, ${ugIdx}, ${fIdx})`
+                : `removeFach(${fbIdx}, ${fIdx})`;
+
+            // Pflicht-Toggle nur bei Einzelfächern, nicht bei Untergruppen
+            const pflichtHtml = !isUntergruppe ? `
+                <div class="pflicht-toggle">
+                    <input type="checkbox" ${fach.pflicht ? 'checked' : ''} 
+                           onchange="updateFach(${fbIdx}, ${fIdx}, 'pflicht', this.checked)">
+                    <span>Pflicht</span>
+                </div>
+            ` : '';
+
+            return `
+                <div class="fach-row">
+                    <select onchange="${onChangeHandler}">${fachOptions}</select>
+                    ${gewichtHtml}
+                    ${pflichtHtml}
+                    <button class="btn-remove-fach" onclick="${removeHandler}">✕</button>
+                </div>
+            `;
+        }
+
+        function renderUntergruppe(fbIdx, ugIdx, ug) {
+            const faecherHtml = ug.faecher.map((f, fIdx) => 
+                renderFachRow(fbIdx, fIdx, f, true, ugIdx)
+            ).join('');
+
+            return `
+                <div class="untergruppe-container">
+                    <div class="untergruppe-header">
+                        <span>📦</span>
+                        <input type="text" value="${ug.name}" 
+                               onchange="updateUntergruppeName(${fbIdx}, ${ugIdx}, this.value)">
+                        <div class="gewicht-mini">
+                            <span>Gewicht:</span>
+                            <input type="number" value="${ug.gewicht}" step="1" min="0" max="100"
+                                   onchange="updateUntergruppeGewicht(${fbIdx}, ${ugIdx}, this.value)">
+                            <span>%</span>
+                        </div>
+                        <button class="btn-remove-fach" onclick="removeUntergruppe(${fbIdx}, ${ugIdx})">✕</button>
+                    </div>
+                    <div class="untergruppe-info">
+                        Durchschnitt aller vorhandenen Noten
+                    </div>
+                    <div id="ug-faecher-${fbIdx}-${ugIdx}">
+                        ${faecherHtml}
+                    </div>
+                    <button class="btn btn-small" onclick="addUntergruppeFach(${fbIdx}, ${ugIdx})">+ Fach</button>
+                </div>
+            `;
+        }
+
+        // Fachbereich Funktionen
+        function addFachbereich() {
+            const newId = 'fb' + Date.now();
+            tempConfig.fachbereiche.push({
+                id: newId,
+                name: 'Neuer Bereich',
+                gewicht: 0,
+                niveauBonus: { aktiv: false, e: 0, m: 0, g: 0 },
+                faecher: [],
+                untergruppen: []
+            });
+            renderFormelEditor();
+        }
+
+        function removeFachbereich(fbIdx) {
+            if (tempConfig.fachbereiche.length > 1) {
+                tempConfig.fachbereiche.splice(fbIdx, 1);
+                renderFormelEditor();
+            }
+        }
+
+        function updateFachbereichName(fbIdx, value) {
+            tempConfig.fachbereiche[fbIdx].name = value;
+            updateFormelPreview();
+        }
+
+        function updateFachbereichGewicht(fbIdx, value) {
+            tempConfig.fachbereiche[fbIdx].gewicht = parseFloat(value) || 0;
+            updateFormelPreview();
+        }
+
+        function toggleNiveauBonus(fbIdx, checked) {
+            tempConfig.fachbereiche[fbIdx].niveauBonus.aktiv = checked;
+            renderFormelEditor();
+        }
+
+        function updateNiveauBonus(fbIdx, niveau, value) {
+            tempConfig.fachbereiche[fbIdx].niveauBonus[niveau] = parseFloat(value) || 0;
+            updateFormelPreview();
+        }
+
+        // Fach Funktionen
+        function addFach(fbIdx) {
+            tempConfig.fachbereiche[fbIdx].faecher.push({
+                fach: 'deutsch',
+                gewicht: 100,
+                pflicht: true
+            });
+            renderFormelEditor();
+        }
+
+        function removeFach(fbIdx, fIdx) {
+            tempConfig.fachbereiche[fbIdx].faecher.splice(fIdx, 1);
+            renderFormelEditor();
+        }
+
+        function updateFach(fbIdx, fIdx, field, value) {
+            if (field === 'pflicht') {
+                tempConfig.fachbereiche[fbIdx].faecher[fIdx][field] = value;
+            } else {
+                tempConfig.fachbereiche[fbIdx].faecher[fIdx][field] = value;
+            }
+            updateFormelPreview();
+        }
+
+        function updateFachGewicht(fbIdx, fIdx, value) {
+            tempConfig.fachbereiche[fbIdx].faecher[fIdx].gewicht = parseFloat(value) || 0;
+            updateFormelPreview();
+        }
+
+        // Untergruppen Funktionen
+        function addUntergruppe(fbIdx) {
+            const newId = 'ug' + Date.now();
+            tempConfig.fachbereiche[fbIdx].untergruppen.push({
+                id: newId,
+                name: 'Neue Gruppe',
+                gewicht: 50,
+                faecher: [{ fach: 'deutsch' }]
+            });
+            renderFormelEditor();
+        }
+
+        function removeUntergruppe(fbIdx, ugIdx) {
+            tempConfig.fachbereiche[fbIdx].untergruppen.splice(ugIdx, 1);
+            renderFormelEditor();
+        }
+
+        function updateUntergruppeName(fbIdx, ugIdx, value) {
+            tempConfig.fachbereiche[fbIdx].untergruppen[ugIdx].name = value;
+            updateFormelPreview();
+        }
+
+        function updateUntergruppeGewicht(fbIdx, ugIdx, value) {
+            tempConfig.fachbereiche[fbIdx].untergruppen[ugIdx].gewicht = parseFloat(value) || 0;
+            updateFormelPreview();
+        }
+
+        function addUntergruppeFach(fbIdx, ugIdx) {
+            tempConfig.fachbereiche[fbIdx].untergruppen[ugIdx].faecher.push({
+                fach: 'deutsch'
+            });
+            renderFormelEditor();
+        }
+
+        function removeUntergruppeFach(fbIdx, ugIdx, fIdx) {
+            tempConfig.fachbereiche[fbIdx].untergruppen[ugIdx].faecher.splice(fIdx, 1);
+            renderFormelEditor();
+        }
+
+        function updateUntergruppeFach(fbIdx, ugIdx, fIdx, field, value) {
+            tempConfig.fachbereiche[fbIdx].untergruppen[ugIdx].faecher[fIdx][field] = value;
+            updateFormelPreview();
+        }
+
+        // Formel-Vorschau
+        function updateFormelPreview() {
+            let formelText = 'Schnitt = ';
+            const parts = [];
+            let totalGewicht = 0;
+            
+            tempConfig.fachbereiche.forEach(fb => {
+                totalGewicht += fb.gewicht;
+                let fbFormel = '';
+                
+                // Einzelfächer
+                if (fb.faecher.length > 0) {
+                    const faecherParts = fb.faecher.map(f => {
+                        const name = FAECHER_LISTE[f.fach]?.kuerzel || f.fach;
+                        return name;
+                    });
+                    
+                    if (faecherParts.length > 1) {
+                        const gewichte = fb.faecher.map(f => f.gewicht);
+                        const alleGleich = gewichte.every(g => g === gewichte[0]);
+                        if (alleGleich) {
+                            fbFormel = `(${faecherParts.join('+')})/` + faecherParts.length;
+                        } else {
+                            fbFormel = `(${faecherParts.join('+')}) gewichtet`;
+                        }
+                    } else {
+                        fbFormel = faecherParts[0];
+                    }
+                }
+                
+                // Untergruppen
+                fb.untergruppen.forEach(ug => {
+                    const ugFaecher = ug.faecher.map(f => FAECHER_LISTE[f.fach]?.kuerzel || f.fach);
+                    const ugFormel = `Ø(${ugFaecher.join(',')})`;
+                    if (fbFormel) {
+                        fbFormel = `(${fbFormel} + ${ugFormel})/2`;
+                    } else {
+                        fbFormel = ugFormel;
+                    }
+                });
+                
+                // Niveau-Bonus
+                if (fb.niveauBonus.aktiv) {
+                    fbFormel = `(${fbFormel}+Bonus)`;
+                }
+                
+                parts.push(`${fbFormel} × ${fb.gewicht}%`);
+            });
+            
+            formelText += parts.join(' + ');
+            
+            const gewichtInfo = totalGewicht === 100 
+                ? '<span style="color:#27ae60">✓ Summe: 100%</span>'
+                : `<span style="color:#e74c3c">⚠ Summe: ${totalGewicht.toFixed(2)}% (muss 100% sein!)</span>`;
+            
+            document.getElementById('formelText').innerHTML = formelText + '<br><br>' + gewichtInfo;
+        }
+
+        // ============================================
+        // GRENZEN FUNKTIONEN
+        // ============================================
+
+        function renderGrenzenTable(abt) {
+            const tbody = document.getElementById(`grenzenBody${abt}`);
+            const grenzen = abt === 'E' ? tempConfig.grenzenE : tempConfig.grenzenG;
+            
+            tbody.innerHTML = '';
+            grenzen.forEach((g, idx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" value="${g.status}" onchange="updateGrenze('${abt}', ${idx}, 'status', this.value)"></td>
+                    <td><input type="number" value="${g.grenze}" step="0.1" min="1" max="6" onchange="updateGrenze('${abt}', ${idx}, 'grenze', parseFloat(this.value))"></td>
+                    <td>
+                        <select onchange="updateGrenze('${abt}', ${idx}, 'farbe', this.value)">
+                            <option value="green" ${g.farbe === 'green' ? 'selected' : ''}>🟢 Grün</option>
+                            <option value="yellow" ${g.farbe === 'yellow' ? 'selected' : ''}>🟡 Gelb</option>
+                            <option value="red" ${g.farbe === 'red' ? 'selected' : ''}>🔴 Rot</option>
+                        </select>
+                    </td>
+                    <td>${grenzen.length > 1 ? `<button class="btn-remove-row" onclick="removeGrenze('${abt}', ${idx})">✕</button>` : ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateGrenze(abt, idx, field, value) {
+            const grenzen = abt === 'E' ? tempConfig.grenzenE : tempConfig.grenzenG;
+            grenzen[idx][field] = value;
+        }
+
+        function addGrenzeRow(abt) {
+            const grenzen = abt === 'E' ? tempConfig.grenzenE : tempConfig.grenzenG;
+            grenzen.push({ grenze: 4.5, status: 'Neuer Status', farbe: 'yellow' });
+            renderGrenzenTable(abt);
+        }
+
+        function removeGrenze(abt, idx) {
+            const grenzen = abt === 'E' ? tempConfig.grenzenE : tempConfig.grenzenG;
+            if (grenzen.length > 1) {
+                grenzen.splice(idx, 1);
+                renderGrenzenTable(abt);
+            }
+        }
+
+        // ============================================
+        // EINSTELLUNGEN SPEICHERN
+        // ============================================
+
+        function saveSettings() {
+            tempConfig.name = document.getElementById('configName').value || 'Unbenannt';
+            
+            // Gewichtung validieren
+            const totalGewicht = tempConfig.fachbereiche.reduce((sum, fb) => sum + fb.gewicht, 0);
+            if (Math.abs(totalGewicht - 100) > 0.5) {
+                alert(`Die Fachbereich-Gewichtung ergibt ${totalGewicht.toFixed(2)}%, muss aber 100% sein!`);
+                return;
+            }
+            
+            // Grenzen sortieren
+            tempConfig.grenzenE.sort((a, b) => a.grenze - b.grenze);
+            tempConfig.grenzenG.sort((a, b) => a.grenze - b.grenze);
+
+            config = JSON.parse(JSON.stringify(tempConfig));
+            saveConfigToStorage();
+            
+            renderAllClassTabs();
+            updateResults();
+            
+            closeSettings();
+            alert('Einstellungen wurden übernommen!');
+        }
+
+        function resetToDefaults() {
+            if (confirm('Alle Einstellungen auf Standard zurücksetzen?')) {
+                tempConfig = JSON.parse(JSON.stringify(defaultConfig));
+                renderFormelEditor();
+                renderGrenzenTable('E');
+                renderGrenzenTable('G');
+                document.getElementById('configName').value = tempConfig.name;
+            }
+        }
+
+        // ============================================
+        // KONFIG EXPORT/IMPORT
+        // ============================================
+
+        function exportConfigOnly() {
+            const configExport = {
+                type: 'promotionsrechner_config',
+                version: 3,
+                exportedAt: new Date().toISOString(),
+                config: config
+            };
+            
+            const blob = new Blob([JSON.stringify(configExport, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Promotionsregeln_${config.name.replace(/\s+/g, '_')}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importConfigOnly(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.config) {
+                        config = data.config;
+                        saveConfigToStorage();
+                        renderAllClassTabs();
+                        updateResults();
+                        alert(`Einstellungen "${config.name}" wurden importiert!`);
+                    } else {
+                        alert('Ungültiges Dateiformat.');
+                    }
+                } catch (err) {
+                    alert('Fehler beim Laden: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        // ============================================
+        // DRAG & DROP
+        // ============================================
+        
+        const dropZone = document.getElementById('dropZone');
+        
+        dropZone.addEventListener('dragenter', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // ============================================
+        // DATEI-VERARBEITUNG
+        // ============================================
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const fileName = file.name.toLowerCase();
+                let type = null;
+                
+                if (fileName.includes('klassenliste')) type = 'klassenliste';
+                else if (fileName.includes('e-schüler') || fileName.includes('e-schueler') || fileName.includes('eschüler') || fileName.includes('eschueler')) type = 'eschueler';
+                
+                if (type) loadExcelFile(file, type);
+            });
+        }
+
+        function loadExcelFile(file, type) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
+
+                processExcelData(json, type);
+                
+                const statusEl = document.getElementById(`status-${type}`);
+                if (statusEl) {
+                    statusEl.classList.add('loaded');
+                    statusEl.querySelector('.status-icon').textContent = '✅';
+                    document.getElementById(`info-${type}`).textContent = `${json.length}`;
+                }
+                
+                updateTabCounts();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processExcelData(data, type) {
+            if (type === 'klassenliste') {
+                stammdaten.klassenliste = {};
+                CLASSES.forEach(c => classData[c] = []);
+                
+                data.forEach(row => {
+                    const vorname = (row['Vorname'] || '').toString().trim();
+                    const nachname = (row['Nachname'] || '').toString().trim();
+                    const klasse = (row['Klasse'] || '').toString().trim();
+                    
+                    if (vorname && nachname && klasse) {
+                        const key = `${vorname.toLowerCase()}_${nachname.toLowerCase()}`;
+                        const klasseNorm = normalizeKlasse(klasse);
+                        stammdaten.klassenliste[key] = klasseNorm;
+                        
+                        if (CLASSES.includes(klasseNorm)) {
+                            classData[klasseNorm].push({
+                                vorname, nachname,
+                                abteilung: 'G',
+                                niveau: 'g',
+                                klasse: klasseNorm,
+                                noten: {},
+                                hasNoten: false
+                            });
+                        }
+                    }
+                });
+                
+                updateAbteilungNiveau();
+            } else if (type === 'eschueler') {
+                stammdaten.eschueler.clear();
+                data.forEach(row => {
+                    const vorname = (row['Vorname'] || '').toString().trim();
+                    const nachname = (row['Nachname'] || '').toString().trim();
+                    if (vorname && nachname) {
+                        stammdaten.eschueler.add(`${vorname.toLowerCase()}_${nachname.toLowerCase()}`);
+                    }
+                });
+                updateAbteilungNiveau();
+            }
+        }
+
+        function updateAbteilungNiveau() {
+            CLASSES.forEach(className => {
+                classData[className].forEach(student => {
+                    const key = `${student.vorname.toLowerCase()}_${student.nachname.toLowerCase()}`;
+                    student.abteilung = stammdaten.eschueler.has(key) ? 'E' : 'G';
+                });
+            });
+            renderAllClassTabs();
+        }
+
+        function normalizeKlasse(klasse) {
+            const match = klasse.match(/SN(\d)\s*([a-d])/i);
+            return match ? `SN${match[1]}${match[2].toLowerCase()}` : klasse;
+        }
+
+        function updateTabCounts() {
+            document.querySelectorAll('.tabs .tab').forEach(tab => {
+                const className = tab.textContent.replace(/\s*\(\d+\)/, '');
+                const count = classData[className]?.length || 0;
+                const hasNoten = classData[className]?.some(s => s.hasNoten) || false;
+                tab.textContent = `${className} (${count})`;
+                tab.classList.toggle('has-data', hasNoten);
+            });
+        }
+
+        function renderAllClassTabs() {
+            CLASSES.forEach(className => renderClassTab(className));
+            updateTabCounts();
+            updateResults();
+        }
+
+        function renderClassTab(className) {
+            const container = document.getElementById(`tab-${className}`);
+            const students = classData[className];
+            
+            if (!students || students.length === 0) {
+                container.innerHTML = `<div class="info-box">Keine Schüler. Bitte Klassenliste hochladen.</div>`;
+                return;
+            }
+
+            // Dynamische Spalten basierend auf Konfiguration
+            const alleFaecher = getAlleFaecherAusConfig();
+            
+            let headerCells = '<th>Vorname</th><th>Nachname</th><th style="text-align:center;">Abt.</th>';
+            alleFaecher.forEach(f => {
+                headerCells += `<th style="text-align:center;">${FAECHER_LISTE[f]?.kuerzel || f}</th>`;
+            });
+            headerCells += '<th style="text-align:center;">Niv.</th><th style="text-align:center;">Schnitt</th><th>Promotion</th>';
+
+            let rows = '';
+            students.forEach((student, idx) => {
+                const schnitt = student.hasNoten ? calculateSchnitt(student) : null;
+                const schnittDisplay = (schnitt === null || schnitt === undefined) ? '-' : schnitt;
+                const promotionResult = (student.hasNoten && schnitt !== null) ? getPromotion(schnitt, student.abteilung) : { status: '-', farbe: null };
+                
+                let rowClass = '';
+                if (student.hasNoten && promotionResult.farbe) {
+                    if (promotionResult.farbe === 'green') rowClass = 'promoted';
+                    else if (promotionResult.farbe === 'red') rowClass = 'not-promoted';
+                    else if (promotionResult.farbe === 'yellow') rowClass = 'discussion';
+                }
+
+                let cells = `
+                    <td>${student.vorname}</td>
+                    <td>${student.nachname}</td>
+                    <td style="text-align:center;">
+                        <select onchange="updateClassStudent('${className}', ${idx}, 'abteilung', this.value)">
+                            <option value="E" ${student.abteilung === 'E' ? 'selected' : ''}>E</option>
+                            <option value="G" ${student.abteilung === 'G' ? 'selected' : ''}>G</option>
+                        </select>
+                    </td>
+                `;
+                
+                alleFaecher.forEach(f => {
+                    const note = student.noten?.[f] ?? '-';
+                    cells += `<td style="text-align:center;"><input type="text" class="editable" value="${note}" onchange="updateStudentNote('${className}', ${idx}, '${f}', this.value)"></td>`;
+                });
+                
+                cells += `
+                    <td style="text-align:center;">
+                        <select onchange="updateClassStudent('${className}', ${idx}, 'niveau', this.value)">
+                            <option value="e" ${student.niveau === 'e' ? 'selected' : ''}>e</option>
+                            <option value="m" ${student.niveau === 'm' ? 'selected' : ''}>m</option>
+                            <option value="g" ${student.niveau === 'g' ? 'selected' : ''}>g</option>
+                        </select>
+                    </td>
+                    <td style="text-align:center;"><strong>${schnittDisplay}</strong></td>
+                    <td><strong>${promotionResult.status}</strong></td>
+                `;
+
+                rows += `<tr class="${rowClass}">${cells}</tr>`;
+            });
+
+            const colWidths = ['90px', '90px', '45px'];
+            alleFaecher.forEach(() => colWidths.push('45px'));
+            colWidths.push('45px', '55px', '100px');
+
+            container.innerHTML = `
+                <div class="result-container">
+                    <table>
+                        <colgroup>${colWidths.map(w => `<col style="width:${w};">`).join('')}</colgroup>
+                        <thead><tr>${headerCells}</tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getAlleFaecherAusConfig() {
+            const faecher = new Set();
+            config.fachbereiche.forEach(fb => {
+                fb.faecher.forEach(f => faecher.add(f.fach));
+                fb.untergruppen.forEach(ug => {
+                    ug.faecher.forEach(f => faecher.add(f.fach));
+                });
+            });
+            return Array.from(faecher);
+        }
+
+        // ============================================
+        // TAB FUNKTIONEN
+        // ============================================
+
+        function showTab(className) {
+            currentTab = className;
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(`tab-${className}`).classList.add('active');
+            document.querySelectorAll('.tabs .tab').forEach(t => {
+                if (t.textContent.startsWith(className)) t.classList.add('active');
+            });
+        }
+
+        // ============================================
+        // PDF IMPORT
+        // ============================================
+
+        async function handlePdfDrop(event) {
+            event.preventDefault();
+            event.target.classList.remove('drag-over');
+            const files = Array.from(event.dataTransfer.files).filter(f => f.type === 'application/pdf');
+            if (files.length > 0) await processMultiplePdfs(files);
+        }
+
+        async function handlePdfUpload(input) {
+            const files = Array.from(input.files);
+            if (files.length === 0) return;
+            await processMultiplePdfs(files);
+            input.value = '';
+        }
+
+        async function processMultiplePdfs(files) {
+            document.getElementById('pdfStatus').textContent = `⏳ ${files.length} PDF(s)...`;
+            
+            let totalImported = 0;
+            for (const file of files) {
+                const result = await processPdfFile(file);
+                totalImported += result.imported;
+            }
+
+            document.getElementById('pdfStatus').textContent = `✅ ${totalImported} importiert`;
+            renderAllClassTabs();
+            updateResults();
+        }
+
+        async function processPdfFile(file) {
+            let importedCount = 0;
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    const text = textContent.items.map(item => item.str).join(' ');
+                    
+                    const studentData = parsePdfPage(text);
+                    if (studentData && matchAndUpdateStudent(studentData)) {
+                        importedCount++;
+                    }
+                }
+            } catch (err) {
+                console.error('PDF Fehler:', file.name, err);
+            }
+            return { imported: importedCount };
+        }
+
+        function parsePdfPage(text) {
+            const noten = {
+                deutsch: extractNote(text, /Deutsch\s+[\d.,\/\s()x]+\s+([\d.,]+|Lza)/i),
+                mathematik: extractNote(text, /Mathematik\s*\([emg]\)\s+[\d.,\/\s()x]+\s+([\d.,]+|Lza)/i),
+                geometrie: extractNote(text, /Geometrie\s*\([emg]\)\s+[\d.,\/\s()x]+\s+([\d.,]+|Lza)/i),
+                physik: extractNote(text, /Physik\s+[\d.,\/\s()x]+\s+([\d.,]+|Lza)/i),
+                chemie: extractNote(text, /Chemie\s+[\d.,\/\s()x]+\s+([\d.,]+|Lza)/i),
+                biologie: extractNote(text, /Biologie\s+[\d.,\/\s()x]+\s+([\d.,]+|Lza)/i),
+                rzg: extractNote(text, /Räume,\s*Zeiten,\s*Gesellschaften\s+[\d.,\/\s()x]+\s+([\d.,]+|Lza)/i),
+                niveau: extractNiveau(text),
+                _rawText: text
+            };
+            
+            const hasAnyNote = Object.keys(noten).some(k => k !== '_rawText' && k !== 'niveau' && noten[k] !== null);
+            return hasAnyNote ? noten : null;
+        }
+
+        function extractNiveau(text) {
+            const match = text.match(/Mathematik\s*\(([emg])\)/i);
+            return match ? match[1].toLowerCase() : null;
+        }
+
+        function extractNote(text, regex) {
+            const match = text.match(regex);
+            if (!match) return null;
+            const noteStr = match[1].trim();
+            if (noteStr.toLowerCase() === 'lza') return 'Lza';
+            const note = parseFloat(noteStr.replace(',', '.'));
+            return isNaN(note) ? null : note;
+        }
+
+        function matchAndUpdateStudent(pdfData) {
+            const text = pdfData._rawText;
+            // Text normalisieren (mehrfache Leerzeichen zu einem)
+            const normalizedText = text.replace(/\s+/g, ' ');
+            
+            for (const klasse of CLASSES) {
+                for (const student of classData[klasse]) {
+                    // Variante 1: Vollständiger Name
+                    const fullName = `${student.vorname} ${student.nachname}`;
+                    
+                    // Variante 2: Vor- und Nachname separat prüfen (für mehrzeilige Namen)
+                    const vornameFound = normalizedText.includes(student.vorname);
+                    const nachnameFound = normalizedText.includes(student.nachname);
+                    
+                    // Match wenn vollständiger Name ODER beide Teile gefunden
+                    if (normalizedText.includes(fullName) || (vornameFound && nachnameFound)) {
+                        // Noten übertragen
+                        if (!student.noten) student.noten = {};
+                        
+                        ['deutsch', 'mathematik', 'geometrie', 'physik', 'chemie', 'biologie', 'rzg'].forEach(fach => {
+                            if (pdfData[fach] !== null) student.noten[fach] = pdfData[fach];
+                        });
+                        
+                        if (pdfData.niveau) student.niveau = pdfData.niveau;
+                        student.hasNoten = true;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // ============================================
+        // BERECHNUNGEN
+        // ============================================
+
+        function calculateSchnitt(student) {
+            const noten = student.noten || {};
+            let gesamtSchnitt = 0;
+            
+            for (const fb of config.fachbereiche) {
+                const fbResult = berechneFachbereich(fb, noten, student.niveau);
+                
+                // Lza in irgendeinem Fach → Lza
+                if (fbResult.lza) {
+                    return 'Lza';
+                }
+                
+                // Nicht alle Noten vorhanden → kein Schnitt
+                if (!fbResult.valid) {
+                    return null;
+                }
+                
+                gesamtSchnitt += fbResult.wert * (fb.gewicht / 100);
+            }
+            
+            return Math.round(gesamtSchnitt * 100) / 100;
+        }
+
+        function berechneFachbereich(fb, noten, niveau) {
+            let summe = 0;
+            let gewichtSumme = 0;
+            let hasLza = false;
+            
+            // Einzelfächer berechnen
+            for (const f of fb.faecher) {
+                const note = noten[f.fach];
+                if (note === 'Lza') { hasLza = true; continue; }
+                if (note !== null && note !== undefined && note !== '' && note !== '-') {
+                    summe += parseFloat(note) * (f.gewicht / 100);
+                    gewichtSumme += f.gewicht;
+                } else if (f.pflicht) {
+                    return { valid: false };
+                }
+            }
+            
+            // Untergruppen berechnen
+            for (const ug of fb.untergruppen) {
+                const ugResult = berechneUntergruppe(ug, noten);
+                if (ugResult.lza) { hasLza = true; continue; }
+                if (ugResult.valid) {
+                    summe += ugResult.wert * (ug.gewicht / 100);
+                    gewichtSumme += ug.gewicht;
+                } else {
+                    return { valid: false };
+                }
+            }
+            
+            if (hasLza) return { valid: false, lza: true };
+            if (gewichtSumme === 0) return { valid: false };
+            
+            // Niveau-Bonus anwenden
+            let wert = summe / (gewichtSumme / 100);
+            if (fb.niveauBonus.aktiv && niveau) {
+                wert += fb.niveauBonus[niveau] || 0;
+            }
+            
+            return { valid: true, wert };
+        }
+
+        function berechneUntergruppe(ug, noten) {
+            let summe = 0;
+            let count = 0;
+            let hasLza = false;
+            
+            for (const f of ug.faecher) {
+                const note = noten[f.fach];
+                if (note === 'Lza') { hasLza = true; continue; }
+                if (note !== null && note !== undefined && note !== '' && note !== '-') {
+                    summe += parseFloat(note);
+                    count++;
+                }
+            }
+            
+            if (hasLza) return { valid: false, lza: true };
+            if (count === 0) return { valid: false }; // Keine Noten vorhanden
+            
+            return { valid: true, wert: summe / count };
+        }
+
+        function getPromotion(schnitt, abteilung) {
+            if (schnitt === 'Lza') return { status: 'Lza', farbe: null };
+            if (schnitt === null) return { status: '-', farbe: null };
+            
+            const grenzen = abteilung === 'E' ? config.grenzenE : config.grenzenG;
+            
+            if (abteilung === 'E') {
+                for (const g of grenzen) {
+                    if (schnitt < g.grenze) return { status: g.status, farbe: g.farbe };
+                }
+            } else {
+                for (const g of grenzen) {
+                    if (g.operator === '>' && schnitt > g.grenze) return { status: g.status, farbe: g.farbe };
+                    else if (g.operator !== '>' && schnitt <= g.grenze) return { status: g.status, farbe: g.farbe };
+                }
+            }
+            
+            const last = grenzen[grenzen.length - 1];
+            return { status: last.status, farbe: last.farbe };
+        }
+
+        // ============================================
+        // ERGEBNISSE
+        // ============================================
+
+        function updateResults() {
+            let totalStudents = 0;
+            let totalE = 0;
+            let totalG = 0;
+            let statusCounts = {};
+
+            CLASSES.forEach(className => {
+                classData[className].forEach(student => {
+                    totalStudents++;
+                    if (student.abteilung === 'E') totalE++;
+                    else if (student.abteilung === 'G') totalG++;
+                    
+                    if (student.hasNoten) {
+                        const schnitt = calculateSchnitt(student);
+                        const promotion = getPromotion(schnitt, student.abteilung);
+                        
+                        if (!statusCounts[promotion.status]) {
+                            statusCounts[promotion.status] = { count: 0, farbe: promotion.farbe };
+                        }
+                        statusCounts[promotion.status].count++;
+                    }
+                });
+            });
+
+            let statsHtml = `
+                <div class="global-stat">
+                    <div class="number">${totalStudents}</div>
+                    <div class="label">Schüler total</div>
+                </div>
+                <div class="global-stat" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="number">${totalE}</div>
+                    <div class="label">E-Schüler</div>
+                </div>
+                <div class="global-stat" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="number">${totalG}</div>
+                    <div class="label">G-Schüler</div>
+                </div>
+            `;
+
+            // Status-Statistiken in gewünschter Reihenfolge
+            const statusOrder = ['promoviert', 'Diskussion', 'Aufstieg?', 'nicht promoviert'];
+            statusOrder.forEach(status => {
+                if (statusCounts[status]) {
+                    const data = statusCounts[status];
+                    let colorClass = data.farbe === 'green' ? 'green' : data.farbe === 'red' ? 'red' : 'yellow';
+                    statsHtml += `
+                        <div class="global-stat ${colorClass}">
+                            <div class="number">${data.count}</div>
+                            <div class="label">${status}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('globalStats').innerHTML = statsHtml;
+            const totalWithNoten = Object.values(statusCounts).reduce((sum, s) => sum + s.count, 0);
+            document.getElementById('exportBtn').disabled = totalWithNoten === 0;
+            updateTabCounts();
+        }
+
+        function updateClassStudent(className, idx, field, value) {
+            classData[className][idx][field] = value;
+            renderClassTab(className);
+            updateResults();
+        }
+
+        function updateStudentNote(className, idx, fach, value) {
+            if (!classData[className][idx].noten) classData[className][idx].noten = {};
+            
+            const num = parseFloat(value.replace(',', '.'));
+            if (!isNaN(num) && num >= 1 && num <= 6) {
+                classData[className][idx].noten[fach] = num;
+                classData[className][idx].hasNoten = true;
+            } else if (value.toLowerCase() === 'lza') {
+                classData[className][idx].noten[fach] = 'Lza';
+                classData[className][idx].hasNoten = true;
+            } else if (value === '' || value === '-') {
+                classData[className][idx].noten[fach] = null;
+            }
+            
+            renderClassTab(className);
+            updateResults();
+        }
+
+        function clearAll() {
+            if (!confirm('Möchtest du wirklich alle Daten löschen?')) {
+                return;
+            }
+            
+            CLASSES.forEach(c => classData[c] = []);
+            stammdaten = { klassenliste: null, eschueler: new Set(), mathee: new Set(), mathem: new Set() };
+
+            ['klassenliste', 'eschueler'].forEach(type => {
+                const statusEl = document.getElementById(`status-${type}`);
+                if (statusEl) {
+                    statusEl.classList.remove('loaded');
+                    statusEl.querySelector('.status-icon').textContent = '⏳';
+                    document.getElementById(`info-${type}`).textContent = '–';
+                }
+            });
+
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('has-data'));
+            document.getElementById('globalStats').innerHTML = '';
+            document.getElementById('exportBtn').disabled = true;
+            document.getElementById('pdfStatus').textContent = '';
+            
+            renderAllClassTabs();
+        }
+
+        // ============================================
+        // EXCEL EXPORT
+        // ============================================
+
+        async function exportAllExcel() {
+            const workbook = new ExcelJS.Workbook();
+            const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF34495E' } };
+            const colorMap = {
+                green: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD5F4E6' } },
+                red: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFCE4E4' } },
+                yellow: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9E6' } }
+            };
+            
+            const alleFaecher = getAlleFaecherAusConfig();
+            
+            // Spalten-Mapping erstellen (A=1, B=2, etc.)
+            // Struktur: Vorname, Nachname, Abt., [Fächer...], Niveau, Schnitt, Promotion
+            const spaltenMap = {};
+            let colIndex = 4; // D = 4 (A=1, B=2, C=3)
+            alleFaecher.forEach(f => {
+                spaltenMap[f] = colIndex;
+                colIndex++;
+            });
+            const niveauCol = colIndex;
+            const schnittCol = colIndex + 1;
+            const promotionCol = colIndex + 2;
+            
+            // Hilfsfunktion: Spaltennummer zu Buchstabe
+            function colToLetter(col) {
+                let letter = '';
+                while (col > 0) {
+                    const mod = (col - 1) % 26;
+                    letter = String.fromCharCode(65 + mod) + letter;
+                    col = Math.floor((col - 1) / 26);
+                }
+                return letter;
+            }
+            
+            CLASSES.forEach(className => {
+                const studentsWithNoten = classData[className].filter(s => s.hasNoten);
+                if (studentsWithNoten.length === 0) return;
+
+                const ws = workbook.addWorksheet(className);
+                
+                // Spalten definieren
+                const columns = [
+                    { key: 'vorname', width: 12 },
+                    { key: 'nachname', width: 12 },
+                    { key: 'abteilung', width: 6 }
+                ];
+                alleFaecher.forEach(f => columns.push({ key: f, width: 6 }));
+                columns.push({ key: 'niveau', width: 6 });
+                columns.push({ key: 'schnitt', width: 8 });
+                columns.push({ key: 'promotion', width: 16 });
+                ws.columns = columns;
+
+                // Header
+                const headerValues = ['Vorname', 'Nachname', 'Abt.'];
+                alleFaecher.forEach(f => headerValues.push(FAECHER_LISTE[f]?.kuerzel || f));
+                headerValues.push('Niv.', 'Schnitt', 'Promotion');
+                
+                const headerRow = ws.addRow(headerValues);
+                headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                headerRow.eachCell((cell, colNumber) => {
+                    cell.fill = headerFill;
+                    cell.alignment = { horizontal: colNumber <= 2 || colNumber === headerValues.length ? 'left' : 'center', vertical: 'middle' };
+                });
+
+                // Daten mit Formeln
+                studentsWithNoten.forEach((student, idx) => {
+                    const rowNum = idx + 2;
+                    const rowValues = [student.vorname, student.nachname, student.abteilung];
+                    alleFaecher.forEach(f => rowValues.push(student.noten?.[f] ?? '-'));
+                    rowValues.push(student.niveau);
+                    rowValues.push(null); // Schnitt-Formel
+                    rowValues.push(null); // Promotion-Formel
+                    
+                    const row = ws.addRow(rowValues);
+                    
+                    // Schnitt-Formel generieren
+                    const schnittFormel = generateSchnittFormel(rowNum, spaltenMap, niveauCol, colToLetter);
+                    row.getCell(schnittCol).value = { formula: schnittFormel };
+                    
+                    // Promotion-Formel generieren
+                    const promotionFormel = generatePromotionFormel(rowNum, schnittCol, 3, colToLetter); // 3 = Abt.-Spalte
+                    row.getCell(promotionCol).value = { formula: promotionFormel };
+                    
+                    // Ausrichtung
+                    row.eachCell((cell, colNumber) => {
+                        cell.alignment = { horizontal: colNumber <= 2 || colNumber === promotionCol ? 'left' : 'center', vertical: 'middle' };
+                    });
+                    
+                    // Farbe basierend auf berechnetem Wert
+                    const schnitt = calculateSchnitt(student);
+                    const promotion = getPromotion(schnitt, student.abteilung);
+                    if (promotion.farbe && colorMap[promotion.farbe]) {
+                        row.eachCell(cell => cell.fill = colorMap[promotion.farbe]);
+                    }
+                });
+
+                // Rahmen
+                ws.eachRow(row => {
+                    row.eachCell(cell => {
+                        cell.border = {
+                            top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                            left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                            bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                            right: { style: 'thin', color: { argb: 'FFCCCCCC' } }
+                        };
+                    });
+                });
+            });
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Promotion_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Schnitt-Formel dynamisch aus Konfiguration generieren
+        function generateSchnittFormel(rowNum, spaltenMap, niveauCol, colToLetter) {
+            const niveauRef = colToLetter(niveauCol) + rowNum;
+            let fachbereichFormeln = [];
+            let allePflichtZellen = [];
+            let alleUntergrZellen = [];
+            
+            for (const fb of config.fachbereiche) {
+                let fbTeile = [];
+                let fbGewichtSumme = 0;
+                
+                // Einzelfächer im Fachbereich
+                if (fb.faecher.length > 0) {
+                    let faecherSum = [];
+                    let faecherGewichtSum = 0;
+                    
+                    for (const f of fb.faecher) {
+                        const col = spaltenMap[f.fach];
+                        if (col) {
+                            const cellRef = colToLetter(col) + rowNum;
+                            faecherSum.push(`${cellRef}*${f.gewicht}`);
+                            faecherGewichtSum += f.gewicht;
+                            if (f.pflicht) {
+                                allePflichtZellen.push(cellRef);
+                            }
+                        }
+                    }
+                    
+                    if (faecherSum.length > 0 && faecherGewichtSum > 0) {
+                        const faecherFormel = `(${faecherSum.join('+')})/` + faecherGewichtSum;
+                        
+                        // Gewicht der Einzelfächer im Fachbereich
+                        const einzelGewicht = fb.untergruppen.length > 0 
+                            ? (100 - fb.untergruppen.reduce((s, u) => s + u.gewicht, 0))
+                            : 100;
+                        
+                        fbTeile.push({ formel: faecherFormel, gewicht: einzelGewicht });
+                        fbGewichtSumme += einzelGewicht;
+                    }
+                }
+                
+                // Untergruppen
+                for (const ug of fb.untergruppen) {
+                    const ugZellen = [];
+                    for (const f of ug.faecher) {
+                        const col = spaltenMap[f.fach];
+                        if (col) {
+                            const cellRef = colToLetter(col) + rowNum;
+                            ugZellen.push(cellRef);
+                            alleUntergrZellen.push(cellRef);
+                        }
+                    }
+                    
+                    if (ugZellen.length > 0) {
+                        // Formel die nur numerische Werte mittelt (ignoriert "-" und leere Zellen)
+                        const sumParts = ugZellen.map(z => `IF(ISNUMBER(${z}),${z},0)`).join('+');
+                        const countParts = ugZellen.map(z => `IF(ISNUMBER(${z}),1,0)`).join('+');
+                        const ugFormel = `(${sumParts})/(${countParts})`;
+                        fbTeile.push({ formel: ugFormel, gewicht: ug.gewicht });
+                        fbGewichtSumme += ug.gewicht;
+                    }
+                }
+                
+                // Fachbereich zusammenbauen
+                if (fbTeile.length > 0) {
+                    let fbFormel;
+                    if (fbTeile.length === 1) {
+                        fbFormel = fbTeile[0].formel;
+                    } else {
+                        // Gewichteter Durchschnitt der Teile
+                        const gewichteteParts = fbTeile.map(t => `(${t.formel})*${t.gewicht}`);
+                        fbFormel = `(${gewichteteParts.join('+')})/` + fbGewichtSumme;
+                    }
+                    
+                    // Niveau-Bonus hinzufügen falls aktiv
+                    if (fb.niveauBonus.aktiv) {
+                        const bonusE = fb.niveauBonus.e;
+                        const bonusM = fb.niveauBonus.m;
+                        const bonusG = fb.niveauBonus.g;
+                        const bonusFormel = `IF(${niveauRef}="e",${bonusE},IF(${niveauRef}="m",${bonusM},${bonusG}))`;
+                        fbFormel = `(${fbFormel}+${bonusFormel})`;
+                    }
+                    
+                    // Mit Fachbereich-Gewicht multiplizieren
+                    fachbereichFormeln.push(`(${fbFormel})*${fb.gewicht/100}`);
+                }
+            }
+            
+            if (fachbereichFormeln.length === 0) {
+                return '""';
+            }
+            
+            // Hauptformel: Summe aller gewichteten Fachbereiche
+            const hauptFormel = `ROUND(${fachbereichFormeln.join('+')},2)`;
+            
+            // Prüfung: Alle Pflichtfächer müssen ausgefüllt sein
+            // Und bei Untergruppen muss mindestens eine Note vorhanden sein
+            let pruefungen = [];
+            
+            if (allePflichtZellen.length > 0) {
+                // Prüfen ob alle Pflichtfächer Zahlen sind
+                const pflichtPruef = allePflichtZellen.map(z => `ISNUMBER(${z})`).join(',');
+                pruefungen.push(`AND(${pflichtPruef})`);
+            }
+            
+            // Bei Untergruppen: Mindestens eine Note muss vorhanden sein (numerisch)
+            if (alleUntergrZellen.length > 0) {
+                const ugNumCheck = alleUntergrZellen.map(z => `IF(ISNUMBER(${z}),1,0)`).join('+');
+                pruefungen.push(`(${ugNumCheck})>0`);
+            }
+            
+            // Lza-Prüfung für alle relevanten Zellen
+            const alleZellen = [...allePflichtZellen, ...alleUntergrZellen];
+            if (alleZellen.length > 0) {
+                const lzaPruef = alleZellen.map(z => `${z}="Lza"`).join(',');
+                const lzaFormel = `IF(OR(${lzaPruef}),"Lza",${hauptFormel})`;
+                
+                if (pruefungen.length > 0) {
+                    return `IF(AND(${pruefungen.join(',')}),${lzaFormel},"")`;
+                } else {
+                    return lzaFormel;
+                }
+            }
+            
+            if (pruefungen.length > 0) {
+                return `IF(AND(${pruefungen.join(',')}),${hauptFormel},"")`;
+            }
+            
+            return hauptFormel;
+        }
+
+        // Promotion-Formel dynamisch aus Konfiguration generieren
+        function generatePromotionFormel(rowNum, schnittCol, abtCol, colToLetter) {
+            const schnittRef = colToLetter(schnittCol) + rowNum;
+            const abtRef = colToLetter(abtCol) + rowNum;
+            
+            // Formel für Abteilung E
+            let formelE = '';
+            const grenzenE = [...config.grenzenE].sort((a, b) => a.grenze - b.grenze);
+            for (let i = 0; i < grenzenE.length - 1; i++) {
+                formelE += `IF(${schnittRef}<${grenzenE[i].grenze},"${grenzenE[i].status}",`;
+            }
+            formelE += `"${grenzenE[grenzenE.length - 1].status}"`;
+            formelE += ')'.repeat(grenzenE.length - 1);
+            
+            // Formel für Abteilung G
+            let formelG = '';
+            const grenzenG = [...config.grenzenG].sort((a, b) => a.grenze - b.grenze);
+            const aufstieg = grenzenG.find(g => g.operator === '>');
+            const normal = grenzenG.find(g => g.operator !== '>');
+            
+            if (aufstieg && normal) {
+                formelG = `IF(${schnittRef}>${aufstieg.grenze},"${aufstieg.status}","${normal.status}")`;
+            } else if (grenzenG.length > 0) {
+                formelG = `"${grenzenG[0].status}"`;
+            } else {
+                formelG = `"promoviert"`;
+            }
+            
+            // Kombinieren: Erst Lza prüfen, dann Abteilung unterscheiden
+            return `IF(${schnittRef}="Lza","Lza",IF(${schnittRef}="","",IF(${abtRef}="E",${formelE},${formelG})))`;
+        }
+
+        // ============================================
+        // SPEICHERN / LADEN
+        // ============================================
+
+        function saveToJson() {
+            const data = {
+                type: 'promotionsrechner_full',
+                version: 3,
+                savedAt: new Date().toISOString(),
+                config: config,
+                classData: classData
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Promotion_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loadFromJson(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.config) {
+                        config = data.config;
+                        saveConfigToStorage();
+                    }
+                    
+                    if (data.classData) {
+                        CLASSES.forEach(className => {
+                            if (data.classData[className]) {
+                                // Konvertiere altes Format (noten direkt auf student) zu neuem Format (student.noten)
+                                classData[className] = data.classData[className].map(student => {
+                                    // Wenn noten-Objekt fehlt, erstelle es aus den direkten Eigenschaften
+                                    if (!student.noten) {
+                                        student.noten = {};
+                                        ['deutsch', 'mathematik', 'geometrie', 'physik', 'chemie', 'biologie', 'rzg'].forEach(fach => {
+                                            if (student[fach] !== undefined && student[fach] !== null) {
+                                                student.noten[fach] = student[fach];
+                                            }
+                                        });
+                                    }
+                                    return student;
+                                });
+                            }
+                        });
+                        
+                        // Status-Anzeigen aktualisieren
+                        const totalStudents = CLASSES.reduce((sum, c) => sum + classData[c].length, 0);
+                        if (totalStudents > 0) {
+                            const statusEl = document.getElementById('status-klassenliste');
+                            if (statusEl) {
+                                statusEl.classList.add('loaded');
+                                statusEl.querySelector('.status-icon').textContent = '✅';
+                                document.getElementById('info-klassenliste').textContent = `${totalStudents} Einträge`;
+                            }
+                            
+                            // E-Schüler zählen
+                            const eSchuelerCount = CLASSES.reduce((sum, c) => 
+                                sum + classData[c].filter(s => s.abteilung === 'E').length, 0);
+                            const statusE = document.getElementById('status-eschueler');
+                            if (statusE) {
+                                statusE.classList.add('loaded');
+                                statusE.querySelector('.status-icon').textContent = '✅';
+                                document.getElementById('info-eschueler').textContent = `${eSchuelerCount} Einträge`;
+                            }
+                        }
+                        
+                        renderAllClassTabs();
+                        updateResults();
+                        
+                        alert(`Daten geladen (${new Date(data.savedAt).toLocaleString('de-CH')})`);
+                    }
+                } catch (err) {
+                    alert('Fehler beim Laden: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        // ============================================
+        // INITIALISIERUNG
+        // ============================================
+        
+        loadConfigFromStorage();
+        renderAllClassTabs();
+    </script>
+</body>
+</html>
