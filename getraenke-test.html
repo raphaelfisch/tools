@@ -58,6 +58,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .loc-btn{padding:7px 12px;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:6px;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;transition:all .2s;flex:1;text-align:center}
 .loc-btn:hover{border-color:var(--accent);color:var(--accent)}
 .loc-btn:disabled{opacity:.5;cursor:wait}
+.photo-area{margin-top:6px}
+.photo-preview{width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-top:6px;display:none}
+.photo-preview.show{display:block}
+.photo-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px dashed var(--border);background:var(--bg);color:var(--text-dim);border-radius:6px;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;transition:all .2s;width:100%;justify-content:center}
+.photo-btn:hover{border-color:var(--accent);color:var(--accent)}
+.photo-info{font-size:.72rem;color:var(--text-dim);margin-top:4px}
+.photo-remove{font-size:.72rem;color:var(--danger);cursor:pointer;margin-left:8px}
+input[type="date"]{position:relative}
+input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;filter:invert(1)}
 .loc-indicator{font-size:.72rem}
 .loc-indicator.ok{color:var(--success)}
 .loc-indicator.none{color:var(--text-dim)}
@@ -163,7 +172,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="nav-right">
 <div class="nav-tabs">
 <button class="nav-tab active" onclick="switchView('form')">Neuer Test</button>
-<button class="nav-tab" onclick="switchView('list')">Einträge</button>
+<button class="nav-tab" onclick="switchView('list')">Alle Tests</button>
 <button class="nav-tab" onclick="switchView('map')">Karte</button>
 </div>
 <div class="db-status"><div class="db-dot" id="dbDot"></div><span id="dbStatusText">Datenbank verbindet...</span></div>
@@ -222,11 +231,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="sliders-grid" id="activeSliders"></div>
 
+<div class="field span2" style="margin-bottom:12px">
+<label>Foto (optional)</label>
+<div class="photo-area">
+<label class="photo-btn" id="photoBtn" for="photoInput">📷 Foto aufnehmen oder auswählen</label>
+<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
+<img id="photoPreview" class="photo-preview">
+<div id="photoInfo" class="photo-info"></div>
+</div>
+</div>
+
 <div class="field span2" style="margin-bottom:12px"><label>Notizen</label><textarea id="notes" rows="2" placeholder="Bemerkungen..."></textarea></div>
 
 <div class="btn-row">
 <button class="btn btn-primary" onclick="saveEntry()">💾 Speichern</button>
-<button class="btn btn-secondary" onclick="resetForm()">Zurücksetzen</button>
+<button class="btn btn-secondary" onclick="resetForm()">+ Neuer Eintrag</button>
 </div>
 
 <div class="manage-section">
@@ -353,6 +372,44 @@ document.getElementById('coordLat').value=c.lat.toFixed(6);
 document.getElementById('coordLng').value=c.lng.toFixed(6);
 updateLoc(true);closeMapPicker();showToast('Standort übernommen!')}
 
+// PHOTO UPLOAD
+var currentPhotoUrl=null;
+
+function handlePhoto(input){
+var file=input.files[0];if(!file)return;
+var preview=document.getElementById('photoPreview');
+var info=document.getElementById('photoInfo');
+var btn=document.getElementById('photoBtn');
+var reader=new FileReader();
+reader.onload=function(e){preview.src=e.target.result;preview.classList.add('show')};
+reader.readAsDataURL(file);
+btn.textContent='⏳ Wird hochgeladen...';
+uploadPhoto(file).then(function(url){
+currentPhotoUrl=url;
+btn.textContent='✓ Foto hochgeladen';
+info.innerHTML='Foto gespeichert <span class="photo-remove" onclick="removePhoto()">✕ Entfernen</span>';
+}).catch(function(err){
+btn.textContent='📷 Foto aufnehmen oder auswählen';
+preview.classList.remove('show');
+showToast('Upload fehlgeschlagen: '+err.message,true);
+})}
+
+async function uploadPhoto(file){
+var ext=file.name.split('.').pop();
+var name=Date.now()+'_'+Math.random().toString(36).substr(2,6)+'.'+ext;
+var res=await sb.storage.from('photos').upload(name,file,{contentType:file.type});
+if(res.error)throw res.error;
+var urlRes=sb.storage.from('photos').getPublicUrl(name);
+return urlRes.data.publicUrl}
+
+function removePhoto(){
+currentPhotoUrl=null;
+document.getElementById('photoPreview').classList.remove('show');
+document.getElementById('photoPreview').src='';
+document.getElementById('photoInfo').innerHTML='';
+document.getElementById('photoBtn').textContent='📷 Foto aufnehmen oder auswählen';
+document.getElementById('photoInput').value=''}
+
 // ENTRIES
 async function loadEntries(){
 try{var res=await sb.from('drinks').select('*').order('test_date',{ascending:false});
@@ -376,12 +433,13 @@ price:parseFloat(document.getElementById('priceChf').value)||null,
 lat:parseFloat(document.getElementById('coordLat').value)||null,
 lng:parseFloat(document.getElementById('coordLng').value)||null,
 ratings:ratings,average:Math.round(avg*10)/10,
-notes:document.getElementById('notes').value.trim()||null};
+notes:document.getElementById('notes').value.trim()||null,
+photo_url:currentPhotoUrl||null};
 showLoading(true);
 try{
-if(editingId){var res=await sb.from('drinks').update(rec).eq('id',editingId);if(res.error)throw res.error;showToast('Aktualisiert!');editingId=null}
-else{var res=await sb.from('drinks').insert(rec);if(res.error)throw res.error;showToast('Gespeichert!')}
-resetForm();await loadEntries();
+if(editingId){var res=await sb.from('drinks').update(rec).eq('id',editingId);if(res.error)throw res.error;showToast('Aktualisiert!')}
+else{var res=await sb.from('drinks').insert(rec).select();if(res.error)throw res.error;if(res.data&&res.data[0])editingId=res.data[0].id;showToast('Gespeichert!')}
+await loadEntries();
 }catch(e){showToast('Fehler: '+e.message,true)}showLoading(false)}
 
 function editEntry(id){
@@ -398,6 +456,9 @@ document.getElementById('coordLat').value=e.lat||'';
 document.getElementById('coordLng').value=e.lng||'';
 document.getElementById('notes').value=e.notes||'';
 updateLoc(e.lat&&e.lng);
+currentPhotoUrl=e.photo_url||null;
+if(currentPhotoUrl){document.getElementById('photoPreview').src=currentPhotoUrl;document.getElementById('photoPreview').classList.add('show');document.getElementById('photoBtn').textContent='✓ Foto vorhanden';document.getElementById('photoInfo').innerHTML='<span class="photo-remove" onclick="removePhoto()">✕ Entfernen</span>'}
+else{removePhoto()}
 activeCriteria=e.ratings?Object.keys(e.ratings):globalCriteria.slice();
 renderCriteriaChips();renderActiveSliders();
 setTimeout(function(){if(e.ratings){Object.keys(e.ratings).forEach(function(c){
@@ -417,7 +478,7 @@ document.getElementById('formTitle').textContent='Neuer Getränke-Test';
 document.getElementById('formSubtitle').textContent='Bewerte dein Getränk und den Ort';
 ['drinkName','locationName','website','priceChf','coordLat','coordLng','notes'].forEach(function(id){document.getElementById(id).value=''});
 document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
-updateLoc(false);activeCriteria=globalCriteria.slice();renderCriteriaChips();renderActiveSliders()}
+updateLoc(false);removePhoto();activeCriteria=globalCriteria.slice();renderCriteriaChips();renderActiveSliders()}
 
 // RENDER LIST
 function renderEntries(){
@@ -436,7 +497,7 @@ c.innerHTML=sorted.map(function(e){
 var r=e.ratings||{};
 var rh=Object.keys(r).map(function(k){return'<div class="e-r"><span class="l">'+k+':</span><span class="v">'+r[k]+'</span></div>'}).join('');
 var web=e.website?'<a href="'+e.website+'" target="_blank" style="color:var(--accent);font-size:.72rem;text-decoration:none">🔗 Webseite</a>':'';
-return'<div class="e-card"><div class="e-top"><div class="e-info"><div class="e-name">'+e.name+'</div><div class="e-loc">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'</div><div class="e-date">'+formatDate(e.test_date)+' '+web+'</div></div><div class="e-score">⌀ '+(e.average||'–')+'</div></div><div class="e-ratings">'+rh+'</div>'+(e.notes?'<div class="e-notes">"'+e.notes+'"</div>':'')+'<div class="e-actions"><button onclick="editEntry(\''+e.id+'\')">✏️ Bearbeiten</button><button class="del" onclick="deleteEntry(\''+e.id+'\')">🗑️ Löschen</button></div></div>'}).join('')}
+return'<div class="e-card">'+(e.photo_url?'<img src="'+e.photo_url+'" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px">':'')+'<div class="e-top"><div class="e-info"><div class="e-name">'+e.name+'</div><div class="e-loc">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'</div><div class="e-date">'+formatDate(e.test_date)+' '+web+'</div></div><div class="e-score">⌀ '+(e.average||'–')+'</div></div><div class="e-ratings">'+rh+'</div>'+(e.notes?'<div class="e-notes">"'+e.notes+'"</div>':'')+'<div class="e-actions"><button onclick="editEntry(\''+e.id+'\')">✏️ Bearbeiten</button><button class="del" onclick="deleteEntry(\''+e.id+'\')">🗑️ Löschen</button></div></div>'}).join('')}
 
 function formatDate(d){if(!d)return'';var p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
 
@@ -460,7 +521,7 @@ html:'<div style="background:'+color+';color:#fff;width:34px;height:34px;border-
 iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-19]});
 var r=e.ratings||{};
 var rh=Object.keys(r).map(function(k){return'<span style="color:#8b8a88">'+k+':</span> <b>'+r[k]+'</b>'}).join(' · ');
-var popup='<div class="popup-title">'+e.name+'</div><div class="popup-meta">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'<br>'+formatDate(e.test_date)+'</div><div class="popup-score">⌀ '+avg+' / 10</div><div class="popup-criteria">'+rh+'</div>'+(e.notes?'<div style="margin-top:5px;font-size:.72rem;color:#8b8a88;font-style:italic">"'+e.notes+'"</div>':'')+(e.website?'<div style="margin-top:6px"><a href="'+e.website+'" target="_blank" style="color:#f59e0b;font-size:.75rem">🔗 Webseite</a></div>':'');
+var popup=(e.photo_url?'<img src="'+e.photo_url+'" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin-bottom:8px">':'')+'<div class="popup-title">'+e.name+'</div><div class="popup-meta">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'<br>'+formatDate(e.test_date)+'</div><div class="popup-score">⌀ '+avg+' / 10</div><div class="popup-criteria">'+rh+'</div>'+(e.notes?'<div style="margin-top:5px;font-size:.72rem;color:#8b8a88;font-style:italic">"'+e.notes+'"</div>':'')+(e.website?'<div style="margin-top:6px"><a href="'+e.website+'" target="_blank" style="color:#f59e0b;font-size:.75rem">🔗 Webseite</a></div>':'');
 mapMarkers.push(L.marker([e.lat,e.lng],{icon:icon}).addTo(map).bindPopup(popup))});
 if(geo.length)map.fitBounds(L.featureGroup(mapMarkers).getBounds().pad(0.15))}
 
