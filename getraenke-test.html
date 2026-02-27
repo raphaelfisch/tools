@@ -76,9 +76,10 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;
 .map-modal.open{display:flex}
 .map-modal-inner{width:100%;max-width:700px;height:70vh;max-height:500px;border-radius:var(--radius);overflow:hidden;position:relative;border:2px solid var(--accent)}
 #pickMap{width:100%;height:100%}
-.map-modal-bar{position:absolute;top:0;left:0;right:0;padding:10px 14px;background:var(--glass);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;z-index:2001;border-bottom:1px solid var(--border)}
-.map-modal-bar span{font-size:.85rem;font-weight:600;color:var(--text)}
-.map-modal-bar button{padding:6px 16px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer}
+.map-modal-bar{position:absolute;top:0;left:0;right:0;padding:8px 12px;background:var(--glass);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;z-index:2001;border-bottom:1px solid var(--border);gap:8px}
+.map-modal-bar span{font-size:.8rem;font-weight:600;color:var(--text);white-space:nowrap}
+.map-modal-bar button{padding:5px 12px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.map-modal-btns{display:flex;gap:6px;flex-shrink:0}
 .modal-cancel{background:var(--card);color:var(--text);border:1px solid var(--border)!important}
 .modal-confirm{background:var(--accent);color:var(--bg);margin-left:8px}
 .map-crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2001;font-size:28px;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
@@ -185,7 +186,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;
 <div class="map-modal-inner">
 <div class="map-modal-bar">
 <span>📍 Standort wählen</span>
-<div>
+<div class="map-modal-btns">
 <button class="modal-cancel" onclick="closeMapPicker()">Abbrechen</button>
 <button class="modal-confirm" onclick="confirmMapPicker()">✓ Übernehmen</button>
 </div>
