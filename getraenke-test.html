@@ -446,8 +446,8 @@ lat:parseFloat(document.getElementById('coordLat').value)||null,lng:parseFloat(d
 ratings:ratings,average:Math.round(avg*10)/10,notes:document.getElementById('notes').value.trim()||null,photo_url:currentPhotoUrl||null};
 showLoading(true);
 try{
-if(editingId){var res=await sb.from('drinks').update(rec).eq('id',editingId);if(res.error)throw res.error;showToast('Aktualisiert!')}
-else{var res=await sb.from('drinks').insert(rec).select();if(res.error)throw res.error;if(res.data&&res.data[0])editingId=res.data[0].id;showToast('Gespeichert!')}
+if(editingId){var res=await sb.from('drinks').update(rec).eq('id',editingId);if(res.error)throw res.error;showToast('Aktualisiert!');markSaved()}
+else{var res=await sb.from('drinks').insert(rec).select();if(res.error)throw res.error;if(res.data&&res.data[0])editingId=res.data[0].id;showToast('Gespeichert!');markSaved()}
 await loadEntries();
 }catch(e){showToast('Fehler: '+e.message,true)}showLoading(false)}
 
@@ -475,7 +475,7 @@ setTimeout(function(){if(e.ratings){Object.keys(e.ratings).forEach(function(c){
 var sid='crit_'+c.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_äöüÄÖÜ]/g,'');
 var el=document.getElementById(sid);var v=document.getElementById(sid+'_val');
 if(el){el.value=e.ratings[c];if(v)v.textContent=e.ratings[c]}})}},50);
-switchView('form');window.scrollTo(0,0)}
+switchView('form');window.scrollTo(0,0);setTimeout(function(){markSaved()},100)}
 
 async function deleteEntry(id){
 if(!confirm('Eintrag löschen?'))return;showLoading(true);
@@ -489,26 +489,135 @@ document.getElementById('formSubtitle').textContent='Bewerte dein Getränk oder 
 document.getElementById('category').value='Getränk';
 ['drinkName','locationName','website','priceChf','coordLat','coordLng','notes'].forEach(function(id){document.getElementById(id).value=''});
 document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
-updateLoc(false);removePhoto();updateCriteriaForCategory();renderGlobalCriteria();renderCriteriaChips();renderActiveSliders()}
+updateLoc(false);removePhoto();updateCriteriaForCategory();renderGlobalCriteria();renderCriteriaChips();renderActiveSliders();markSaved()}
 
 // SHARE
-function shareEntry(id){
+async function shareEntry(id){
 var e=entries.find(function(x){return x.id===id});if(!e)return;
-var cat=e.category==='Pommes'?'🍟':'🍹';
-var stars='';var avg=e.average||0;for(var i=0;i<5;i++)stars+=i<Math.round(avg/2)?'⭐':'';
-var text=cat+' '+e.name+' @ '+e.location+'\n'+stars+' '+avg+'/10';
-if(e.price)text+='\n💰 '+Number(e.price).toFixed(2)+' CHF';
-var r=e.ratings||{};var top3=Object.entries(r).sort(function(a,b){return b[1]-a[1]}).slice(0,3);
-if(top3.length)text+='\n'+top3.map(function(t){return t[0]+': '+t[1]+'/10'}).join(' · ');
-if(e.notes)text+='\n"'+e.notes+'"';
+showToast('Bild wird erstellt...');
+try{
+var blob=await generateShareImage(e);
+var catIcon=e.category==='Pommes'?'🍟':'🍹';
+var text=catIcon+' '+e.name+' @ '+e.location+' — ⌀ '+(e.average||'?')+'/10';
 
-if(navigator.share){
-var shareData={title:e.name+' — Test-Tracker',text:text};
-if(e.photo_url)shareData.url=e.photo_url;
-navigator.share(shareData).catch(function(){})
+if(navigator.share&&navigator.canShare){
+var file=new File([blob],'test-tracker.png',{type:'image/png'});
+var shareData={files:[file],title:e.name,text:text};
+if(navigator.canShare(shareData)){
+await navigator.share(shareData);return}
+}
+// Fallback: download
+var url=URL.createObjectURL(blob);
+var a=document.createElement('a');a.href=url;a.download='test-tracker-'+e.name.replace(/\s+/g,'-')+'.png';
+document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+showToast('Bild heruntergeladen!');
+}catch(err){if(err.name!=='AbortError')showToast('Teilen fehlgeschlagen',true)}}
+
+function generateShareImage(e){
+return new Promise(function(resolve,reject){
+var W=1080,H=1350;
+var canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+var ctx=canvas.getContext('2d');
+var catIcon=(e.category||'Getränk')==='Pommes'?'🍟':'🍹';
+var avg=e.average||0;
+var r=e.ratings||{};
+
+function drawCard(){
+// Background
+var grad=ctx.createLinearGradient(0,0,0,H);
+grad.addColorStop(0,'#1a1d27');grad.addColorStop(1,'#0f1117');
+ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+
+var y=0;
+// Photo area
+if(e.photo_url&&imgLoaded){
+var imgH=H*0.5;
+ctx.drawImage(img,0,0,W,imgH);
+// Gradient overlay on photo
+var ov=ctx.createLinearGradient(0,imgH-200,0,imgH);
+ov.addColorStop(0,'rgba(15,17,23,0)');ov.addColorStop(1,'rgba(15,17,23,1)');
+ctx.fillStyle=ov;ctx.fillRect(0,imgH-200,W,200);
+y=imgH-40;
 }else{
-navigator.clipboard.writeText(text).then(function(){showToast('In Zwischenablage kopiert!')}).catch(function(){
-window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank')})}}
+y=80;
+// Decorative top bar
+ctx.fillStyle='#f59e0b';ctx.fillRect(0,0,W,6);
+}
+
+// Category + Name
+y+=50;
+ctx.font='bold 36px "DM Sans",sans-serif';ctx.fillStyle='#8b8a88';
+ctx.fillText(catIcon+' '+(e.category||'Getränk').toUpperCase(),60,y);
+
+y+=60;
+ctx.font='bold 64px "Playfair Display",serif';ctx.fillStyle='#e8e6e3';
+var nameLines=wrapText(ctx,e.name,W-120,64);
+nameLines.forEach(function(line){ctx.fillText(line,60,y);y+=72});
+
+// Location
+y+=10;
+ctx.font='500 34px "DM Sans",sans-serif';ctx.fillStyle='#8b8a88';
+ctx.fillText('📍 '+e.location,60,y);
+
+// Price + Date
+if(e.price||e.test_date){
+y+=46;ctx.font='400 28px "DM Sans",sans-serif';ctx.fillStyle='#6b7280';
+var meta=[];
+if(e.price)meta.push(Number(e.price).toFixed(2)+' CHF');
+if(e.test_date)meta.push(formatDate(e.test_date));
+ctx.fillText(meta.join(' · '),60,y)}
+
+// Score circle
+y+=70;
+var scoreX=W/2,scoreR=70;
+ctx.beginPath();ctx.arc(scoreX,y,scoreR,0,Math.PI*2);
+ctx.fillStyle=avg>=7?'#22c55e':avg>=4?'#f59e0b':'#ef4444';ctx.fill();
+ctx.font='bold 52px "DM Sans",sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';
+ctx.fillText(avg.toString(),scoreX,y+18);
+ctx.font='400 22px "DM Sans",sans-serif';ctx.fillStyle='rgba(255,255,255,0.7)';
+ctx.fillText('von 10',scoreX,y+48);
+ctx.textAlign='left';
+
+// Ratings
+y+=scoreR+50;
+var keys=Object.keys(r);
+var cols=2;var colW=(W-120)/cols;
+keys.forEach(function(k,i){
+var col=i%cols;var row=Math.floor(i/cols);
+var rx=60+col*colW;var ry=y+row*44;
+ctx.font='400 26px "DM Sans",sans-serif';ctx.fillStyle='#8b8a88';
+ctx.fillText(k,rx,ry);
+ctx.font='bold 26px "DM Sans",sans-serif';ctx.fillStyle='#f59e0b';
+ctx.fillText(r[k]+'/10',rx+ctx.measureText(k+'  ').width+10,ry)});
+
+// Notes
+if(e.notes){
+var notesY=y+Math.ceil(keys.length/cols)*44+20;
+ctx.font='italic 26px "DM Sans",sans-serif';ctx.fillStyle='#6b7280';
+var noteLines=wrapText(ctx,'"'+e.notes+'"',W-120,26);
+noteLines.slice(0,3).forEach(function(line){ctx.fillText(line,60,notesY);notesY+=34})}
+
+// Branding
+ctx.font='bold 24px "DM Sans",sans-serif';ctx.fillStyle='#3a3d4a';
+ctx.textAlign='center';ctx.fillText('Test-Tracker '+catIcon,W/2,H-30);ctx.textAlign='left';
+
+canvas.toBlob(function(blob){resolve(blob)},'image/png')}
+
+var img=new Image();var imgLoaded=false;
+if(e.photo_url){
+img.crossOrigin='anonymous';
+img.onload=function(){imgLoaded=true;drawCard()};
+img.onerror=function(){drawCard()};
+img.src=e.photo_url;
+}else{drawCard()}})}
+
+function wrapText(ctx,text,maxW,fontSize){
+var words=text.split(' ');var lines=[];var line='';
+words.forEach(function(w){
+var test=line?line+' '+w:w;
+if(ctx.measureText(test).width>maxW&&line){lines.push(line);line=w}
+else{line=test}});
+if(line)lines.push(line);return lines}
 
 // CATEGORY FILTER
 function renderCatFilter(){
@@ -586,10 +695,17 @@ var popup=(e.photo_url?'<img src="'+e.photo_url+'" style="width:100%;max-height:
 mapMarkers.push(L.marker([e.lat,e.lng],{icon:icon}).addTo(map).bindPopup(popup))});
 if(geo.length)map.fitBounds(L.featureGroup(mapMarkers).getBounds().pad(0.15))}
 
+var savedState='';
+
+function getFormState(){
+return document.getElementById('drinkName').value.trim()+'|'+document.getElementById('locationName').value.trim()+'|'+document.getElementById('category').value+'|'+document.getElementById('priceChf').value+'|'+document.getElementById('website').value+'|'+document.getElementById('notes').value.trim()+'|'+activeCriteria.join(',')}
+
+function markSaved(){savedState=getFormState()}
+
 function hasUnsavedChanges(){
-var name=document.getElementById('drinkName').value.trim();
-var loc=document.getElementById('locationName').value.trim();
-return name!==''||loc!==''}
+var current=getFormState();
+if(current==='||Getränk||||')return false;
+return current!==savedState}
 
 function switchView(v){
 if(v!=='form'&&hasUnsavedChanges()){if(!confirm('Du hast ungespeicherte Änderungen. Trotzdem wechseln?'))return}
@@ -614,7 +730,7 @@ function loadTheme(){
 try{var t=localStorage.getItem('gt_theme');if(t==='light'){document.body.classList.add('light');document.getElementById('themeBtn').textContent='☀️'}}catch(e){}}
 
 document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
-loadTheme();
+loadTheme();markSaved();
 window.addEventListener('beforeunload',function(e){if(hasUnsavedChanges()){e.preventDefault();e.returnValue=''}});
 init();
 </script>
