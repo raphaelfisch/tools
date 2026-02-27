@@ -525,7 +525,7 @@ showToast('Bild heruntergeladen!');
 }catch(err){if(err.name!=='AbortError')showToast('Teilen fehlgeschlagen',true)}}
 
 function generateShareImage(e){
-return new Promise(function(resolve,reject){
+return new Promise(function(resolve){
 var W=1080,H=1920;
 var canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
 var ctx=canvas.getContext('2d');
@@ -540,11 +540,7 @@ function drawCard(){
 var bgGrad=ctx.createLinearGradient(0,0,0,H);
 bgGrad.addColorStop(0,'#0a0c10');bgGrad.addColorStop(0.5,'#131620');bgGrad.addColorStop(1,'#0a0c10');
 ctx.fillStyle=bgGrad;ctx.fillRect(0,0,W,H);
-
-// Subtle grain texture
-for(var gi=0;gi<8000;gi++){
-ctx.fillStyle='rgba(255,255,255,'+(Math.random()*0.015)+')';
-ctx.fillRect(Math.random()*W,Math.random()*H,1,1)}
+for(var gi=0;gi<8000;gi++){ctx.fillStyle='rgba(255,255,255,'+(Math.random()*0.015)+')';ctx.fillRect(Math.random()*W,Math.random()*H,1,1)}
 
 // === TOP ACCENT BAR ===
 var barGrad=ctx.createLinearGradient(0,0,W,0);
@@ -554,141 +550,107 @@ ctx.fillStyle=barGrad;ctx.fillRect(0,0,W,8);
 var y=60;
 
 // === BRANDING TOP ===
-ctx.font='600 28px "Outfit",sans-serif';ctx.fillStyle='#4a4d5a';ctx.textAlign='center';
-ctx.fillText('TEST-TRACKER',W/2,y);
-y+=16;
+ctx.textAlign='center';
+ctx.font='600 28px "Outfit",sans-serif';ctx.fillStyle='#4a4d5a';
+ctx.fillText('TEST-TRACKER',W/2,y);y+=40;
 ctx.font='400 20px "Outfit",sans-serif';ctx.fillStyle='#3a3d4a';
-ctx.fillText(catIcon+' '+(e.category||'Getränk').toUpperCase()+'-BEWERTUNG',W/2,y+24);
-ctx.textAlign='left';
-y+=80;
+ctx.fillText(catIcon+' '+(e.category||'Getränk').toUpperCase()+'-BEWERTUNG',W/2,y);
+y+=60;
 
 // === PHOTO ===
 if(e.photo_url&&imgLoaded){
 var photoX=60,photoW=W-120,photoH=520;
-// Rounded rect clip
-ctx.save();
-roundRect(ctx,photoX,y,photoW,photoH,24);ctx.clip();
-// Cover fit
-var iw=img.width,ih=img.height;
-var scale=Math.max(photoW/iw,photoH/ih);
+ctx.save();roundRect(ctx,photoX,y,photoW,photoH,24);ctx.clip();
+var iw=img.width,ih=img.height;var scale=Math.max(photoW/iw,photoH/ih);
 var sw=iw*scale,sh=ih*scale;
 ctx.drawImage(img,photoX+(photoW-sw)/2,y+(photoH-sh)/2,sw,sh);
-// Subtle vignette
 var vig=ctx.createRadialGradient(W/2,y+photoH/2,photoW*0.3,W/2,y+photoH/2,photoW*0.8);
 vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,0.3)');
-ctx.fillStyle=vig;ctx.fillRect(photoX,y,photoW,photoH);
-ctx.restore();
-// Photo border glow
-ctx.strokeStyle=accent+'33';ctx.lineWidth=2;
-roundRect(ctx,photoX,y,photoW,photoH,24);ctx.stroke();
+ctx.fillStyle=vig;ctx.fillRect(photoX,y,photoW,photoH);ctx.restore();
+ctx.strokeStyle=accent+'33';ctx.lineWidth=2;roundRect(ctx,photoX,y,photoW,photoH,24);ctx.stroke();
 y+=photoH+50;
 }else{
-// No photo: decorative element
-ctx.save();ctx.textAlign='center';
 ctx.font='120px sans-serif';ctx.fillText(catIcon,W/2,y+100);
-ctx.textAlign='left';ctx.restore();
 y+=180;
 }
 
-// === DIVIDER LINE ===
+// === DIVIDER ===
 var divGrad=ctx.createLinearGradient(60,0,W-60,0);
 divGrad.addColorStop(0,'transparent');divGrad.addColorStop(0.2,accent+'44');divGrad.addColorStop(0.8,accent+'44');divGrad.addColorStop(1,'transparent');
-ctx.strokeStyle=divGrad;ctx.lineWidth=1;
-ctx.beginPath();ctx.moveTo(60,y);ctx.lineTo(W-60,y);ctx.stroke();
-y+=40;
+ctx.strokeStyle=divGrad;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(60,y);ctx.lineTo(W-60,y);ctx.stroke();
+y+=50;
 
-// === NAME ===
+// === NAME (centered) ===
 ctx.font='800 62px "Syne",sans-serif';ctx.fillStyle='#e8e6e3';
 var nameLines=wrapText(ctx,e.name,W-120,62);
-nameLines.forEach(function(line){ctx.fillText(line,60,y);y+=72});
+nameLines.forEach(function(line){ctx.fillText(line,W/2,y);y+=72});
 
-// === LOCATION ===
-y+=8;
-ctx.font='500 32px "Outfit",sans-serif';ctx.fillStyle='#8b8a88';
-ctx.fillText('📍  '+e.location,60,y);
+// === LOCATION + PRICE + DATE (one line, centered) ===
+y+=12;
+ctx.font='500 28px "Outfit",sans-serif';ctx.fillStyle='#8b8a88';
+var infoParts=['📍 '+e.location];
+if(e.price)infoParts.push('💰 '+Number(e.price).toFixed(2)+' CHF');
+if(e.test_date)infoParts.push('📅 '+formatDate(e.test_date));
+var infoLines=wrapText(ctx,infoParts.join('  ·  '),W-120,28);
+infoLines.forEach(function(line){ctx.fillText(line,W/2,y);y+=38});
 
-// === PRICE + DATE ROW ===
-y+=48;
-ctx.font='400 26px "Outfit",sans-serif';ctx.fillStyle='#6b7280';
-var meta=[];
-if(e.price)meta.push('💰 '+Number(e.price).toFixed(2)+' CHF');
-if(e.test_date)meta.push('📅 '+formatDate(e.test_date));
-if(meta.length)ctx.fillText(meta.join('    '),60,y);
-
-// === SCORE SECTION ===
-y+=80;
-// Score background pill
-var scoreW=280,scoreH=120,scoreX=(W-scoreW)/2;
+// === SCORE PILL (bigger) ===
+y+=50;
+var scoreW=340,scoreH=140,scoreX=(W-scoreW)/2;
 ctx.save();
-roundRect(ctx,scoreX,y-10,scoreW,scoreH,60);
-var scoreGrad=ctx.createLinearGradient(scoreX,y,scoreX+scoreW,y);
 var scoreColor=avg>=7?'#22c55e':avg>=4?accent:'#ef4444';
-scoreGrad.addColorStop(0,scoreColor);scoreGrad.addColorStop(1,scoreColor+'cc');
+ctx.shadowColor=scoreColor+'66';ctx.shadowBlur=40;ctx.shadowOffsetY=10;
+roundRect(ctx,scoreX,y,scoreW,scoreH,70);
+var scoreGrad=ctx.createLinearGradient(scoreX,y,scoreX+scoreW,y+scoreH);
+scoreGrad.addColorStop(0,scoreColor);scoreGrad.addColorStop(1,scoreColor+'bb');
 ctx.fillStyle=scoreGrad;ctx.fill();
-// Score shadow
-ctx.shadowColor=scoreColor+'66';ctx.shadowBlur=30;ctx.shadowOffsetY=8;
-roundRect(ctx,scoreX,y-10,scoreW,scoreH,60);ctx.fill();
 ctx.restore();
+ctx.font='800 64px "Syne",sans-serif';ctx.fillStyle='#fff';
+ctx.fillText(avg+' / 10',W/2,y+88);
 
-ctx.textAlign='center';
-ctx.font='800 56px "Syne",sans-serif';ctx.fillStyle='#fff';
-ctx.fillText(avg+' / 10',W/2,y+68);
-ctx.textAlign='left';
+y+=scoreH+60;
 
-y+=scoreH+50;
-
-// === RATINGS GRID ===
+// === RATINGS (centered) ===
 var keys=Object.keys(r);
 if(keys.length){
-// Section label
 ctx.font='600 22px "Outfit",sans-serif';ctx.fillStyle='#4a4d5a';
-ctx.fillText('BEWERTUNGEN',60,y);y+=30;
+ctx.fillText('BEWERTUNGEN',W/2,y);y+=35;
 
-var cols=2;var colW=(W-160)/cols;
+var barW=W-160;var barX=80;
 keys.forEach(function(k,i){
-var col=i%cols;var row=Math.floor(i/cols);
-var rx=60+col*(colW+40);var ry=y+row*56;
-
-// Rating bar background
-ctx.fillStyle='#1e2130';
-roundRect(ctx,rx,ry-2,colW,36,8);ctx.fill();
-
-// Rating bar fill
-var pct=r[k]/10;
-ctx.fillStyle=accent+'44';
-roundRect(ctx,rx,ry-2,colW*pct,36,8);ctx.fill();
-
-// Label
-ctx.font='500 22px "Outfit",sans-serif';ctx.fillStyle='#8b8a88';
-ctx.fillText(k,rx+12,ry+22);
-// Value
-ctx.font='700 22px "Outfit",sans-serif';ctx.fillStyle=accent;
-ctx.textAlign='right';ctx.fillText(r[k]+'/10',rx+colW-12,ry+22);
-ctx.textAlign='left';
+var ry=y+i*52;
+// Bar bg
+ctx.fillStyle='#1e2130';roundRect(ctx,barX,ry,barW,36,8);ctx.fill();
+// Bar fill
+var pct=r[k]/10;ctx.fillStyle=accent+'44';roundRect(ctx,barX,ry,barW*pct,36,8);ctx.fill();
+// Label left
+ctx.textAlign='left';ctx.font='500 22px "Outfit",sans-serif';ctx.fillStyle='#8b8a88';
+ctx.fillText(k,barX+14,ry+24);
+// Value right
+ctx.textAlign='right';ctx.font='700 22px "Outfit",sans-serif';ctx.fillStyle=accent;
+ctx.fillText(r[k]+'/10',barX+barW-14,ry+24);
+ctx.textAlign='center';
 });
-y+=Math.ceil(keys.length/cols)*56+20;
+y+=keys.length*52+20;
 }
 
-// === NOTES ===
+// === NOTES (centered) ===
 if(e.notes){
 y+=10;
 ctx.font='600 22px "Outfit",sans-serif';ctx.fillStyle='#4a4d5a';
-ctx.fillText('NOTIZEN',60,y);y+=34;
+ctx.fillText('NOTIZEN',W/2,y);y+=36;
 ctx.font='italic 26px "Outfit",sans-serif';ctx.fillStyle='#6b7280';
-var noteLines=wrapText(ctx,'"'+e.notes+'"',W-120,26);
-noteLines.slice(0,3).forEach(function(line){ctx.fillText(line,60,y);y+=34})}
+var noteLines=wrapText(ctx,'"'+e.notes+'"',W-160,26);
+noteLines.slice(0,3).forEach(function(line){ctx.fillText(line,W/2,y);y+=34})}
 
 // === BOTTOM BRANDING ===
-// Accent line
 var btmGrad=ctx.createLinearGradient(0,0,W,0);
 btmGrad.addColorStop(0,accent);btmGrad.addColorStop(1,accentDark);
 ctx.fillStyle=btmGrad;ctx.fillRect(0,H-8,W,8);
-
-ctx.textAlign='center';
 ctx.font='700 24px "Syne",sans-serif';ctx.fillStyle='#3a3d4a';
 ctx.fillText(catIcon+' TEST-TRACKER',W/2,H-36);
-ctx.textAlign='left';
 
+ctx.textAlign='left';
 canvas.toBlob(function(blob){resolve(blob)},'image/png')}
 
 var img=new Image();var imgLoaded=false;
