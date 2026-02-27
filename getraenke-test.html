@@ -249,15 +249,20 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;
 <button class="btn btn-secondary" onclick="resetForm()">+ Neuer Eintrag</button>
 </div>
 
-<div class="manage-section">
-<h3>Kriterien-Vorlagen</h3>
-<p>Diese erscheinen als Vorschlag bei jedem neuen Test.</p>
+<details class="manage-section">
+<summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px">
+<span style="font-size:.85rem">⚙️</span>
+<span style="font-size:.85rem;font-weight:600;color:var(--accent)">Standard-Kriterien anpassen</span>
+<span style="font-size:.7rem;color:var(--text-dim);margin-left:4px">— werden bei jedem neuen Test vorausgewählt</span>
+</summary>
+<div style="margin-top:12px">
 <div class="manage-tags" id="criteriaList"></div>
 <div class="add-row">
-<input type="text" id="newCriteriaInput" placeholder="Neue Vorlage..." onkeydown="if(event.key==='Enter')addGlobalCriteria()">
+<input type="text" id="newCriteriaInput" placeholder="Neues Standard-Kriterium..." onkeydown="if(event.key==='Enter')addGlobalCriteria()">
 <button class="btn btn-primary btn-sm" onclick="addGlobalCriteria()">+ Hinzufügen</button>
 </div>
 </div>
+</details>
 </div>
 
 <!-- LIST -->
