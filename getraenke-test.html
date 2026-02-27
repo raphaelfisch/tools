@@ -353,8 +353,8 @@ function openMapPicker(){
 document.getElementById('mapModal').classList.add('open');
 setTimeout(function(){
 if(pickMap){pickMap.remove();pickMap=null}
-var lat=parseFloat(document.getElementById('coordLat').value)||47.37;
-var lng=parseFloat(document.getElementById('coordLng').value)||8.54;
+var lat=parseFloat(document.getElementById('coordLat').value)||47.4245;
+var lng=parseFloat(document.getElementById('coordLng').value)||9.3767;
 pickMap=L.map('pickMap',{center:[lat,lng],zoom:13,zoomControl:true});
 var pk=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'swisstopo',maxZoom:18});
 var pl=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'swisstopo',maxZoom:20});
