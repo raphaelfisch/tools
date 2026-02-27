@@ -237,7 +237,7 @@ body:not(.light) input[type="date"]::-webkit-calendar-picker-indicator{filter:in
 <label>Foto (optional)</label>
 <div class="photo-area">
 <label class="photo-btn" id="photoBtn" for="photoInput">📷 Foto hinzufügen</label>
-<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
+<input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)">
 <img id="photoPreview" class="photo-preview">
 <div id="photoInfo" class="photo-info"></div>
 </div>
@@ -320,6 +320,7 @@ allCriteria=res.data;
 updateCriteriaForCategory();
 renderGlobalCriteria();renderCriteriaChips();renderActiveSliders();
 await loadEntries();
+markSaved();
 var sv=null;try{sv=localStorage.getItem('gt_view')}catch(e){}
 if(sv&&['form','list','ranking','map'].indexOf(sv)!==-1)switchView(sv);
 }catch(e){document.getElementById('dbStatusText').textContent='Datenbank-Fehler';showToast('Verbindung: '+e.message,true)}}
@@ -730,7 +731,7 @@ function loadTheme(){
 try{var t=localStorage.getItem('gt_theme');if(t==='light'){document.body.classList.add('light');document.getElementById('themeBtn').textContent='☀️'}}catch(e){}}
 
 document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
-loadTheme();markSaved();
+loadTheme();
 window.addEventListener('beforeunload',function(e){if(hasUnsavedChanges()){e.preventDefault();e.returnValue=''}});
 init();
 </script>
