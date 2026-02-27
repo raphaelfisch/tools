@@ -510,14 +510,15 @@ try{
 var blob=await generateShareImage(e);
 var catIcon=e.category==='Pommes'?'🍟':'🍹';
 var text=catIcon+' '+e.name+' @ '+e.location+' — ⌀ '+(e.average||'?')+'/10';
+var isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-if(navigator.share&&navigator.canShare){
+if(isMobile&&navigator.share&&navigator.canShare){
 var file=new File([blob],'test-tracker.png',{type:'image/png'});
 var shareData={files:[file],title:e.name,text:text};
 if(navigator.canShare(shareData)){
 await navigator.share(shareData);return}
 }
-// Fallback: download
+// Desktop: direct download
 var url=URL.createObjectURL(blob);
 var a=document.createElement('a');a.href=url;a.download='test-tracker-'+e.name.replace(/\s+/g,'-')+'.png';
 document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
