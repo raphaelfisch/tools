@@ -2,504 +2,480 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Getränke-Test 🍹</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Getränke-Test</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f1117;
-    --card: #1a1d27;
-    --accent: #f59e0b;
-    --accent-light: #fbbf24;
-    --accent-dim: rgba(245, 158, 11, 0.15);
-    --text: #e8e6e3;
-    --text-dim: #8b8a88;
-    --border: #2a2d3a;
-    --success: #22c55e;
-    --danger: #ef4444;
-    --glass: rgba(26, 29, 39, 0.85);
-    --radius: 12px;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+:root{--bg:#0f1117;--card:#1a1d27;--accent:#f59e0b;--accent-light:#fbbf24;--accent-dim:rgba(245,158,11,0.15);--text:#e8e6e3;--text-dim:#8b8a88;--border:#2a2d3a;--success:#22c55e;--danger:#ef4444;--glass:rgba(26,29,39,0.85);--radius:12px;--nav-h:56px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
 
-  .nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--glass); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000; }
-  .nav-brand { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 800; color: var(--accent); }
-  .nav-right { display: flex; align-items: center; gap: 12px; }
-  .nav-tabs { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 10px; }
-  .nav-tab { padding: 8px 20px; border: none; background: transparent; color: var(--text-dim); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-  .nav-tab.active { background: var(--accent); color: var(--bg); font-weight: 600; }
-  .nav-tab:hover:not(.active) { color: var(--text); background: var(--card); }
+.nav{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;height:var(--nav-h);border-bottom:1px solid var(--border);background:var(--glass);backdrop-filter:blur(20px);position:sticky;top:0;z-index:1000}
+.nav-brand{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:800;color:var(--accent)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-tabs{display:flex;gap:3px;background:var(--bg);padding:3px;border-radius:10px}
+.nav-tab{padding:6px 14px;border:none;background:transparent;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;border-radius:7px;cursor:pointer;transition:all .2s}
+.nav-tab.active{background:var(--accent);color:var(--bg);font-weight:600}
+.nav-tab:hover:not(.active){color:var(--text);background:var(--card)}
+.db-status{display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--text-dim);padding:4px 8px;background:var(--card);border-radius:16px;border:1px solid var(--border)}
+.db-dot{width:6px;height:6px;border-radius:50%;background:var(--danger)}
+.db-dot.connected{background:var(--success)}
 
-  .db-status { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-dim); padding: 6px 12px; background: var(--card); border-radius: 20px; border: 1px solid var(--border); }
-  .db-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
-  .db-dot.connected { background: var(--success); }
+.view{display:none;padding:20px;max-width:900px;margin:0 auto}
+.view.active{display:block}
 
-  .view { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
-  .view.active { display: block; }
-  #mapView { padding: 0; max-width: 100%; }
-  #map { height: calc(100vh - 65px); width: 100%; }
+/* MAP - no scroll */
+#mapView{padding:0;max-width:100%;overflow:hidden}
+#map{height:calc(100dvh - var(--nav-h));width:100%}
 
-  .leaflet-popup-content-wrapper { background: var(--card) !important; color: var(--text) !important; border-radius: var(--radius) !important; border: 1px solid var(--border) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important; }
-  .leaflet-popup-tip { background: var(--card) !important; }
-  .leaflet-popup-content { font-family: 'DM Sans', sans-serif !important; margin: 12px 16px !important; }
-  .popup-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
-  .popup-meta { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 8px; }
-  .popup-score { display: inline-block; background: var(--accent); color: var(--bg); padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; }
-  .popup-criteria { margin-top: 8px; font-size: 0.78rem; line-height: 1.6; }
+.leaflet-popup-content-wrapper{background:var(--card)!important;color:var(--text)!important;border-radius:var(--radius)!important;border:1px solid var(--border)!important;box-shadow:0 8px 24px rgba(0,0,0,.4)!important}
+.leaflet-popup-tip{background:var(--card)!important}
+.leaflet-popup-content{font-family:'DM Sans',sans-serif!important;margin:10px 14px!important}
+.popup-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--accent);margin-bottom:4px}
+.popup-meta{font-size:.78rem;color:var(--text-dim);margin-bottom:6px}
+.popup-score{display:inline-block;background:var(--accent);color:var(--bg);padding:2px 8px;border-radius:20px;font-weight:700;font-size:.8rem}
+.popup-criteria{margin-top:6px;font-size:.72rem;line-height:1.5}
+.leaflet-control-layers{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:8px!important;color:var(--text)!important;box-shadow:0 4px 12px rgba(0,0,0,.3)!important;padding:8px 12px!important}
+.leaflet-control-layers label{color:var(--text)!important;font-family:'DM Sans',sans-serif!important;font-size:.82rem!important}
 
-  .form-header { margin-bottom: 24px; }
-  .form-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 800; color: var(--accent); }
-  .form-header p { color: var(--text-dim); margin-top: 4px; }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-  .form-group { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; transition: border-color 0.2s; }
-  .form-group:hover { border-color: var(--accent-dim); }
-  .form-group.full-width { grid-column: 1 / -1; }
-  .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .form-group input, .form-group textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
-  .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+/* FORM */
+.form-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:800;color:var(--accent);margin-bottom:4px}
+.form-subtitle{color:var(--text-dim);font-size:.85rem;margin-bottom:16px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-row.three{grid-template-columns:1fr 1fr 1fr}
+.field{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.field.span2{grid-column:span 2}
+.field label{display:block;font-size:.72rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.field input,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none}
+.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical}
 
-  .slider-wrap { display: flex; align-items: center; gap: 12px; }
-  .slider-wrap input[type="range"] { flex: 1; -webkit-appearance: none; appearance: none; height: 6px; background: var(--border); border-radius: 3px; border: none; padding: 0; }
-  .slider-wrap input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--bg); box-shadow: 0 2px 6px rgba(245,158,11,0.3); }
-  .slider-val { min-width: 32px; text-align: center; font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+/* Location */
+.loc-buttons{display:flex;gap:6px;margin-bottom:6px}
+.loc-btn{padding:7px 12px;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:6px;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;transition:all .2s;flex:1;text-align:center}
+.loc-btn:hover{border-color:var(--accent);color:var(--accent)}
+.loc-btn:disabled{opacity:.5;cursor:wait}
+.loc-indicator{font-size:.72rem}
+.loc-indicator.ok{color:var(--success)}
+.loc-indicator.none{color:var(--text-dim)}
 
-  .btn-row { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
-  .btn { padding: 12px 28px; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-primary { background: var(--accent); color: var(--bg); }
-  .btn-primary:hover:not(:disabled) { background: var(--accent-light); transform: translateY(-1px); }
-  .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--accent); }
-  .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+/* Map picker modal */
+.map-modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(15,17,23,.85);align-items:center;justify-content:center;padding:20px}
+.map-modal.open{display:flex}
+.map-modal-inner{width:100%;max-width:700px;height:70vh;max-height:500px;border-radius:var(--radius);overflow:hidden;position:relative;border:2px solid var(--accent)}
+#pickMap{width:100%;height:100%}
+.map-modal-bar{position:absolute;top:0;left:0;right:0;padding:10px 14px;background:var(--glass);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;z-index:2001;border-bottom:1px solid var(--border)}
+.map-modal-bar span{font-size:.85rem;font-weight:600;color:var(--text)}
+.map-modal-bar button{padding:6px 16px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer}
+.modal-cancel{background:var(--card);color:var(--text);border:1px solid var(--border)!important}
+.modal-confirm{background:var(--accent);color:var(--bg);margin-left:8px}
+.map-crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2001;font-size:28px;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 
-  .criteria-section { margin-top: 32px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-  .criteria-section h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--accent); margin-bottom: 16px; }
-  .criteria-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-  .criteria-tag { display: flex; align-items: center; gap: 6px; background: var(--accent-dim); border: 1px solid rgba(245,158,11,0.3); border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 500; color: var(--accent-light); }
-  .criteria-tag .remove-crit { cursor: pointer; opacity: 0.6; transition: opacity 0.2s; font-size: 1.1rem; line-height: 1; }
-  .criteria-tag .remove-crit:hover { opacity: 1; color: var(--danger); }
-  .add-criteria-row { display: flex; gap: 8px; }
-  .add-criteria-row input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; }
-  .add-criteria-row input:focus { border-color: var(--accent); }
+/* Criteria */
+.section-label{font-size:.72rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.criteria-bar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.chip{padding:3px 9px;border-radius:12px;font-size:.76rem;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:var(--bg);color:var(--text-dim);user-select:none;line-height:1.3}
+.chip.active{background:var(--accent-dim);border-color:rgba(245,158,11,.3);color:var(--accent-light)}
+.chip:hover{border-color:var(--accent)}
+.add-row{display:flex;gap:6px}
+.add-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;font-size:.8rem}
+.add-row input:focus{border-color:var(--accent)}
 
-  .entries-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-  .entries-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 800; color: var(--accent); }
-  .entry-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; transition: border-color 0.2s; position: relative; }
-  .entry-card:hover { border-color: var(--accent-dim); }
-  .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-  .entry-name { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; }
-  .entry-location { font-size: 0.85rem; color: var(--text-dim); margin-top: 2px; }
-  .entry-date { font-size: 0.8rem; color: var(--text-dim); }
-  .entry-score-badge { background: var(--accent); color: var(--bg); font-weight: 800; font-size: 1.1rem; padding: 6px 16px; border-radius: 20px; white-space: nowrap; }
-  .entry-ratings { display: flex; flex-wrap: wrap; gap: 8px; }
-  .entry-rating { background: var(--bg); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; }
-  .entry-rating .label { color: var(--text-dim); }
-  .entry-rating .val { color: var(--accent); font-weight: 700; margin-left: 4px; }
-  .entry-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }
-  .entry-actions button { background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-  .entry-actions button:hover { border-color: var(--danger); color: var(--danger); }
-  .entry-notes { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--text-dim); font-style: italic; }
+.sliders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:12px}
+.s-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.s-card label{display:block;font-size:.7rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.slider-wrap{display:flex;align-items:center;gap:8px}
+.slider-wrap input[type="range"]{flex:1;-webkit-appearance:none;appearance:none;height:5px;background:var(--border);border-radius:3px;border:none;padding:0}
+.slider-wrap input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);box-shadow:0 2px 4px rgba(245,158,11,.3)}
+.slider-val{min-width:22px;text-align:center;font-weight:700;font-size:.95rem;color:var(--accent)}
 
-  .sort-bar { display: flex; gap: 8px; align-items: center; }
-  .sort-bar select { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+.btn-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.btn{padding:10px 24px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--accent);color:var(--bg)}
+.btn-primary:hover{background:var(--accent-light);transform:translateY(-1px)}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent)}
+.btn-sm{padding:5px 12px;font-size:.78rem}
 
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); }
-  .empty-state .icon { font-size: 3rem; margin-bottom: 16px; }
-  .empty-state h3 { font-family: 'Playfair Display', serif; color: var(--text); margin-bottom: 8px; }
+.manage-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:20px}
+.manage-section h3{font-family:'Playfair Display',serif;font-size:1rem;color:var(--accent);margin-bottom:3px}
+.manage-section>p{font-size:.72rem;color:var(--text-dim);margin-bottom:10px}
+.manage-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.m-tag{display:flex;align-items:center;gap:4px;background:var(--accent-dim);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:3px 9px;font-size:.76rem;font-weight:500;color:var(--accent-light)}
+.m-tag .x{cursor:pointer;opacity:.6;font-size:.95rem;line-height:1}
+.m-tag .x:hover{opacity:1;color:var(--danger)}
 
-  .loading-overlay { position: fixed; inset: 0; background: rgba(15,17,23,0.7); display: none; align-items: center; justify-content: center; z-index: 3000; }
-  .loading-overlay.show { display: flex; }
-  .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* LIST */
+.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.list-header h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:800;color:var(--accent)}
+.sort-bar select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.82rem;cursor:pointer}
+.e-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;transition:border-color .2s}
+.e-card:hover{border-color:var(--accent-dim)}
+.e-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.e-info{flex:1;min-width:0}
+.e-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.e-loc{font-size:.78rem;color:var(--text-dim);margin-top:1px}
+.e-date{font-size:.72rem;color:var(--text-dim)}
+.e-score{background:var(--accent);color:var(--bg);font-weight:800;font-size:.95rem;padding:4px 12px;border-radius:14px;white-space:nowrap;flex-shrink:0}
+.e-ratings{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.e-r{background:var(--bg);border-radius:5px;padding:3px 7px;font-size:.72rem}
+.e-r .l{color:var(--text-dim)}
+.e-r .v{color:var(--accent);font-weight:700;margin-left:2px}
+.e-notes{margin-top:6px;font-size:.78rem;color:var(--text-dim);font-style:italic}
+.e-actions{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.e-actions button{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:.78rem;font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;gap:3px}
+.e-actions button:hover{border-color:var(--accent);color:var(--accent)}
+.e-actions button.del:hover{border-color:var(--danger);color:var(--danger)}
+.empty-state{text-align:center;padding:50px 20px;color:var(--text-dim)}
+.empty-state .icon{font-size:2.5rem;margin-bottom:10px}
+.empty-state h3{font-family:'Playfair Display',serif;color:var(--text);margin-bottom:6px}
 
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--success); color: #fff; padding: 12px 24px; border-radius: 10px; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 2000; }
-  .toast.error { background: var(--danger); }
-  .toast.show { transform: translateY(0); opacity: 1; }
+.loading-overlay{position:fixed;inset:0;background:rgba(15,17,23,.7);display:none;align-items:center;justify-content:center;z-index:3000}
+.loading-overlay.show{display:flex}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:16px;right:16px;background:var(--success);color:#fff;padding:10px 18px;border-radius:8px;font-weight:600;font-size:.85rem;transform:translateY(80px);opacity:0;transition:all .3s;z-index:2000}
+.toast.error{background:var(--danger)}
+.toast.show{transform:translateY(0);opacity:1}
 
-  @media (max-width: 600px) {
-    .nav { flex-direction: column; gap: 12px; padding: 12px 16px; }
-    .nav-right { flex-direction: column; gap: 8px; width: 100%; }
-    .nav-tabs { width: 100%; justify-content: center; }
-    .view { padding: 16px; }
-    .form-grid { grid-template-columns: 1fr; }
-    .entry-top { flex-direction: column; gap: 8px; }
-    .entry-actions { position: static; margin-top: 8px; }
-  }
+@media(max-width:600px){
+.nav{flex-direction:column;gap:8px;padding:8px 12px;height:auto}
+:root{--nav-h:auto}
+#map{height:calc(100dvh - 100px)}
+.nav-right{flex-direction:column;gap:6px;width:100%}
+.nav-tabs{width:100%;justify-content:center}
+.view{padding:14px}
+.form-row,.form-row.three{grid-template-columns:1fr}
+.field.span2{grid-column:span 1}
+.sliders-grid{grid-template-columns:1fr 1fr}
+.e-top{flex-direction:column;gap:6px}
+.map-modal-inner{height:60vh}
+}
 </style>
 </head>
 <body>
-
 <nav class="nav">
-  <div class="nav-brand">🍹 Getränke-Test</div>
-  <div class="nav-right">
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchView('form')">Neuer Test</button>
-      <button class="nav-tab" onclick="switchView('list')">Einträge</button>
-      <button class="nav-tab" onclick="switchView('map')">Karte</button>
-    </div>
-    <div class="db-status">
-      <div class="db-dot" id="dbDot"></div>
-      <span id="dbStatusText">Verbinde...</span>
-    </div>
-  </div>
+<div class="nav-brand">🍹 Getränke-Test</div>
+<div class="nav-right">
+<div class="nav-tabs">
+<button class="nav-tab active" onclick="switchView('form')">Neuer Test</button>
+<button class="nav-tab" onclick="switchView('list')">Einträge</button>
+<button class="nav-tab" onclick="switchView('map')">Karte</button>
+</div>
+<div class="db-status"><div class="db-dot" id="dbDot"></div><span id="dbStatusText">Datenbank verbindet...</span></div>
+</div>
 </nav>
-
 <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
 
+<!-- MAP PICKER MODAL -->
+<div class="map-modal" id="mapModal">
+<div class="map-modal-inner">
+<div class="map-modal-bar">
+<span>📍 Standort wählen</span>
+<div>
+<button class="modal-cancel" onclick="closeMapPicker()">Abbrechen</button>
+<button class="modal-confirm" onclick="confirmMapPicker()">✓ Übernehmen</button>
+</div>
+</div>
+<div id="pickMap"></div>
+<div class="map-crosshair">📍</div>
+</div>
+</div>
+
+<!-- FORM -->
 <div id="formView" class="view active">
-  <div class="form-header">
-    <h2 id="formTitle">Neuer Getränke-Test</h2>
-    <p id="formSubtitle">Bewerte dein Getränk und den Ort</p>
-  </div>
-  <div class="form-grid">
-    <div class="form-group">
-      <label>Getränk / Name</label>
-      <input type="text" id="drinkName" placeholder="z.B. Gin Tonic, Aperol Spritz...">
-    </div>
-    <div class="form-group">
-      <label>Ort / Bar / Restaurant</label>
-      <input type="text" id="locationName" placeholder="z.B. Bar XY, Zürich">
-    </div>
-    <div class="form-group">
-      <label>Google Maps Link</label>
-      <input type="url" id="googleMapsLink" placeholder="https://maps.google.com/...">
-    </div>
-    <div class="form-group">
-      <label>Datum</label>
-      <input type="date" id="testDate">
-    </div>
-    <div class="form-group">
-      <label>Preis (CHF)</label>
-      <input type="number" id="priceChf" placeholder="z.B. 14.50" step="0.50" min="0">
-    </div>
-    <div class="form-group">
-      <label>Koordinaten (lat, lng)</label>
-      <div style="display:flex; gap:8px;">
-        <input type="number" id="coordLat" placeholder="Lat" step="any" style="flex:1">
-        <input type="number" id="coordLng" placeholder="Lng" step="any" style="flex:1">
-        <button class="btn btn-secondary btn-sm" onclick="extractCoords()" title="Aus Maps-Link">📍</button>
-        <button class="btn btn-secondary btn-sm" onclick="useMyLocation()" title="Mein Standort">📡</button>
-      </div>
-    </div>
-    <div id="criteriaSliders"></div>
-    <div class="form-group full-width">
-      <label>Notizen</label>
-      <textarea id="notes" rows="3" placeholder="Zusätzliche Bemerkungen..."></textarea>
-    </div>
-  </div>
-  <div class="btn-row">
-    <button class="btn btn-primary" onclick="saveEntry()">💾 Speichern</button>
-    <button class="btn btn-secondary" onclick="resetForm()">Zurücksetzen</button>
-  </div>
-  <div class="criteria-section">
-    <h3>Bewertungskriterien verwalten</h3>
-    <div class="criteria-list" id="criteriaList"></div>
-    <div class="add-criteria-row">
-      <input type="text" id="newCriteriaInput" placeholder="Neues Kriterium..." onkeydown="if(event.key==='Enter') addCriteria()">
-      <button class="btn btn-primary btn-sm" onclick="addCriteria()">+ Hinzufügen</button>
-    </div>
-  </div>
+<div class="form-title" id="formTitle">Neuer Getränke-Test</div>
+<div class="form-subtitle" id="formSubtitle">Bewerte dein Getränk und den Ort</div>
+
+<div class="form-row">
+<div class="field"><label>Getränk</label><input type="text" id="drinkName" placeholder="z.B. Gin Tonic"></div>
+<div class="field"><label>Ort / Bar</label><input type="text" id="locationName" placeholder="z.B. Bar XY, Zürich"></div>
+</div>
+<div class="form-row three">
+<div class="field"><label>Datum</label><input type="date" id="testDate"></div>
+<div class="field"><label>Preis (CHF)</label><input type="number" id="priceChf" placeholder="14.50" step="0.50" min="0"></div>
+<div class="field"><label>Webseite (optional)</label><input type="url" id="website" placeholder="https://..."></div>
 </div>
 
+<div class="field span2" style="margin-bottom:12px">
+<label>Standort</label>
+<div class="loc-buttons">
+<button class="loc-btn" onclick="useMyLocation()" id="locBtn">📡 GPS-Standort</button>
+<button class="loc-btn" onclick="openMapPicker()">🗺️ Auf Karte wählen</button>
+</div>
+<div class="loc-indicator none" id="locStatus">Kein Standort gesetzt</div>
+<input type="hidden" id="coordLat"><input type="hidden" id="coordLng">
+</div>
+
+<div class="criteria-bar">
+<div class="section-label">Kriterien für diesen Test</div>
+<div class="chips" id="criteriaChips"></div>
+<div class="add-row">
+<input type="text" id="customCritInput" placeholder="Eigenes Kriterium..." onkeydown="if(event.key==='Enter')addCustomCriteria()">
+<button class="btn btn-primary btn-sm" onclick="addCustomCriteria()">+</button>
+</div>
+</div>
+
+<div class="sliders-grid" id="activeSliders"></div>
+
+<div class="field span2" style="margin-bottom:12px"><label>Notizen</label><textarea id="notes" rows="2" placeholder="Bemerkungen..."></textarea></div>
+
+<div class="btn-row">
+<button class="btn btn-primary" onclick="saveEntry()">💾 Speichern</button>
+<button class="btn btn-secondary" onclick="resetForm()">Zurücksetzen</button>
+</div>
+
+<div class="manage-section">
+<h3>Kriterien-Vorlagen</h3>
+<p>Diese erscheinen als Vorschlag bei jedem neuen Test.</p>
+<div class="manage-tags" id="criteriaList"></div>
+<div class="add-row">
+<input type="text" id="newCriteriaInput" placeholder="Neue Vorlage..." onkeydown="if(event.key==='Enter')addGlobalCriteria()">
+<button class="btn btn-primary btn-sm" onclick="addGlobalCriteria()">+ Hinzufügen</button>
+</div>
+</div>
+</div>
+
+<!-- LIST -->
 <div id="listView" class="view">
-  <div class="entries-header">
-    <h2>Alle Tests</h2>
-    <div class="sort-bar">
-      <select id="sortBy" onchange="renderEntries()">
-        <option value="date-desc">Neueste zuerst</option>
-        <option value="date-asc">Älteste zuerst</option>
-        <option value="score-desc">Bester Score</option>
-        <option value="score-asc">Schlechtester Score</option>
-        <option value="price-asc">Günstigster</option>
-        <option value="price-desc">Teuerster</option>
-      </select>
-    </div>
-  </div>
-  <div id="entriesList"></div>
+<div class="list-header">
+<h2>Alle Tests</h2>
+<div class="sort-bar"><select id="sortBy" onchange="renderEntries()">
+<option value="date-desc">Neueste zuerst</option><option value="date-asc">Älteste zuerst</option>
+<option value="score-desc">Bester Score</option><option value="score-asc">Schlechtester Score</option>
+<option value="price-asc">Günstigster</option><option value="price-desc">Teuerster</option>
+</select></div>
+</div>
+<div id="entriesList"></div>
 </div>
 
-<div id="mapView" class="view">
-  <div id="map"></div>
-</div>
-
+<!-- MAP -->
+<div id="mapView" class="view"><div id="map"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://gazswoxtcwhbhosuohga.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhenN3b3h0Y3doYmhvc3VvaGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjEzMzQsImV4cCI6MjA4Nzc5NzMzNH0.v5SB7bcrxu6mNfRCSyAdamk2X4znPIOIrWoXBKtaBhw';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var SUPABASE_URL='https://gazswoxtcwhbhosuohga.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhenN3b3h0Y3doYmhvc3VvaGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjEzMzQsImV4cCI6MjA4Nzc5NzMzNH0.v5SB7bcrxu6mNfRCSyAdamk2X4znPIOIrWoXBKtaBhw';
+var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+var globalCriteria=[],activeCriteria=[],entries=[],editingId=null,map=null,mapMarkers=[],pickMap=null;
 
-let criteria = [];
-let entries = [];
-let editingId = null;
-let map = null;
-let markers = [];
+async function init(){
+try{
+var res=await sb.from('criteria').select('*').order('sort_order');
+if(res.error)throw res.error;
+document.getElementById('dbDot').classList.add('connected');
+document.getElementById('dbStatusText').textContent='Datenbank verbunden';
+globalCriteria=res.data.map(function(c){return c.name});
+activeCriteria=globalCriteria.slice();
+renderGlobalCriteria();renderCriteriaChips();renderActiveSliders();
+await loadEntries();
+}catch(e){document.getElementById('dbStatusText').textContent='Datenbank-Fehler';showToast('Verbindung: '+e.message,true)}}
 
-async function init() {
-  try {
-    const { data, error } = await sb.from('criteria').select('*').order('sort_order');
-    if (error) throw error;
-    document.getElementById('dbDot').classList.add('connected');
-    document.getElementById('dbStatusText').textContent = 'Verbunden';
-    criteria = data.map(c => c.name);
-    renderCriteria();
-    await loadEntries();
-  } catch (e) {
-    document.getElementById('dbStatusText').textContent = 'Fehler!';
-    showToast('Verbindung fehlgeschlagen: ' + e.message, true);
-  }
-}
+// GLOBAL CRITERIA
+function renderGlobalCriteria(){
+document.getElementById('criteriaList').innerHTML=globalCriteria.map(function(c){
+return'<div class="m-tag">'+c+'<span class="x" onclick="removeGlobalCriteria(\''+c.replace(/'/g,"\\'")+'\')">×</span></div>'}).join('')}
 
-function renderCriteria() {
-  document.getElementById('criteriaList').innerHTML = criteria.map(c =>
-    '<div class="criteria-tag">' + c + '<span class="remove-crit" onclick="removeCriteria(\'' + c.replace(/'/g, "\\'") + '\')">×</span></div>'
-  ).join('');
-  renderCriteriaSliders();
-}
+async function addGlobalCriteria(){
+var input=document.getElementById('newCriteriaInput'),name=input.value.trim();
+if(!name)return;
+if(globalCriteria.find(function(c){return c.toLowerCase()===name.toLowerCase()}))return showToast('Existiert bereits!',true);
+try{var res=await sb.from('criteria').insert({name:name,sort_order:globalCriteria.length+1});if(res.error)throw res.error;
+globalCriteria.push(name);if(activeCriteria.indexOf(name)===-1)activeCriteria.push(name);
+input.value='';renderGlobalCriteria();renderCriteriaChips();renderActiveSliders();showToast('"'+name+'" hinzugefügt');
+}catch(e){showToast('Fehler: '+e.message,true)}}
 
-async function addCriteria() {
-  var input = document.getElementById('newCriteriaInput');
-  var name = input.value.trim();
-  if (!name) return;
-  if (criteria.find(function(c) { return c.toLowerCase() === name.toLowerCase(); })) return showToast('Existiert bereits!', true);
-  try {
-    var res = await sb.from('criteria').insert({ name: name, sort_order: criteria.length + 1 });
-    if (res.error) throw res.error;
-    criteria.push(name);
-    input.value = '';
-    renderCriteria();
-    showToast('"' + name + '" hinzugefügt');
-  } catch (e) { showToast('Fehler: ' + e.message, true); }
-}
+async function removeGlobalCriteria(name){
+if(!confirm('"'+name+'" löschen?'))return;
+try{var res=await sb.from('criteria').delete().eq('name',name);if(res.error)throw res.error;
+globalCriteria=globalCriteria.filter(function(c){return c!==name});renderGlobalCriteria();renderCriteriaChips();showToast('"'+name+'" entfernt');
+}catch(e){showToast('Fehler: '+e.message,true)}}
 
-async function removeCriteria(name) {
-  if (!confirm('"' + name + '" löschen?')) return;
-  try {
-    var res = await sb.from('criteria').delete().eq('name', name);
-    if (res.error) throw res.error;
-    criteria = criteria.filter(function(c) { return c !== name; });
-    renderCriteria();
-    showToast('"' + name + '" entfernt');
-  } catch (e) { showToast('Fehler: ' + e.message, true); }
-}
+// CRITERIA PICKER
+function renderCriteriaChips(){
+var all=globalCriteria.slice();
+activeCriteria.forEach(function(c){if(all.indexOf(c)===-1)all.push(c)});
+document.getElementById('criteriaChips').innerHTML=all.map(function(c){
+var on=activeCriteria.indexOf(c)!==-1;
+return'<div class="chip'+(on?' active':'')+'" onclick="toggleCriteria(\''+c.replace(/'/g,"\\'")+'\')">'+(on?'✓ ':'')+c+'</div>'}).join('')}
 
-function renderCriteriaSliders() {
-  document.getElementById('criteriaSliders').innerHTML = criteria.map(function(c) {
-    var id = 'crit_' + c.replace(/\s+/g, '_');
-    return '<div class="form-group"><label>' + c + ' (1–10)</label><div class="slider-wrap"><input type="range" id="' + id + '" min="1" max="10" value="5" oninput="document.getElementById(\'' + id + '_val\').textContent=this.value"><span class="slider-val" id="' + id + '_val">5</span></div></div>';
-  }).join('');
-}
+function toggleCriteria(name){var i=activeCriteria.indexOf(name);if(i!==-1)activeCriteria.splice(i,1);else activeCriteria.push(name);renderCriteriaChips();renderActiveSliders()}
 
-async function loadEntries() {
-  try {
-    var res = await sb.from('drinks').select('*').order('test_date', { ascending: false });
-    if (res.error) throw res.error;
-    entries = res.data || [];
-    renderEntries();
-  } catch (e) { showToast('Ladefehler: ' + e.message, true); }
-}
+function addCustomCriteria(){var input=document.getElementById('customCritInput'),name=input.value.trim();
+if(!name)return;if(activeCriteria.find(function(c){return c.toLowerCase()===name.toLowerCase()}))return showToast('Bereits vorhanden!',true);
+activeCriteria.push(name);input.value='';renderCriteriaChips();renderActiveSliders()}
 
-async function saveEntry() {
-  var name = document.getElementById('drinkName').value.trim();
-  var location = document.getElementById('locationName').value.trim();
-  if (!name || !location) return showToast('Getränk und Ort angeben!', true);
+function renderActiveSliders(){
+document.getElementById('activeSliders').innerHTML=activeCriteria.map(function(c){
+var id='crit_'+c.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_äöüÄÖÜ]/g,'');
+return'<div class="s-card"><label>'+c+'</label><div class="slider-wrap"><input type="range" id="'+id+'" min="1" max="10" value="5" oninput="document.getElementById(\''+id+'_val\').textContent=this.value"><span class="slider-val" id="'+id+'_val">5</span></div></div>'}).join('')}
 
-  var ratings = {};
-  criteria.forEach(function(c) {
-    var el = document.getElementById('crit_' + c.replace(/\s+/g, '_'));
-    ratings[c] = el ? parseInt(el.value) : 5;
-  });
-  var vals = Object.values(ratings);
-  var avg = vals.length ? (vals.reduce(function(a, b) { return a + b; }, 0) / vals.length) : 0;
+// LOCATION
+function useMyLocation(){
+if(!navigator.geolocation)return showToast('GPS nicht verfügbar',true);
+var btn=document.getElementById('locBtn');btn.textContent='⏳ Suche...';btn.disabled=true;
+navigator.geolocation.getCurrentPosition(function(p){
+document.getElementById('coordLat').value=p.coords.latitude.toFixed(6);
+document.getElementById('coordLng').value=p.coords.longitude.toFixed(6);
+updateLoc(true);btn.textContent='📡 GPS-Standort';btn.disabled=false;showToast('Standort gesetzt!');
+},function(){btn.textContent='📡 GPS-Standort';btn.disabled=false;showToast('Standort nicht verfügbar',true)},{enableHighAccuracy:true,timeout:10000})}
 
-  var record = {
-    name: name,
-    location: location,
-    google_maps_link: document.getElementById('googleMapsLink').value.trim() || null,
-    test_date: document.getElementById('testDate').value || new Date().toISOString().split('T')[0],
-    price: parseFloat(document.getElementById('priceChf').value) || null,
-    lat: parseFloat(document.getElementById('coordLat').value) || null,
-    lng: parseFloat(document.getElementById('coordLng').value) || null,
-    ratings: ratings,
-    average: Math.round(avg * 10) / 10,
-    notes: document.getElementById('notes').value.trim() || null
-  };
+function updateLoc(ok){
+var el=document.getElementById('locStatus');
+el.textContent=ok?'✓ Standort gesetzt':'Kein Standort gesetzt';
+el.className='loc-indicator '+(ok?'ok':'none')}
 
-  showLoading(true);
-  try {
-    if (editingId) {
-      var res = await sb.from('drinks').update(record).eq('id', editingId);
-      if (res.error) throw res.error;
-      showToast('Aktualisiert!');
-      editingId = null;
-    } else {
-      var res = await sb.from('drinks').insert(record);
-      if (res.error) throw res.error;
-      showToast('Gespeichert!');
-    }
-    resetForm();
-    await loadEntries();
-  } catch (e) { showToast('Fehler: ' + e.message, true); }
-  showLoading(false);
-}
+// MAP PICKER
+function openMapPicker(){
+document.getElementById('mapModal').classList.add('open');
+setTimeout(function(){
+if(pickMap){pickMap.remove();pickMap=null}
+var lat=parseFloat(document.getElementById('coordLat').value)||47.37;
+var lng=parseFloat(document.getElementById('coordLng').value)||8.54;
+pickMap=L.map('pickMap',{center:[lat,lng],zoom:13,zoomControl:true});
+var pk=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'swisstopo',maxZoom:18});
+var pl=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'swisstopo',maxZoom:20});
+pk.addTo(pickMap);
+L.control.layers({'Karte':pk,'Luftbild':pl},null,{position:'topright',collapsed:false}).addTo(pickMap);
+pickMap.invalidateSize();
+},150)}
 
-function editEntry(id) {
-  var e = entries.find(function(x) { return x.id === id; });
-  if (!e) return;
-  editingId = id;
-  document.getElementById('formTitle').textContent = 'Eintrag bearbeiten';
-  document.getElementById('formSubtitle').textContent = e.name + ' — ' + e.location;
-  document.getElementById('drinkName').value = e.name;
-  document.getElementById('locationName').value = e.location;
-  document.getElementById('googleMapsLink').value = e.google_maps_link || '';
-  document.getElementById('testDate').value = e.test_date;
-  document.getElementById('priceChf').value = e.price || '';
-  document.getElementById('coordLat').value = e.lat || '';
-  document.getElementById('coordLng').value = e.lng || '';
-  document.getElementById('notes').value = e.notes || '';
-  setTimeout(function() {
-    criteria.forEach(function(c) {
-      var sid = 'crit_' + c.replace(/\s+/g, '_');
-      var el = document.getElementById(sid);
-      var v = document.getElementById(sid + '_val');
-      if (el && e.ratings && e.ratings[c] !== undefined) { el.value = e.ratings[c]; if (v) v.textContent = e.ratings[c]; }
-    });
-  }, 50);
-  switchView('form');
-}
+function closeMapPicker(){document.getElementById('mapModal').classList.remove('open');if(pickMap){pickMap.remove();pickMap=null}}
 
-async function deleteEntry(id) {
-  if (!confirm('Eintrag löschen?')) return;
-  showLoading(true);
-  try {
-    var res = await sb.from('drinks').delete().eq('id', id);
-    if (res.error) throw res.error;
-    await loadEntries();
-    showToast('Gelöscht');
-  } catch (e) { showToast('Fehler: ' + e.message, true); }
-  showLoading(false);
-}
+function confirmMapPicker(){
+if(!pickMap)return;
+var c=pickMap.getCenter();
+document.getElementById('coordLat').value=c.lat.toFixed(6);
+document.getElementById('coordLng').value=c.lng.toFixed(6);
+updateLoc(true);closeMapPicker();showToast('Standort übernommen!')}
 
-function resetForm() {
-  editingId = null;
-  document.getElementById('formTitle').textContent = 'Neuer Getränke-Test';
-  document.getElementById('formSubtitle').textContent = 'Bewerte dein Getränk und den Ort';
-  ['drinkName','locationName','googleMapsLink','priceChf','coordLat','coordLng','notes'].forEach(function(id) { document.getElementById(id).value = ''; });
-  document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
-  criteria.forEach(function(c) {
-    var id = 'crit_' + c.replace(/\s+/g, '_');
-    var el = document.getElementById(id);
-    var v = document.getElementById(id + '_val');
-    if (el) { el.value = 5; if (v) v.textContent = '5'; }
-  });
-}
+// ENTRIES
+async function loadEntries(){
+try{var res=await sb.from('drinks').select('*').order('test_date',{ascending:false});
+if(res.error)throw res.error;entries=res.data||[];renderEntries();
+}catch(e){showToast('Ladefehler: '+e.message,true)}}
 
-function extractCoords() {
-  var link = document.getElementById('googleMapsLink').value;
-  var patterns = [/@(-?\d+\.?\d*),(-?\d+\.?\d*)/, /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/, /place\/(-?\d+\.?\d*),(-?\d+\.?\d*)/];
-  for (var i = 0; i < patterns.length; i++) {
-    var m = link.match(patterns[i]);
-    if (m) {
-      document.getElementById('coordLat').value = parseFloat(m[1]);
-      document.getElementById('coordLng').value = parseFloat(m[2]);
-      return showToast('Koordinaten extrahiert!');
-    }
-  }
-  showToast('Keine Koordinaten gefunden', true);
-}
+async function saveEntry(){
+var name=document.getElementById('drinkName').value.trim();
+var loc=document.getElementById('locationName').value.trim();
+if(!name||!loc)return showToast('Getränk und Ort angeben!',true);
+if(!activeCriteria.length)return showToast('Mindestens ein Kriterium!',true);
+var ratings={};
+activeCriteria.forEach(function(c){var id='crit_'+c.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_äöüÄÖÜ]/g,'');
+var el=document.getElementById(id);ratings[c]=el?parseInt(el.value):5});
+var vals=Object.values(ratings);
+var avg=vals.length?(vals.reduce(function(a,b){return a+b},0)/vals.length):0;
+var rec={name:name,location:loc,
+website:document.getElementById('website').value.trim()||null,
+test_date:document.getElementById('testDate').value||new Date().toISOString().split('T')[0],
+price:parseFloat(document.getElementById('priceChf').value)||null,
+lat:parseFloat(document.getElementById('coordLat').value)||null,
+lng:parseFloat(document.getElementById('coordLng').value)||null,
+ratings:ratings,average:Math.round(avg*10)/10,
+notes:document.getElementById('notes').value.trim()||null};
+showLoading(true);
+try{
+if(editingId){var res=await sb.from('drinks').update(rec).eq('id',editingId);if(res.error)throw res.error;showToast('Aktualisiert!');editingId=null}
+else{var res=await sb.from('drinks').insert(rec);if(res.error)throw res.error;showToast('Gespeichert!')}
+resetForm();await loadEntries();
+}catch(e){showToast('Fehler: '+e.message,true)}showLoading(false)}
 
-function useMyLocation() {
-  if (!navigator.geolocation) return showToast('Nicht verfügbar', true);
-  navigator.geolocation.getCurrentPosition(
-    function(p) { document.getElementById('coordLat').value = p.coords.latitude.toFixed(6); document.getElementById('coordLng').value = p.coords.longitude.toFixed(6); showToast('Standort ermittelt!'); },
-    function() { showToast('Standort nicht verfügbar', true); }
-  );
-}
+function editEntry(id){
+var e=entries.find(function(x){return x.id===id});if(!e)return;
+editingId=id;
+document.getElementById('formTitle').textContent='Eintrag bearbeiten';
+document.getElementById('formSubtitle').textContent=e.name+' — '+e.location;
+document.getElementById('drinkName').value=e.name;
+document.getElementById('locationName').value=e.location;
+document.getElementById('website').value=e.website||'';
+document.getElementById('testDate').value=e.test_date;
+document.getElementById('priceChf').value=e.price||'';
+document.getElementById('coordLat').value=e.lat||'';
+document.getElementById('coordLng').value=e.lng||'';
+document.getElementById('notes').value=e.notes||'';
+updateLoc(e.lat&&e.lng);
+activeCriteria=e.ratings?Object.keys(e.ratings):globalCriteria.slice();
+renderCriteriaChips();renderActiveSliders();
+setTimeout(function(){if(e.ratings){Object.keys(e.ratings).forEach(function(c){
+var sid='crit_'+c.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_äöüÄÖÜ]/g,'');
+var el=document.getElementById(sid);var v=document.getElementById(sid+'_val');
+if(el){el.value=e.ratings[c];if(v)v.textContent=e.ratings[c]}})}},50);
+switchView('form');window.scrollTo(0,0)}
 
-function renderEntries() {
-  var container = document.getElementById('entriesList');
-  var sortBy = document.getElementById('sortBy') ? document.getElementById('sortBy').value : 'date-desc';
-  var sorted = entries.slice();
-  switch (sortBy) {
-    case 'date-desc': sorted.sort(function(a,b) { return (b.test_date||'').localeCompare(a.test_date||''); }); break;
-    case 'date-asc': sorted.sort(function(a,b) { return (a.test_date||'').localeCompare(b.test_date||''); }); break;
-    case 'score-desc': sorted.sort(function(a,b) { return (b.average||0)-(a.average||0); }); break;
-    case 'score-asc': sorted.sort(function(a,b) { return (a.average||0)-(b.average||0); }); break;
-    case 'price-asc': sorted.sort(function(a,b) { return (a.price||999)-(b.price||999); }); break;
-    case 'price-desc': sorted.sort(function(a,b) { return (b.price||0)-(a.price||0); }); break;
-  }
-  if (!sorted.length) {
-    container.innerHTML = '<div class="empty-state"><div class="icon">🍹</div><h3>Noch keine Tests</h3><p>Erstelle deinen ersten Getränke-Test!</p></div>';
-    return;
-  }
-  container.innerHTML = sorted.map(function(e) {
-    var r = e.ratings || {};
-    var ratingsHtml = Object.keys(r).map(function(k) { return '<div class="entry-rating"><span class="label">' + k + ':</span><span class="val">' + r[k] + '</span></div>'; }).join('');
-    return '<div class="entry-card"><div class="entry-actions"><button onclick="editEntry(\'' + e.id + '\')">✏️</button><button onclick="deleteEntry(\'' + e.id + '\')">🗑️</button></div><div class="entry-top"><div><div class="entry-name">' + e.name + '</div><div class="entry-location">📍 ' + e.location + (e.price ? ' · ' + Number(e.price).toFixed(2) + ' CHF' : '') + '</div><div class="entry-date">' + formatDate(e.test_date) + '</div></div><div class="entry-score-badge">⌀ ' + (e.average || '–') + '</div></div><div class="entry-ratings">' + ratingsHtml + '</div>' + (e.notes ? '<div class="entry-notes">"' + e.notes + '"</div>' : '') + '</div>';
-  }).join('');
-}
+async function deleteEntry(id){
+if(!confirm('Eintrag löschen?'))return;showLoading(true);
+try{var res=await sb.from('drinks').delete().eq('id',id);if(res.error)throw res.error;await loadEntries();showToast('Gelöscht');
+}catch(e){showToast('Fehler: '+e.message,true)}showLoading(false)}
 
-function formatDate(d) {
-  if (!d) return '';
-  var p = d.split('-');
-  return p[2] + '.' + p[1] + '.' + p[0];
-}
+function resetForm(){
+editingId=null;
+document.getElementById('formTitle').textContent='Neuer Getränke-Test';
+document.getElementById('formSubtitle').textContent='Bewerte dein Getränk und den Ort';
+['drinkName','locationName','website','priceChf','coordLat','coordLng','notes'].forEach(function(id){document.getElementById(id).value=''});
+document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
+updateLoc(false);activeCriteria=globalCriteria.slice();renderCriteriaChips();renderActiveSliders()}
 
-function initMap() {
-  if (map) { map.remove(); map = null; }
-  map = L.map('map', { center: [46.8, 8.2], zoom: 8 });
-  L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg', {
-    attribution: '&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>', maxZoom: 18
-  }).addTo(map);
-  updateMapMarkers();
-}
+// RENDER LIST
+function renderEntries(){
+var c=document.getElementById('entriesList');
+var s=document.getElementById('sortBy')?document.getElementById('sortBy').value:'date-desc';
+var sorted=entries.slice();
+switch(s){
+case'date-desc':sorted.sort(function(a,b){return(b.test_date||'').localeCompare(a.test_date||'')});break;
+case'date-asc':sorted.sort(function(a,b){return(a.test_date||'').localeCompare(b.test_date||'')});break;
+case'score-desc':sorted.sort(function(a,b){return(b.average||0)-(a.average||0)});break;
+case'score-asc':sorted.sort(function(a,b){return(a.average||0)-(b.average||0)});break;
+case'price-asc':sorted.sort(function(a,b){return(a.price||999)-(b.price||999)});break;
+case'price-desc':sorted.sort(function(a,b){return(b.price||0)-(a.price||0)});break}
+if(!sorted.length){c.innerHTML='<div class="empty-state"><div class="icon">🍹</div><h3>Noch keine Tests</h3><p>Erstelle deinen ersten Getränke-Test!</p></div>';return}
+c.innerHTML=sorted.map(function(e){
+var r=e.ratings||{};
+var rh=Object.keys(r).map(function(k){return'<div class="e-r"><span class="l">'+k+':</span><span class="v">'+r[k]+'</span></div>'}).join('');
+var web=e.website?'<a href="'+e.website+'" target="_blank" style="color:var(--accent);font-size:.72rem;text-decoration:none">🔗 Webseite</a>':'';
+return'<div class="e-card"><div class="e-top"><div class="e-info"><div class="e-name">'+e.name+'</div><div class="e-loc">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'</div><div class="e-date">'+formatDate(e.test_date)+' '+web+'</div></div><div class="e-score">⌀ '+(e.average||'–')+'</div></div><div class="e-ratings">'+rh+'</div>'+(e.notes?'<div class="e-notes">"'+e.notes+'"</div>':'')+'<div class="e-actions"><button onclick="editEntry(\''+e.id+'\')">✏️ Bearbeiten</button><button class="del" onclick="deleteEntry(\''+e.id+'\')">🗑️ Löschen</button></div></div>'}).join('')}
 
-function updateMapMarkers() {
-  if (!map) return;
-  markers.forEach(function(m) { map.removeLayer(m); });
-  markers = [];
-  var geo = entries.filter(function(e) { return e.lat && e.lng; });
-  geo.forEach(function(e) {
-    var avg = e.average || 0;
-    var color = avg >= 7 ? '#22c55e' : avg >= 4 ? '#f59e0b' : '#ef4444';
-    var icon = L.divIcon({
-      className: '',
-      html: '<div style="background:' + color + ';color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;font-family:DM Sans,sans-serif;border:3px solid rgba(255,255,255,0.9);box-shadow:0 3px 10px rgba(0,0,0,0.3)">' + avg + '</div>',
-      iconSize: [36,36], iconAnchor: [18,18], popupAnchor: [0,-20]
-    });
-    var r = e.ratings || {};
-    var rHtml = Object.keys(r).map(function(k) { return '<span style="color:#8b8a88">' + k + ':</span> <b>' + r[k] + '</b>'; }).join(' · ');
-    var popup = '<div class="popup-title">' + e.name + '</div><div class="popup-meta">📍 ' + e.location + (e.price ? ' · ' + Number(e.price).toFixed(2) + ' CHF' : '') + '<br>' + formatDate(e.test_date) + '</div><div class="popup-score">⌀ ' + avg + ' / 10</div><div class="popup-criteria">' + rHtml + '</div>' + (e.notes ? '<div style="margin-top:6px;font-size:0.75rem;color:#8b8a88;font-style:italic">"' + e.notes + '"</div>' : '') + (e.google_maps_link ? '<div style="margin-top:8px"><a href="' + e.google_maps_link + '" target="_blank" style="color:#f59e0b;font-size:0.8rem">📍 Google Maps</a></div>' : '');
-    markers.push(L.marker([e.lat, e.lng], { icon: icon }).addTo(map).bindPopup(popup));
-  });
-  if (geo.length) map.fitBounds(L.featureGroup(markers).getBounds().pad(0.15));
-}
+function formatDate(d){if(!d)return'';var p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
 
-function switchView(view) {
-  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-  document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
-  var idx = { form: 0, list: 1, map: 2 };
-  document.getElementById(view + 'View').classList.add('active');
-  document.querySelectorAll('.nav-tab')[idx[view]].classList.add('active');
-  if (view === 'list') renderEntries();
-  if (view === 'map') setTimeout(function() { initMap(); }, 100);
-}
+// MAIN MAP
+function initMap(){
+if(map){map.remove();map=null}
+map=L.map('map',{center:[46.8,8.2],zoom:8});
+var karte=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>',maxZoom:18});
+var luft=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>',maxZoom:20});
+karte.addTo(map);
+L.control.layers({'Karte':karte,'Luftbild':luft},null,{position:'topright',collapsed:false}).addTo(map);
+updateMapMarkers()}
 
-function showLoading(s) { document.getElementById('loading').classList.toggle('show', s); }
+function updateMapMarkers(){
+if(!map)return;mapMarkers.forEach(function(m){map.removeLayer(m)});mapMarkers=[];
+var geo=entries.filter(function(e){return e.lat&&e.lng});
+geo.forEach(function(e){
+var avg=e.average||0;var color=avg>=7?'#22c55e':avg>=4?'#f59e0b':'#ef4444';
+var icon=L.divIcon({className:'',
+html:'<div style="background:'+color+';color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;font-family:DM Sans,sans-serif;border:3px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.3)">'+avg+'</div>',
+iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-19]});
+var r=e.ratings||{};
+var rh=Object.keys(r).map(function(k){return'<span style="color:#8b8a88">'+k+':</span> <b>'+r[k]+'</b>'}).join(' · ');
+var popup='<div class="popup-title">'+e.name+'</div><div class="popup-meta">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'<br>'+formatDate(e.test_date)+'</div><div class="popup-score">⌀ '+avg+' / 10</div><div class="popup-criteria">'+rh+'</div>'+(e.notes?'<div style="margin-top:5px;font-size:.72rem;color:#8b8a88;font-style:italic">"'+e.notes+'"</div>':'')+(e.website?'<div style="margin-top:6px"><a href="'+e.website+'" target="_blank" style="color:#f59e0b;font-size:.75rem">🔗 Webseite</a></div>':'');
+mapMarkers.push(L.marker([e.lat,e.lng],{icon:icon}).addTo(map).bindPopup(popup))});
+if(geo.length)map.fitBounds(L.featureGroup(mapMarkers).getBounds().pad(0.15))}
 
-function showToast(msg, err) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.toggle('error', !!err);
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 3000);
-}
+function switchView(v){
+document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});
+document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});
+var idx={form:0,list:1,map:2};
+document.getElementById(v+'View').classList.add('active');
+document.querySelectorAll('.nav-tab')[idx[v]].classList.add('active');
+if(v==='list')renderEntries();if(v==='map')setTimeout(function(){initMap()},100)}
 
-document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
+function showLoading(s){document.getElementById('loading').classList.toggle('show',s)}
+function showToast(msg,err){var t=document.getElementById('toast');t.textContent=msg;t.classList.toggle('error',!!err);t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3000)}
+
+document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
 init();
 </script>
 </body>
