@@ -531,12 +531,15 @@ document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('ac
 var idx={form:0,list:1,map:2};
 document.getElementById(v+'View').classList.add('active');
 document.querySelectorAll('.nav-tab')[idx[v]].classList.add('active');
-if(v==='list')renderEntries();if(v==='map')setTimeout(function(){initMap()},100)}
+if(v==='list')renderEntries();if(v==='map')setTimeout(function(){initMap()},100);
+try{localStorage.setItem('gt_view',v)}catch(e){}}
 
 function showLoading(s){document.getElementById('loading').classList.toggle('show',s)}
 function showToast(msg,err){var t=document.getElementById('toast');t.textContent=msg;t.classList.toggle('error',!!err);t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3000)}
 
 document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
+var savedView=null;try{savedView=localStorage.getItem('gt_view')}catch(e){}
+if(savedView&&['form','list','map'].indexOf(savedView)!==-1)switchView(savedView);
 init();
 </script>
 </body>
