@@ -87,8 +87,10 @@ body:not(.light) input[type="date"]::-webkit-calendar-picker-indicator{filter:in
 .s-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
 .s-card label{display:block;font-size:.7rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
 .slider-wrap{display:flex;align-items:center;gap:8px}
-.slider-wrap input[type="range"]{flex:1;-webkit-appearance:none;appearance:none;height:5px;background:var(--border);border-radius:3px;border:none;padding:0}
-.slider-wrap input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);box-shadow:0 2px 4px var(--accent-dim)}
+.slider-wrap input[type="range"]{flex:1;-webkit-appearance:none;appearance:none;height:5px;background:var(--border);border-radius:3px;border:none;padding:0;margin:0}
+.slider-wrap input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);box-shadow:0 2px 4px var(--accent-dim);margin-top:0}
+.slider-wrap input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);box-shadow:0 2px 4px var(--accent-dim)}
+.slider-wrap input[type="range"]::-moz-range-track{height:5px;background:var(--border);border-radius:3px;border:none}
 .slider-val{min-width:22px;text-align:center;font-weight:700;font-size:.95rem;color:var(--accent)}
 .btn-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .btn{padding:10px 24px;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
@@ -384,7 +386,7 @@ activeCriteria.push(name);input.value='';renderCriteriaChips();renderActiveSlide
 function renderActiveSliders(){
 document.getElementById('activeSliders').innerHTML=activeCriteria.map(function(c){
 var id='crit_'+c.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_äöüÄÖÜ]/g,'');
-return'<div class="s-card"><label>'+c+'</label><div class="slider-wrap"><input type="range" id="'+id+'" min="1" max="10" value="5" oninput="document.getElementById(\''+id+'_val\').textContent=this.value"><span class="slider-val" id="'+id+'_val">5</span></div></div>'}).join('')}
+return'<div class="s-card"><label>'+c+'</label><div class="slider-wrap"><input type="range" id="'+id+'" min="0" max="10" value="5" oninput="if(this.value<1){this.value=1}document.getElementById(\''+id+'_val\').textContent=this.value"><span class="slider-val" id="'+id+'_val">5</span></div></div>'}).join('')}
 
 // LOCATION
 function useMyLocation(){
