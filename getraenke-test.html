@@ -201,7 +201,7 @@ body:not(.light) input[type="date"]::-webkit-calendar-picker-indicator{filter:in
 
 <div class="form-row three">
 <div class="field"><label>Kategorie</label>
-<select id="category"><option value="Getränk">🍹 Getränk</option><option value="Pommes">🍟 Pommes</option></select>
+<select id="category" onchange="onCategoryChange()"><option value="Getränk">🍹 Getränk</option><option value="Pommes">🍟 Pommes</option></select>
 </div>
 <div class="field"><label>Name / Produkt</label><input type="text" id="drinkName" placeholder="z.B. Gin Tonic, Pommes"></div>
 <div class="field"><label>Ort / Bar</label><input type="text" id="locationName" placeholder="z.B. Bar XY, Zürich"></div>
@@ -236,7 +236,7 @@ body:not(.light) input[type="date"]::-webkit-calendar-picker-indicator{filter:in
 <div class="field span2" style="margin-bottom:12px">
 <label>Foto (optional)</label>
 <div class="photo-area">
-<label class="photo-btn" id="photoBtn" for="photoInput">📷 Foto aufnehmen oder auswählen</label>
+<label class="photo-btn" id="photoBtn" for="photoInput">📷 Foto hinzufügen</label>
 <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
 <img id="photoPreview" class="photo-preview">
 <div id="photoInfo" class="photo-info"></div>
@@ -254,7 +254,7 @@ body:not(.light) input[type="date"]::-webkit-calendar-picker-indicator{filter:in
 <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px">
 <span style="font-size:.85rem">⚙️</span>
 <span style="font-size:.85rem;font-weight:600;color:var(--accent)">Standard-Kriterien anpassen</span>
-<span style="font-size:.7rem;color:var(--text-dim);margin-left:4px">— werden bei jedem neuen Test vorausgewählt</span>
+<span style="font-size:.7rem;color:var(--text-dim);margin-left:4px">— für die gewählte Kategorie</span>
 </summary>
 <div style="margin-top:12px">
 <div class="manage-tags" id="criteriaList"></div>
@@ -308,6 +308,7 @@ var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 var globalCriteria=[],activeCriteria=[],entries=[],editingId=null,map=null,mapMarkers=[],pickMap=null;
 var filterCat='';
+var allCriteria=[];
 
 async function init(){
 try{
@@ -315,15 +316,24 @@ var res=await sb.from('criteria').select('*').order('sort_order');
 if(res.error)throw res.error;
 document.getElementById('dbDot').classList.add('connected');
 document.getElementById('dbStatusText').textContent='Datenbank verbunden';
-globalCriteria=res.data.map(function(c){return c.name});
-activeCriteria=globalCriteria.slice();
+allCriteria=res.data;
+updateCriteriaForCategory();
 renderGlobalCriteria();renderCriteriaChips();renderActiveSliders();
 await loadEntries();
 var sv=null;try{sv=localStorage.getItem('gt_view')}catch(e){}
 if(sv&&['form','list','ranking','map'].indexOf(sv)!==-1)switchView(sv);
 }catch(e){document.getElementById('dbStatusText').textContent='Datenbank-Fehler';showToast('Verbindung: '+e.message,true)}}
 
+function updateCriteriaForCategory(){
+var cat=document.getElementById('category')?document.getElementById('category').value:'Getränk';
+globalCriteria=allCriteria.filter(function(c){return(c.category||'Getränk')===cat}).map(function(c){return c.name});
+activeCriteria=globalCriteria.slice()}
+
 // GLOBAL CRITERIA
+function onCategoryChange(){
+updateCriteriaForCategory();
+renderGlobalCriteria();renderCriteriaChips();renderActiveSliders()}
+
 function renderGlobalCriteria(){
 document.getElementById('criteriaList').innerHTML=globalCriteria.map(function(c){
 return'<div class="m-tag">'+c+'<span class="x" onclick="removeGlobalCriteria(\''+c.replace(/'/g,"\\'")+'\')">×</span></div>'}).join('')}
@@ -331,16 +341,21 @@ return'<div class="m-tag">'+c+'<span class="x" onclick="removeGlobalCriteria(\''
 async function addGlobalCriteria(){
 var input=document.getElementById('newCriteriaInput'),name=input.value.trim();
 if(!name)return;
+var cat=document.getElementById('category').value;
 if(globalCriteria.find(function(c){return c.toLowerCase()===name.toLowerCase()}))return showToast('Existiert bereits!',true);
-try{var res=await sb.from('criteria').insert({name:name,sort_order:globalCriteria.length+1});if(res.error)throw res.error;
+try{var res=await sb.from('criteria').insert({name:name,sort_order:globalCriteria.length+1,category:cat});if(res.error)throw res.error;
+allCriteria.push({name:name,sort_order:globalCriteria.length+1,category:cat});
 globalCriteria.push(name);if(activeCriteria.indexOf(name)===-1)activeCriteria.push(name);
 input.value='';renderGlobalCriteria();renderCriteriaChips();renderActiveSliders();showToast('"'+name+'" hinzugefügt');
 }catch(e){showToast('Fehler: '+e.message,true)}}
 
 async function removeGlobalCriteria(name){
 if(!confirm('"'+name+'" löschen?'))return;
-try{var res=await sb.from('criteria').delete().eq('name',name);if(res.error)throw res.error;
-globalCriteria=globalCriteria.filter(function(c){return c!==name});renderGlobalCriteria();renderCriteriaChips();showToast('"'+name+'" entfernt');
+var cat=document.getElementById('category').value;
+try{var res=await sb.from('criteria').delete().eq('name',name).eq('category',cat);if(res.error)throw res.error;
+allCriteria=allCriteria.filter(function(c){return!(c.name===name&&(c.category||'Getränk')===cat)});
+globalCriteria=globalCriteria.filter(function(c){return c!==name});
+renderGlobalCriteria();renderCriteriaChips();showToast('"'+name+'" entfernt');
 }catch(e){showToast('Fehler: '+e.message,true)}}
 
 // CRITERIA PICKER
@@ -399,14 +414,14 @@ var reader=new FileReader();reader.onload=function(e){preview.src=e.target.resul
 btn.textContent='⏳ Wird hochgeladen...';
 uploadPhoto(file).then(function(url){currentPhotoUrl=url;btn.textContent='✓ Foto hochgeladen';
 info.innerHTML='Foto gespeichert <span class="photo-remove" onclick="removePhoto()">✕ Entfernen</span>';
-}).catch(function(err){btn.textContent='📷 Foto aufnehmen oder auswählen';preview.classList.remove('show');showToast('Upload fehlgeschlagen: '+err.message,true)})}
+}).catch(function(err){btn.textContent='📷 Foto hinzufügen';preview.classList.remove('show');showToast('Upload fehlgeschlagen: '+err.message,true)})}
 
 async function uploadPhoto(file){
 var ext=file.name.split('.').pop();var name=Date.now()+'_'+Math.random().toString(36).substr(2,6)+'.'+ext;
 var res=await sb.storage.from('photos').upload(name,file,{contentType:file.type});if(res.error)throw res.error;
 return sb.storage.from('photos').getPublicUrl(name).data.publicUrl}
 
-function removePhoto(){currentPhotoUrl=null;document.getElementById('photoPreview').classList.remove('show');document.getElementById('photoPreview').src='';document.getElementById('photoInfo').innerHTML='';document.getElementById('photoBtn').textContent='📷 Foto aufnehmen oder auswählen';document.getElementById('photoInput').value=''}
+function removePhoto(){currentPhotoUrl=null;document.getElementById('photoPreview').classList.remove('show');document.getElementById('photoPreview').src='';document.getElementById('photoInfo').innerHTML='';document.getElementById('photoBtn').textContent='📷 Foto hinzufügen';document.getElementById('photoInput').value=''}
 
 // ENTRIES
 async function loadEntries(){
@@ -474,7 +489,7 @@ document.getElementById('formSubtitle').textContent='Bewerte dein Getränk oder 
 document.getElementById('category').value='Getränk';
 ['drinkName','locationName','website','priceChf','coordLat','coordLng','notes'].forEach(function(id){document.getElementById(id).value=''});
 document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
-updateLoc(false);removePhoto();activeCriteria=globalCriteria.slice();renderCriteriaChips();renderActiveSliders()}
+updateLoc(false);removePhoto();updateCriteriaForCategory();renderGlobalCriteria();renderCriteriaChips();renderActiveSliders()}
 
 // SHARE
 function shareEntry(id){
