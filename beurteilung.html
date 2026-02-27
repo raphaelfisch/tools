@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MakerEdu Beurteilungs-Generator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #F9FAFB; color: #1F2937; display: flex; flex-direction: column; height: 100vh; }
+
+  /* Top bar */
+  .topbar { background: #1F2937; padding: 10px 18px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .topbar-logo { width: 28px; height: 28px; background: linear-gradient(135deg, #2563EB, #9333EA); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px; }
+  .topbar-title { flex: 1; }
+  .topbar-title h1 { color: white; font-size: 14px; font-weight: 700; }
+  .topbar-title p { color: #93C5FD; font-size: 11px; }
+  .preset-btn { padding: 5px 10px; font-size: 11px; background: #374151; color: #D1D5DB; border: 1px solid #4B5563; border-radius: 6px; cursor: pointer; font-weight: 500; }
+  .preset-btn:hover { background: #4B5563; }
+
+  /* Main layout */
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .left { width: 55%; overflow-y: auto; padding: 14px; border-right: 1px solid #E5E7EB; }
+  .right { width: 45%; overflow-y: auto; padding: 14px; background: #F3F4F6; }
+
+  /* Settings panel */
+  .settings { margin-bottom: 12px; background: white; border-radius: 8px; border: 1px solid #E5E7EB; padding: 10px; }
+  .settings-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 12px; font-weight: 600; color: #374151; }
+  .settings-body { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .settings-body input, .settings-body textarea { padding: 5px 8px; font-size: 12px; border: 1px solid #D1D5DB; border-radius: 6px; outline: none; font-family: inherit; }
+  .settings-body textarea { resize: vertical; }
+
+  /* Buttons */
+  .btn-reset { padding: 6px 10px; font-size: 11px; background: #FEE2E2; color: #DC2626; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+  .btn-pdf { padding: 7px 16px; font-size: 12px; background: #2563EB; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .btn-pdf:disabled { background: #D1D5DB; cursor: not-allowed; }
+
+  /* Status bar */
+  .status { font-size: 12px; color: #6B7280; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .status-badge { padding: 2px 8px; border-radius: 10px; font-weight: 600; font-size: 11px; }
+
+  /* Accordion */
+  .comp-accordion { border: 2px solid transparent; border-radius: 10px; margin-bottom: 10px; overflow: hidden; background: white; }
+  .comp-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; transition: background 0.15s; }
+  .comp-header:hover { filter: brightness(0.98); }
+  .comp-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .comp-label { flex: 1; }
+  .comp-label strong { font-size: 13px; display: block; }
+  .comp-label small { font-size: 11px; color: #6B7280; }
+  .comp-count { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .comp-body { padding: 8px 12px 12px; }
+
+  /* Subcategory */
+  .sub-header { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+  .sub-header:hover { filter: brightness(0.97); }
+  .sub-label { font-weight: 600; font-size: 13px; flex: 1; }
+  .sub-count { font-size: 11px; color: #9CA3AF; }
+  .sub-indicators { padding-left: 32px; padding-top: 4px; padding-bottom: 4px; }
+  .ind-label { display: flex; gap: 8px; align-items: flex-start; padding: 3px 0; font-size: 12px; color: #374151; cursor: pointer; line-height: 1.4; }
+  .ind-label input { margin-top: 2px; width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* Chevron */
+  .chevron { transition: transform 0.2s; display: inline-block; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* Preview */
+  .preview { background: white; border-radius: 10px; border: 1px solid #E5E7EB; overflow: hidden; }
+  .preview-header { background: #1F2937; padding: 14px 18px; }
+  .preview-header h2 { color: white; font-size: 15px; font-weight: 700; }
+  .preview-header p { color: #93C5FD; font-size: 11px; }
+  .preview-body { padding: 16px; }
+  .preview-assignment { background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 10px; color: #374151; white-space: pre-wrap; }
+  .preview-stats { display: flex; gap: 8px; margin-bottom: 14px; justify-content: center; flex-wrap: wrap; }
+  .preview-stat { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .preview-comp-title { font-size: 11px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .preview-comp-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .preview-sub-title { font-size: 10px; font-weight: 600; color: #374151; margin-bottom: 2px; }
+  .preview-ind { font-size: 9px; color: #6B7280; padding-left: 8px; line-height: 1.5; }
+  .preview-empty { text-align: center; color: #9CA3AF; font-size: 12px; padding: 20px; }
+  .right-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .right-topbar span { font-size: 13px; font-weight: 700; color: #1F2937; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">M</div>
+  <div class="topbar-title">
+    <h1>MakerEdu Beurteilungs-Generator</h1>
+    <p>Kompetenz-Diamant konfigurieren & PDF erstellen</p>
+  </div>
+  <button class="preset-btn" onclick="applyPreset('minimal')">Minimal (4)</button>
+  <button class="preset-btn" onclick="applyPreset('standard')">Standard (8)</button>
+  <button class="preset-btn" onclick="applyPreset('full')">Umfassend</button>
+</div>
+
+<div class="main">
+  <div class="left">
+    <!-- Settings -->
+    <div class="settings">
+      <div class="settings-header" onclick="toggleSettings()">
+        <span>Dokument-Einstellungen</span>
+        <span class="chevron" id="settings-chevron">▼</span>
+      </div>
+      <div class="settings-body" id="settings-body" style="display:none;">
+        <input type="text" id="docTitle" value="CHALLENGE-BEURTEILUNG" placeholder="Titel">
+        <input type="text" id="docSubtitle" value="MakerEdu Kompetenz-Diamant | Selbst- & Fremdeinschätzung" placeholder="Untertitel">
+        <input type="text" id="schoolName" value="" placeholder="Schulname (optional)">
+        <textarea id="assignmentText" rows="3" placeholder="Auftrag / Aufgabenstellung (erscheint auf dem Beurteilungsblatt)"></textarea>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+      <button class="btn-reset" onclick="resetAll()">Alles zurücksetzen</button>
+    </div>
+
+    <div class="status">
+      <span class="status-badge" id="status-badge" style="background:#F3F4F6;color:#6B7280;">0 Indikatoren ausgewählt</span>
+      <span>·</span>
+      <span id="status-comps">0 Kompetenzbereiche aktiv</span>
+    </div>
+
+    <div id="accordions"></div>
+  </div>
+
+  <div class="right">
+    <div class="right-topbar">
+      <span>Vorschau</span>
+      <button class="btn-pdf" id="btn-pdf" disabled onclick="generatePDF()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        PDF erstellen
+      </button>
+    </div>
+    <div id="preview"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const DATA = {
+  personal: {
+    id: "personal", label: "PERSONALKOMPETENZ", shortLabel: "Dranbleiben",
+    color: "#9333EA", colorLight: "#F3E8FF",
+    subs: [
+      { id: "p1", label: "Eigenständigkeit", inds: [
+        "Du hast dein Produkt selbständig geplant und umgesetzt.",
+        "Du hast deine eigene(n) Idee(n) umgesetzt.",
+        "Du hattest viele gute Ideen.",
+        "Du konntest etwas bauen, das dir wichtig ist.",
+        "Du hast etwas gelernt, das dich interessiert.",
+      ]},
+      { id: "p2", label: "Offenheit / Risikobereitschaft", inds: [
+        "Du hast Werkzeuge, Materialien oder Maschinen ausprobiert, die du vorher noch nicht kanntest.",
+        "Du hast Ideen umgesetzt, von denen du nicht wusstest, ob sie funktionieren.",
+        "Du hast ein Projekt gewählt, das du vorher noch nie umgesetzt hast.",
+      ]},
+      { id: "p3", label: "Selbstregulation / Selbstreflexion", inds: [
+        "Du hast so lange getüftelt, bis das Problem gelöst war.",
+        "Wenn etwas nicht funktioniert hat, wolltest du herausfinden, was der Grund dafür ist.",
+        "Du hast Fehler als Chance gesehen und etwas daraus gelernt.",
+        "Wenn es mal mühsam war, konntest du dich selbst zum Weitermachen motivieren.",
+        "Du hast die Zeit sinnvoll eingeteilt.",
+        "Du hast dein Ziel im Auge behalten und bis zum Schluss verfolgt.",
+        "Du konntest dich auf dein Projekt konzentrieren.",
+      ]},
+      { id: "p4", label: "Flexibilität / Improvisation", inds: [
+        "Wenn etwas gefehlt hat (z.B. Material), hast du etwas anderes verwendet.",
+        "Du hast Dinge verwendet, die eigentlich für etwas anderes gedacht sind.",
+      ]},
+      { id: "p5", label: "Verantwortung / Haltung", inds: [
+        "Du bist Schwierigkeiten nicht aus dem Weg gegangen.",
+        "Du hast Hilfe gesucht und angenommen, wenn du nicht mehr weiterwusstest.",
+        "Du hast deine wichtigsten Erkenntnisse dokumentiert.",
+        "Du hast deinen Arbeitsplatz aufgeräumt und sauber hinterlassen.",
+        "Du hast die Schutz- und Sicherheitsregeln beachtet.",
+      ]},
+    ]
+  },
+  methodical: {
+    id: "methodical", label: "METHODISCHE KOMPETENZ", shortLabel: "Denken & Zeigen",
+    color: "#F97316", colorLight: "#FFF7ED",
+    subs: [
+      { id: "m1", label: "Problemanalyse / Problemverstehen", inds: [
+        "Du hast selbst versucht, das Problem zu verstehen.",
+        "Dir war klar, welches Problem zu lösen ist.",
+        "Bei Fehlern hast du herausgefunden, was das Problem war.",
+        "Du hast Tipps zu deinem Problem im Netz oder anderswo gefunden.",
+      ]},
+      { id: "m2", label: "Kreative Problemlösefähigkeiten", inds: [
+        "Du hattest sehr viele Ideen.",
+        "Du hast Methoden zur Ideenentwicklung eingesetzt (z.B. Brainstorming, morphologischer Kasten).",
+        "Bei der Fehlersuche bist du systematisch vorgegangen.",
+        "Du konntest selbstständig Fehler beheben.",
+        "Du konntest Fehler mit Unterstützung anderer beheben.",
+      ]},
+      { id: "m3", label: "Produktentwicklung", inds: [
+        "Du hast Skizzen, Modelle und Prototypen angefertigt, bevor du das Endprodukt gebaut hast.",
+        "Du kannst deine Konstruktionsschritte und Gestaltungsentscheidungen begründen.",
+        "Du kannst dir für dein Projekt Inspirationen suchen (z.B. im Netz oder von Mitschüler:innen).",
+      ]},
+      { id: "m4", label: "Recherche- und Informationskompetenzen", inds: [
+        "Du hast im Internet brauchbare Anregungen für dein Produkt gefunden.",
+        "Du hast KI-Tools gezielt und mit guten Prompts für die Problemlösung eingesetzt.",
+      ]},
+    ]
+  },
+  social: {
+    id: "social", label: "SOZIALE KOMPETENZ", shortLabel: "Zusammenarbeiten",
+    color: "#16A34A", colorLight: "#F0FDF4",
+    subs: [
+      { id: "s1", label: "Zusammenarbeit", inds: [
+        "Du bist respektvoll mit anderen umgegangen.",
+        "Du hast dazu beigetragen, dass Meinungsverschiedenheiten gelöst wurden.",
+        "Du konntest deine Stärken einbringen.",
+        "Du hast dich aktiv an der Zusammenarbeit beteiligt.",
+      ]},
+      { id: "s2", label: "Hilfs- und Unterstützungsbereitschaft", inds: [
+        "Du hast anderen bei ihren Projekten weitergeholfen.",
+        "Du konntest anderen etwas beibringen (z.B. wie ein Werkzeug funktioniert).",
+        "Du hast dazu beigetragen, dass Ideen anderer umgesetzt werden konnten.",
+      ]},
+      { id: "s3", label: "Feedback einfordern und geben", inds: [
+        "Wenn du nicht weiterwusstest, hast du andere um Unterstützung gebeten.",
+        "Du konntest das Feedback anderer für dein Projekt nutzen.",
+        "Du konntest dich in die Produkte anderer hineindenken und Verbesserungsvorschläge machen.",
+      ]},
+      { id: "s4", label: "Wertschätzung", inds: [
+        "Du hast andere für eine gute Idee gelobt.",
+        "Du hast die Stärken anderer erkannt und gewürdigt.",
+      ]},
+    ]
+  },
+  technical: {
+    id: "technical", label: "FACHKOMPETENZ", shortLabel: "Machen",
+    color: "#2563EB", colorLight: "#EFF6FF",
+    subs: [
+      { id: "f1", label: "Werkzeuge & Handwerk", inds: [
+        "Du hast digitale Fabrikationsverfahren für die Herstellung deines Produkts verwendet.",
+        "Du weisst, wofür du einen 3D-Drucker / Laser Cutter / Plotter sinnvoll einsetzen kannst.",
+        "Du hast neue technische Verfahren kennengelernt.",
+      ]},
+      { id: "f2", label: "Technik", inds: [
+        "Du konntest deine Kenntnisse über Naturwissenschaft und Technik anwenden.",
+        "Dein Produkt funktioniert zuverlässig wie geplant.",
+        "Dein Produkt zeigt eine eigene kreative Erweiterung über die Vorlage hinaus.",
+      ]},
+      { id: "f3", label: "Informatische Kompetenzen", inds: [
+        "Du konntest Microcontroller, Sensoren und Aktoren zielführend in dein Produkt einbauen.",
+        "Du hast Programme geschrieben, in welchen Daten von Sensoren zur Steuerung von Aktoren richtig verwendet werden.",
+        "Du konntest Schleifen, Wenn-Dann-Bedingungen, Variablen und andere Programmierbausteine zu lauffähigen Programmen zusammensetzen.",
+      ]},
+      { id: "f4", label: "Medienkompetenzen", inds: [
+        "Du hast Medien zur Dokumentation deiner Arbeit sinnvoll eingesetzt.",
+        "Du kannst dein Projekt und das technische Konzept erklären.",
+      ]},
+    ]
+  }
+};
+
+const PRESETS = {
+  minimal: { p3:[0,1], m2:[2,3], s3:[0,1], f3:[0,2] },
+  standard: { p1:[0,1], p3:[0,3,4], m1:[0,2], m3:[0,1], s2:[0,1], s3:[0,1], f3:[0,1,2], f2:[1,2] },
+};
+
+// State
+let selections = {}; // { subId: [indicatorIndex, ...] }
+let openComps = {};
+let openSubs = {};
+let customTexts = {}; // { "subId-index": "edited text" }
+let customAdded = {}; // { subId: ["custom ind 1", ...] }
+let editingInd = null; // "subId-index" currently being edited
+
+function getIndText(subId, idx, sub) {
+  const key = subId + '-' + idx;
+  if (customTexts[key] !== undefined) return customTexts[key];
+  if (idx >= sub.inds.length) return (customAdded[subId] || [])[idx - sub.inds.length] || '';
+  return sub.inds[idx];
+}
+
+function getAllInds(sub) {
+  const added = customAdded[sub.id] || [];
+  return [...sub.inds, ...added];
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  renderAccordions();
+  renderPreview();
+  updateStatus();
+}
+
+function toggleSettings() {
+  const body = document.getElementById('settings-body');
+  const chev = document.getElementById('settings-chevron');
+  const visible = body.style.display !== 'none';
+  body.style.display = visible ? 'none' : 'flex';
+  chev.classList.toggle('open', !visible);
+}
+
+function updateStatus() {
+  let total = 0;
+  Object.values(selections).forEach(arr => total += arr.length);
+  const activeCount = getActiveComps().length;
+  const badge = document.getElementById('status-badge');
+  badge.textContent = total + ' Indikatoren ausgewählt';
+  badge.style.background = total > 0 ? '#DCFCE7' : '#F3F4F6';
+  badge.style.color = total > 0 ? '#16A34A' : '#6B7280';
+  document.getElementById('status-comps').textContent = activeCount + ' Kompetenzbereiche aktiv';
+  document.getElementById('btn-pdf').disabled = total === 0;
+}
+
+function getActiveComps() {
+  return Object.values(DATA).filter(comp =>
+    comp.subs.some(sub => (selections[sub.id] || []).length > 0)
+  );
+}
+
+function renderAccordions() {
+  let html = '';
+  Object.values(DATA).forEach(comp => {
+    const totalSel = comp.subs.reduce((s, sub) => s + (selections[sub.id] || []).length, 0);
+    const isOpen = openComps[comp.id];
+    html += `<div class="comp-accordion" style="border-color:${comp.color}22">`;
+    html += `<div class="comp-header" style="background:${isOpen ? comp.colorLight : 'white'}" onclick="toggleComp('${comp.id}')">`;
+    html += `<div class="comp-dot" style="background:${comp.color}"></div>`;
+    html += `<div class="comp-label"><strong style="color:${comp.color}">${comp.label}</strong><small>(${comp.shortLabel})</small></div>`;
+    html += `<span class="comp-count" style="background:${totalSel > 0 ? comp.color : '#E5E7EB'};color:${totalSel > 0 ? 'white' : '#6B7280'}">${totalSel}</span>`;
+    html += `<span class="chevron ${isOpen ? 'open' : ''}">▼</span>`;
+    html += `</div>`;
+    if (isOpen) {
+      html += `<div class="comp-body">`;
+      comp.subs.forEach(sub => {
+        const allInds = getAllInds(sub);
+        const sel = selections[sub.id] || [];
+        const allSel = sel.length === allInds.length && allInds.length > 0;
+        const someSel = sel.length > 0;
+        const subOpen = openSubs[sub.id];
+        html += `<div style="margin-bottom:6px">`;
+        html += `<div class="sub-header" style="background:${someSel ? comp.color + '12' : 'transparent'}" onclick="toggleSub('${sub.id}')">`;
+        html += `<input type="checkbox" ${allSel ? 'checked' : ''} onclick="event.stopPropagation();toggleAllInds('${sub.id}',${!allSel})" style="accent-color:${comp.color};width:16px;height:16px">`;
+        html += `<span class="sub-label">${sub.label}</span>`;
+        html += `<span class="sub-count">${sel.length}/${allInds.length}</span>`;
+        html += `<span class="chevron ${subOpen ? 'open' : ''}">▼</span>`;
+        html += `</div>`;
+        if (subOpen) {
+          html += `<div class="sub-indicators">`;
+          allInds.forEach((_, i) => {
+            const indText = getIndText(sub.id, i, sub);
+            const checked = sel.includes(i);
+            const editKey = sub.id + '-' + i;
+            const isEditing = editingInd === editKey;
+            if (isEditing) {
+              html += `<div style="display:flex;gap:4px;align-items:center;margin:2px 0">`;
+              html += `<input type="checkbox" ${checked ? 'checked' : ''} onclick="toggleInd('${sub.id}',${i})" style="accent-color:${comp.color};width:16px;height:16px;flex-shrink:0">`;
+              html += `<input type="text" id="edit-input-${editKey}" value="${indText.replace(/"/g,'&quot;')}" style="flex:1;font-size:11px;padding:3px 6px;border:1.5px solid ${comp.color};border-radius:4px;outline:none" onkeydown="if(event.key==='Enter')saveIndEdit('${sub.id}',${i},this.value);if(event.key==='Escape')cancelEdit()">`;
+              html += `<button onclick="saveIndEdit('${sub.id}',${i},document.getElementById('edit-input-${editKey}').value)" style="font-size:10px;padding:2px 6px;background:${comp.color};color:white;border:none;border-radius:3px;cursor:pointer">✓</button>`;
+              html += `<button onclick="cancelEdit()" style="font-size:10px;padding:2px 6px;background:#E5E7EB;border:none;border-radius:3px;cursor:pointer">✕</button>`;
+              if (i >= sub.inds.length) html += `<button onclick="removeCustomInd('${sub.id}',${i})" style="font-size:10px;padding:2px 6px;background:#FEE2E2;color:#DC2626;border:none;border-radius:3px;cursor:pointer">🗑</button>`;
+              html += `</div>`;
+            } else {
+              html += `<div style="display:flex;align-items:center;gap:2px">`;
+              h
