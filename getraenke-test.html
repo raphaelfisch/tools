@@ -3,45 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Getränke-Test</title>
+<title>Test-Tracker 🍹🍟</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0f1117;--card:#1a1d27;--accent:#f59e0b;--accent-light:#fbbf24;--accent-dim:rgba(245,158,11,0.15);--text:#e8e6e3;--text-dim:#8b8a88;--border:#2a2d3a;--success:#22c55e;--danger:#ef4444;--glass:rgba(26,29,39,0.85);--radius:12px;--nav-h:56px}
+body.light{--bg:#f5f5f0;--card:#ffffff;--accent:#d97706;--accent-light:#b45309;--accent-dim:rgba(217,119,6,0.1);--text:#1a1a1a;--text-dim:#6b7280;--border:#e5e5e0;--success:#16a34a;--danger:#dc2626;--glass:rgba(255,255,255,0.85)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
-
 .nav{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;height:var(--nav-h);border-bottom:1px solid var(--border);background:var(--glass);backdrop-filter:blur(20px);position:sticky;top:0;z-index:1000}
 .nav-brand{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:800;color:var(--accent)}
 .nav-right{display:flex;align-items:center;gap:10px}
 .nav-tabs{display:flex;gap:3px;background:var(--bg);padding:3px;border-radius:10px}
 .nav-tab{padding:6px 14px;border:none;background:transparent;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;border-radius:7px;cursor:pointer;transition:all .2s}
-.nav-tab.active{background:var(--accent);color:var(--bg);font-weight:600}
+.nav-tab.active{background:var(--accent);color:#fff;font-weight:600}
 .nav-tab:hover:not(.active){color:var(--text);background:var(--card)}
 .db-status{display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--text-dim);padding:4px 8px;background:var(--card);border-radius:16px;border:1px solid var(--border)}
-.db-dot{width:6px;height:6px;border-radius:50%;background:var(--danger)}
-.db-dot.connected{background:var(--success)}
-
-.view{display:none;padding:20px;max-width:900px;margin:0 auto}
-.view.active{display:block}
-
-/* MAP - no scroll */
+.db-dot{width:6px;height:6px;border-radius:50%;background:var(--danger)}.db-dot.connected{background:var(--success)}
+.view{display:none;padding:20px;max-width:900px;margin:0 auto}.view.active{display:block}
 #mapView{padding:0;max-width:100%;overflow:hidden}
 #map{height:calc(100dvh - var(--nav-h));width:100%}
-
-.leaflet-popup-content-wrapper{background:var(--card)!important;color:var(--text)!important;border-radius:var(--radius)!important;border:1px solid var(--border)!important;box-shadow:0 8px 24px rgba(0,0,0,.4)!important}
+.leaflet-popup-content-wrapper{background:var(--card)!important;color:var(--text)!important;border-radius:var(--radius)!important;border:1px solid var(--border)!important;box-shadow:0 8px 24px rgba(0,0,0,.2)!important}
 .leaflet-popup-tip{background:var(--card)!important}
 .leaflet-popup-content{font-family:'DM Sans',sans-serif!important;margin:10px 14px!important}
 .popup-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--accent);margin-bottom:4px}
 .popup-meta{font-size:.78rem;color:var(--text-dim);margin-bottom:6px}
-.popup-score{display:inline-block;background:var(--accent);color:var(--bg);padding:2px 8px;border-radius:20px;font-weight:700;font-size:.8rem}
+.popup-score{display:inline-block;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;font-weight:700;font-size:.8rem}
 .popup-criteria{margin-top:6px;font-size:.72rem;line-height:1.5}
-.leaflet-control-layers{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:8px!important;color:var(--text)!important;box-shadow:0 4px 12px rgba(0,0,0,.3)!important;padding:8px 12px!important}
+.leaflet-control-layers{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:8px!important;color:var(--text)!important;box-shadow:0 4px 12px rgba(0,0,0,.15)!important;padding:8px 12px!important}
 .leaflet-control-layers label{color:var(--text)!important;font-family:'DM Sans',sans-serif!important;font-size:.82rem!important}
-
-/* FORM */
 .form-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:800;color:var(--accent);margin-bottom:4px}
 .form-subtitle{color:var(--text-dim);font-size:.85rem;margin-bottom:16px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
@@ -49,29 +41,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .field{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
 .field.span2{grid-column:span 2}
 .field label{display:block;font-size:.72rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.field input,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none}
-.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.field input,.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 .field textarea{resize:vertical}
-
-/* Location */
+.field select{cursor:pointer}
 .loc-buttons{display:flex;gap:6px;margin-bottom:6px}
 .loc-btn{padding:7px 12px;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:6px;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;transition:all .2s;flex:1;text-align:center}
 .loc-btn:hover{border-color:var(--accent);color:var(--accent)}
 .loc-btn:disabled{opacity:.5;cursor:wait}
 .photo-area{margin-top:6px}
-.photo-preview{width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-top:6px;display:none}
-.photo-preview.show{display:block}
+.photo-preview{width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-top:6px;display:none}.photo-preview.show{display:block}
 .photo-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px dashed var(--border);background:var(--bg);color:var(--text-dim);border-radius:6px;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;transition:all .2s;width:100%;justify-content:center}
 .photo-btn:hover{border-color:var(--accent);color:var(--accent)}
 .photo-info{font-size:.72rem;color:var(--text-dim);margin-top:4px}
 .photo-remove{font-size:.72rem;color:var(--danger);cursor:pointer;margin-left:8px}
 input[type="date"]{position:relative}
-input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;filter:invert(1)}
-.loc-indicator{font-size:.72rem}
-.loc-indicator.ok{color:var(--success)}
-.loc-indicator.none{color:var(--text-dim)}
-
-/* Map picker modal */
+input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6}
+body:not(.light) input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1)}
+.theme-toggle{background:var(--bg);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-toggle:hover{border-color:var(--accent)}
+.loc-indicator{font-size:.72rem}.loc-indicator.ok{color:var(--success)}.loc-indicator.none{color:var(--text-dim)}
 .map-modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(15,17,23,.85);align-items:center;justify-content:center;padding:20px}
 .map-modal.open{display:flex}
 .map-modal-inner{width:100%;max-width:700px;height:70vh;max-height:500px;border-radius:var(--radius);overflow:hidden;position:relative;border:2px solid var(--accent)}
@@ -83,8 +72,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;
 .modal-cancel{background:var(--card);color:var(--text);border:1px solid var(--border)!important}
 .modal-confirm{background:var(--accent);color:var(--bg);margin-left:8px}
 .map-crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2001;font-size:28px;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
-
-/* Criteria */
 .section-label{font-size:.72rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 .criteria-bar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
@@ -94,7 +81,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;
 .add-row{display:flex;gap:6px}
 .add-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;font-size:.8rem}
 .add-row input:focus{border-color:var(--accent)}
-
 .sliders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:12px}
 .s-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
 .s-card label{display:block;font-size:.7rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
@@ -102,55 +88,64 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;
 .slider-wrap input[type="range"]{flex:1;-webkit-appearance:none;appearance:none;height:5px;background:var(--border);border-radius:3px;border:none;padding:0}
 .slider-wrap input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);box-shadow:0 2px 4px rgba(245,158,11,.3)}
 .slider-val{min-width:22px;text-align:center;font-weight:700;font-size:.95rem;color:var(--accent)}
-
 .btn-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .btn{padding:10px 24px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
-.btn-primary{background:var(--accent);color:var(--bg)}
-.btn-primary:hover{background:var(--accent-light);transform:translateY(-1px)}
-.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
-.btn-secondary:hover{border-color:var(--accent)}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-light);transform:translateY(-1px)}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent)}
 .btn-sm{padding:5px 12px;font-size:.78rem}
-
 .manage-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:20px}
-.manage-section h3{font-family:'Playfair Display',serif;font-size:1rem;color:var(--accent);margin-bottom:3px}
-.manage-section>p{font-size:.72rem;color:var(--text-dim);margin-bottom:10px}
 .manage-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
 .m-tag{display:flex;align-items:center;gap:4px;background:var(--accent-dim);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:3px 9px;font-size:.76rem;font-weight:500;color:var(--accent-light)}
-.m-tag .x{cursor:pointer;opacity:.6;font-size:.95rem;line-height:1}
-.m-tag .x:hover{opacity:1;color:var(--danger)}
+.m-tag .x{cursor:pointer;opacity:.6;font-size:.95rem;line-height:1}.m-tag .x:hover{opacity:1;color:var(--danger)}
 
 /* LIST */
 .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
 .list-header h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:800;color:var(--accent)}
-.sort-bar select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.82rem;cursor:pointer}
+.list-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.list-controls select,.list-controls input{background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.82rem}
+.list-controls input{width:160px}
+.list-controls input::placeholder{color:var(--text-dim)}
+.cat-filter{display:flex;gap:4px;margin-bottom:12px}
+.cat-btn{padding:4px 12px;border-radius:14px;font-size:.78rem;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text-dim);transition:all .15s}
+.cat-btn.active{background:var(--accent-dim);border-color:rgba(245,158,11,.3);color:var(--accent-light)}
+.cat-btn:hover{border-color:var(--accent)}
 .e-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;transition:border-color .2s}
 .e-card:hover{border-color:var(--accent-dim)}
 .e-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .e-info{flex:1;min-width:0}
 .e-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.e-cat{display:inline-block;font-size:.68rem;padding:2px 7px;border-radius:8px;background:var(--accent-dim);color:var(--accent-light);font-weight:500;margin-left:6px;vertical-align:middle}
 .e-loc{font-size:.78rem;color:var(--text-dim);margin-top:1px}
 .e-date{font-size:.72rem;color:var(--text-dim)}
-.e-score{background:var(--accent);color:var(--bg);font-weight:800;font-size:.95rem;padding:4px 12px;border-radius:14px;white-space:nowrap;flex-shrink:0}
+.e-score{background:var(--accent);color:#fff;font-weight:800;font-size:.95rem;padding:4px 12px;border-radius:14px;white-space:nowrap;flex-shrink:0}
 .e-ratings{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .e-r{background:var(--bg);border-radius:5px;padding:3px 7px;font-size:.72rem}
-.e-r .l{color:var(--text-dim)}
-.e-r .v{color:var(--accent);font-weight:700;margin-left:2px}
+.e-r .l{color:var(--text-dim)}.e-r .v{color:var(--accent);font-weight:700;margin-left:2px}
 .e-notes{margin-top:6px;font-size:.78rem;color:var(--text-dim);font-style:italic}
 .e-actions{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
 .e-actions button{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:.78rem;font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;gap:3px}
 .e-actions button:hover{border-color:var(--accent);color:var(--accent)}
 .e-actions button.del:hover{border-color:var(--danger);color:var(--danger)}
+.e-actions button.share{color:var(--success)}.e-actions button.share:hover{border-color:var(--success)}
 .empty-state{text-align:center;padding:50px 20px;color:var(--text-dim)}
 .empty-state .icon{font-size:2.5rem;margin-bottom:10px}
 .empty-state h3{font-family:'Playfair Display',serif;color:var(--text);margin-bottom:6px}
+
+/* RANKING */
+.ranking-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.ranking-card .rank-num{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:800;color:var(--accent);margin-right:10px}
+.ranking-card .rank-top{display:flex;align-items:center}
+.ranking-card .rank-info{flex:1}
+.ranking-card .rank-name{font-weight:600;font-size:.95rem}
+.ranking-card .rank-loc{font-size:.75rem;color:var(--text-dim)}
+.ranking-card .rank-score{font-weight:800;font-size:1rem;color:var(--accent)}
 
 .loading-overlay{position:fixed;inset:0;background:rgba(15,17,23,.7);display:none;align-items:center;justify-content:center;z-index:3000}
 .loading-overlay.show{display:flex}
 .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:16px;right:16px;background:var(--success);color:#fff;padding:10px 18px;border-radius:8px;font-weight:600;font-size:.85rem;transform:translateY(80px);opacity:0;transition:all .3s;z-index:2000}
-.toast.error{background:var(--danger)}
-.toast.show{transform:translateY(0);opacity:1}
+.toast.error{background:var(--danger)}.toast.show{transform:translateY(0);opacity:1}
 
 @media(max-width:600px){
 .nav{flex-direction:column;gap:8px;padding:8px 12px;height:auto}
@@ -164,18 +159,21 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;
 .sliders-grid{grid-template-columns:1fr 1fr}
 .e-top{flex-direction:column;gap:6px}
 .map-modal-inner{height:60vh}
+.list-controls input{width:120px}
 }
 </style>
 </head>
 <body>
 <nav class="nav">
-<div class="nav-brand">🍹 Getränke-Test</div>
+<div class="nav-brand">🍹🍟 Test-Tracker</div>
 <div class="nav-right">
 <div class="nav-tabs">
 <button class="nav-tab active" onclick="switchView('form')">Neuer Test</button>
 <button class="nav-tab" onclick="switchView('list')">Alle Tests</button>
+<button class="nav-tab" onclick="switchView('ranking')">Ranking</button>
 <button class="nav-tab" onclick="switchView('map')">Karte</button>
 </div>
+<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Hell/Dunkel umschalten">🌙</button>
 <div class="db-status"><div class="db-dot" id="dbDot"></div><span id="dbStatusText">Datenbank verbindet...</span></div>
 </div>
 </nav>
@@ -198,11 +196,14 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;
 
 <!-- FORM -->
 <div id="formView" class="view active">
-<div class="form-title" id="formTitle">Neuer Getränke-Test</div>
-<div class="form-subtitle" id="formSubtitle">Bewerte dein Getränk und den Ort</div>
+<div class="form-title" id="formTitle">Neuer Test</div>
+<div class="form-subtitle" id="formSubtitle">Bewerte dein Getränk oder deine Pommes</div>
 
-<div class="form-row">
-<div class="field"><label>Getränk</label><input type="text" id="drinkName" placeholder="z.B. Gin Tonic"></div>
+<div class="form-row three">
+<div class="field"><label>Kategorie</label>
+<select id="category"><option value="Getränk">🍹 Getränk</option><option value="Pommes">🍟 Pommes</option></select>
+</div>
+<div class="field"><label>Name / Produkt</label><input type="text" id="drinkName" placeholder="z.B. Gin Tonic, Pommes"></div>
 <div class="field"><label>Ort / Bar</label><input type="text" id="locationName" placeholder="z.B. Bar XY, Zürich"></div>
 </div>
 <div class="form-row three">
@@ -269,13 +270,32 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6;
 <div id="listView" class="view">
 <div class="list-header">
 <h2>Alle Tests</h2>
-<div class="sort-bar"><select id="sortBy" onchange="renderEntries()">
+<div class="list-controls">
+<input type="text" id="searchInput" placeholder="🔍 Suche..." oninput="renderEntries()">
+<select id="sortBy" onchange="renderEntries()">
 <option value="date-desc">Neueste zuerst</option><option value="date-asc">Älteste zuerst</option>
 <option value="score-desc">Bester Score</option><option value="score-asc">Schlechtester Score</option>
 <option value="price-asc">Günstigster</option><option value="price-desc">Teuerster</option>
-</select></div>
+</select>
 </div>
+</div>
+<div class="cat-filter" id="catFilter"></div>
 <div id="entriesList"></div>
+</div>
+
+<!-- RANKING -->
+<div id="rankingView" class="view">
+<div class="list-header">
+<h2>🏆 Ranking</h2>
+<div class="list-controls">
+<select id="rankCat" onchange="renderRanking()">
+<option value="">Alle Kategorien</option>
+<option value="Getränk">🍹 Getränke</option>
+<option value="Pommes">🍟 Pommes</option>
+</select>
+</div>
+</div>
+<div id="rankingList"></div>
 </div>
 
 <!-- MAP -->
@@ -287,6 +307,7 @@ var SUPABASE_URL='https://gazswoxtcwhbhosuohga.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhenN3b3h0Y3doYmhvc3VvaGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjEzMzQsImV4cCI6MjA4Nzc5NzMzNH0.v5SB7bcrxu6mNfRCSyAdamk2X4znPIOIrWoXBKtaBhw';
 var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 var globalCriteria=[],activeCriteria=[],entries=[],editingId=null,map=null,mapMarkers=[],pickMap=null;
+var filterCat='';
 
 async function init(){
 try{
@@ -298,8 +319,8 @@ globalCriteria=res.data.map(function(c){return c.name});
 activeCriteria=globalCriteria.slice();
 renderGlobalCriteria();renderCriteriaChips();renderActiveSliders();
 await loadEntries();
-var savedView=null;try{savedView=localStorage.getItem('gt_view')}catch(e){}
-if(savedView&&['form','list','map'].indexOf(savedView)!==-1)switchView(savedView);
+var sv=null;try{sv=localStorage.getItem('gt_view')}catch(e){}
+if(sv&&['form','list','ranking','map'].indexOf(sv)!==-1)switchView(sv);
 }catch(e){document.getElementById('dbStatusText').textContent='Datenbank-Fehler';showToast('Verbindung: '+e.message,true)}}
 
 // GLOBAL CRITERIA
@@ -351,10 +372,7 @@ document.getElementById('coordLng').value=p.coords.longitude.toFixed(6);
 updateLoc(true);btn.textContent='📡 GPS-Standort';btn.disabled=false;showToast('Standort gesetzt!');
 },function(){btn.textContent='📡 GPS-Standort';btn.disabled=false;showToast('Standort nicht verfügbar',true)},{enableHighAccuracy:true,timeout:10000})}
 
-function updateLoc(ok){
-var el=document.getElementById('locStatus');
-el.textContent=ok?'✓ Standort gesetzt':'Kein Standort gesetzt';
-el.className='loc-indicator '+(ok?'ok':'none')}
+function updateLoc(ok){var el=document.getElementById('locStatus');el.textContent=ok?'✓ Standort gesetzt':'Kein Standort gesetzt';el.className='loc-indicator '+(ok?'ok':'none')}
 
 // MAP PICKER
 function openMapPicker(){
@@ -366,83 +384,51 @@ var lng=parseFloat(document.getElementById('coordLng').value)||9.3767;
 pickMap=L.map('pickMap',{center:[lat,lng],zoom:13,zoomControl:true});
 var pk=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'swisstopo',maxZoom:18});
 var pl=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'swisstopo',maxZoom:20});
-pk.addTo(pickMap);
-L.control.layers({'Karte':pk,'Luftbild':pl},null,{position:'topright',collapsed:false}).addTo(pickMap);
-pickMap.invalidateSize();
-},150)}
+pk.addTo(pickMap);L.control.layers({'Karte':pk,'Luftbild':pl},null,{position:'topright',collapsed:false}).addTo(pickMap);
+pickMap.invalidateSize();},150)}
 
 function closeMapPicker(){document.getElementById('mapModal').classList.remove('open');if(pickMap){pickMap.remove();pickMap=null}}
+function confirmMapPicker(){if(!pickMap)return;var c=pickMap.getCenter();document.getElementById('coordLat').value=c.lat.toFixed(6);document.getElementById('coordLng').value=c.lng.toFixed(6);updateLoc(true);closeMapPicker();showToast('Standort übernommen!')}
 
-function confirmMapPicker(){
-if(!pickMap)return;
-var c=pickMap.getCenter();
-document.getElementById('coordLat').value=c.lat.toFixed(6);
-document.getElementById('coordLng').value=c.lng.toFixed(6);
-updateLoc(true);closeMapPicker();showToast('Standort übernommen!')}
-
-// PHOTO UPLOAD
+// PHOTO
 var currentPhotoUrl=null;
-
 function handlePhoto(input){
 var file=input.files[0];if(!file)return;
-var preview=document.getElementById('photoPreview');
-var info=document.getElementById('photoInfo');
-var btn=document.getElementById('photoBtn');
-var reader=new FileReader();
-reader.onload=function(e){preview.src=e.target.result;preview.classList.add('show')};
-reader.readAsDataURL(file);
+var preview=document.getElementById('photoPreview');var info=document.getElementById('photoInfo');var btn=document.getElementById('photoBtn');
+var reader=new FileReader();reader.onload=function(e){preview.src=e.target.result;preview.classList.add('show')};reader.readAsDataURL(file);
 btn.textContent='⏳ Wird hochgeladen...';
-uploadPhoto(file).then(function(url){
-currentPhotoUrl=url;
-btn.textContent='✓ Foto hochgeladen';
+uploadPhoto(file).then(function(url){currentPhotoUrl=url;btn.textContent='✓ Foto hochgeladen';
 info.innerHTML='Foto gespeichert <span class="photo-remove" onclick="removePhoto()">✕ Entfernen</span>';
-}).catch(function(err){
-btn.textContent='📷 Foto aufnehmen oder auswählen';
-preview.classList.remove('show');
-showToast('Upload fehlgeschlagen: '+err.message,true);
-})}
+}).catch(function(err){btn.textContent='📷 Foto aufnehmen oder auswählen';preview.classList.remove('show');showToast('Upload fehlgeschlagen: '+err.message,true)})}
 
 async function uploadPhoto(file){
-var ext=file.name.split('.').pop();
-var name=Date.now()+'_'+Math.random().toString(36).substr(2,6)+'.'+ext;
-var res=await sb.storage.from('photos').upload(name,file,{contentType:file.type});
-if(res.error)throw res.error;
-var urlRes=sb.storage.from('photos').getPublicUrl(name);
-return urlRes.data.publicUrl}
+var ext=file.name.split('.').pop();var name=Date.now()+'_'+Math.random().toString(36).substr(2,6)+'.'+ext;
+var res=await sb.storage.from('photos').upload(name,file,{contentType:file.type});if(res.error)throw res.error;
+return sb.storage.from('photos').getPublicUrl(name).data.publicUrl}
 
-function removePhoto(){
-currentPhotoUrl=null;
-document.getElementById('photoPreview').classList.remove('show');
-document.getElementById('photoPreview').src='';
-document.getElementById('photoInfo').innerHTML='';
-document.getElementById('photoBtn').textContent='📷 Foto aufnehmen oder auswählen';
-document.getElementById('photoInput').value=''}
+function removePhoto(){currentPhotoUrl=null;document.getElementById('photoPreview').classList.remove('show');document.getElementById('photoPreview').src='';document.getElementById('photoInfo').innerHTML='';document.getElementById('photoBtn').textContent='📷 Foto aufnehmen oder auswählen';document.getElementById('photoInput').value=''}
 
 // ENTRIES
 async function loadEntries(){
 try{var res=await sb.from('drinks').select('*').order('test_date',{ascending:false});
-if(res.error)throw res.error;entries=res.data||[];renderEntries();
+if(res.error)throw res.error;entries=res.data||[];renderCatFilter();renderEntries();
 }catch(e){showToast('Ladefehler: '+e.message,true)}}
 
 async function saveEntry(){
 var name=document.getElementById('drinkName').value.trim();
 var loc=document.getElementById('locationName').value.trim();
-if(!name||!loc)return showToast('Getränk und Ort angeben!',true);
+if(!name||!loc)return showToast('Name und Ort angeben!',true);
 if(!activeCriteria.length)return showToast('Mindestens ein Kriterium!',true);
 var ratings={};
 activeCriteria.forEach(function(c){var id='crit_'+c.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_äöüÄÖÜ]/g,'');
 var el=document.getElementById(id);ratings[c]=el?parseInt(el.value):5});
-var vals=Object.values(ratings);
-var avg=vals.length?(vals.reduce(function(a,b){return a+b},0)/vals.length):0;
-var rec={name:name,location:loc,
+var vals=Object.values(ratings);var avg=vals.length?(vals.reduce(function(a,b){return a+b},0)/vals.length):0;
+var rec={name:name,location:loc,category:document.getElementById('category').value,
 website:document.getElementById('website').value.trim()||null,
 test_date:document.getElementById('testDate').value||new Date().toISOString().split('T')[0],
 price:parseFloat(document.getElementById('priceChf').value)||null,
-lat:parseFloat(document.getElementById('coordLat').value)||null,
-lng:parseFloat(document.getElementById('coordLng').value)||null,
-ratings:ratings,average:Math.round(avg*10)/10,
-notes:document.getElementById('notes').value.trim()||null,
-photo_url:currentPhotoUrl||null};
+lat:parseFloat(document.getElementById('coordLat').value)||null,lng:parseFloat(document.getElementById('coordLng').value)||null,
+ratings:ratings,average:Math.round(avg*10)/10,notes:document.getElementById('notes').value.trim()||null,photo_url:currentPhotoUrl||null};
 showLoading(true);
 try{
 if(editingId){var res=await sb.from('drinks').update(rec).eq('id',editingId);if(res.error)throw res.error;showToast('Aktualisiert!')}
@@ -455,6 +441,7 @@ var e=entries.find(function(x){return x.id===id});if(!e)return;
 editingId=id;
 document.getElementById('formTitle').textContent='Eintrag bearbeiten';
 document.getElementById('formSubtitle').textContent=e.name+' — '+e.location;
+document.getElementById('category').value=e.category||'Getränk';
 document.getElementById('drinkName').value=e.name;
 document.getElementById('locationName').value=e.location;
 document.getElementById('website').value=e.website||'';
@@ -482,17 +469,55 @@ try{var res=await sb.from('drinks').delete().eq('id',id);if(res.error)throw res.
 
 function resetForm(){
 editingId=null;
-document.getElementById('formTitle').textContent='Neuer Getränke-Test';
-document.getElementById('formSubtitle').textContent='Bewerte dein Getränk und den Ort';
+document.getElementById('formTitle').textContent='Neuer Test';
+document.getElementById('formSubtitle').textContent='Bewerte dein Getränk oder deine Pommes';
+document.getElementById('category').value='Getränk';
 ['drinkName','locationName','website','priceChf','coordLat','coordLng','notes'].forEach(function(id){document.getElementById(id).value=''});
 document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
 updateLoc(false);removePhoto();activeCriteria=globalCriteria.slice();renderCriteriaChips();renderActiveSliders()}
+
+// SHARE
+function shareEntry(id){
+var e=entries.find(function(x){return x.id===id});if(!e)return;
+var cat=e.category==='Pommes'?'🍟':'🍹';
+var stars='';var avg=e.average||0;for(var i=0;i<5;i++)stars+=i<Math.round(avg/2)?'⭐':'';
+var text=cat+' '+e.name+' @ '+e.location+'\n'+stars+' '+avg+'/10';
+if(e.price)text+='\n💰 '+Number(e.price).toFixed(2)+' CHF';
+var r=e.ratings||{};var top3=Object.entries(r).sort(function(a,b){return b[1]-a[1]}).slice(0,3);
+if(top3.length)text+='\n'+top3.map(function(t){return t[0]+': '+t[1]+'/10'}).join(' · ');
+if(e.notes)text+='\n"'+e.notes+'"';
+
+if(navigator.share){
+var shareData={title:e.name+' — Test-Tracker',text:text};
+if(e.photo_url)shareData.url=e.photo_url;
+navigator.share(shareData).catch(function(){})
+}else{
+navigator.clipboard.writeText(text).then(function(){showToast('In Zwischenablage kopiert!')}).catch(function(){
+window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank')})}}
+
+// CATEGORY FILTER
+function renderCatFilter(){
+var cats={};entries.forEach(function(e){var c=e.category||'Getränk';cats[c]=(cats[c]||0)+1});
+var html='<div class="cat-btn'+(filterCat===''?' active':'')+'" onclick="setFilter(\'\')">Alle ('+entries.length+')</div>';
+Object.keys(cats).forEach(function(c){
+var icon=c==='Pommes'?'🍟':'🍹';
+html+='<div class="cat-btn'+(filterCat===c?' active':'')+'" onclick="setFilter(\''+c+'\')">'+icon+' '+c+' ('+cats[c]+')</div>'});
+document.getElementById('catFilter').innerHTML=html}
+
+function setFilter(cat){filterCat=cat;renderCatFilter();renderEntries()}
+
+function getFiltered(){
+var list=entries;
+if(filterCat)list=list.filter(function(e){return(e.category||'Getränk')===filterCat});
+var q=(document.getElementById('searchInput')?document.getElementById('searchInput').value:'').toLowerCase().trim();
+if(q)list=list.filter(function(e){return e.name.toLowerCase().indexOf(q)!==-1||e.location.toLowerCase().indexOf(q)!==-1||(e.notes||'').toLowerCase().indexOf(q)!==-1});
+return list}
 
 // RENDER LIST
 function renderEntries(){
 var c=document.getElementById('entriesList');
 var s=document.getElementById('sortBy')?document.getElementById('sortBy').value:'date-desc';
-var sorted=entries.slice();
+var sorted=getFiltered();
 switch(s){
 case'date-desc':sorted.sort(function(a,b){return(b.test_date||'').localeCompare(a.test_date||'')});break;
 case'date-asc':sorted.sort(function(a,b){return(a.test_date||'').localeCompare(b.test_date||'')});break;
@@ -500,23 +525,35 @@ case'score-desc':sorted.sort(function(a,b){return(b.average||0)-(a.average||0)})
 case'score-asc':sorted.sort(function(a,b){return(a.average||0)-(b.average||0)});break;
 case'price-asc':sorted.sort(function(a,b){return(a.price||999)-(b.price||999)});break;
 case'price-desc':sorted.sort(function(a,b){return(b.price||0)-(a.price||0)});break}
-if(!sorted.length){c.innerHTML='<div class="empty-state"><div class="icon">🍹</div><h3>Noch keine Tests</h3><p>Erstelle deinen ersten Getränke-Test!</p></div>';return}
+if(!sorted.length){c.innerHTML='<div class="empty-state"><div class="icon">🍹🍟</div><h3>Keine Tests gefunden</h3><p>Erstelle deinen ersten Test oder ändere den Filter.</p></div>';return}
 c.innerHTML=sorted.map(function(e){
-var r=e.ratings||{};
+var r=e.ratings||{};var catIcon=(e.category||'Getränk')==='Pommes'?'🍟':'🍹';
 var rh=Object.keys(r).map(function(k){return'<div class="e-r"><span class="l">'+k+':</span><span class="v">'+r[k]+'</span></div>'}).join('');
 var web=e.website?'<a href="'+e.website+'" target="_blank" style="color:var(--accent);font-size:.72rem;text-decoration:none">🔗 Webseite</a>':'';
-return'<div class="e-card">'+(e.photo_url?'<img src="'+e.photo_url+'" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px">':'')+'<div class="e-top"><div class="e-info"><div class="e-name">'+e.name+'</div><div class="e-loc">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'</div><div class="e-date">'+formatDate(e.test_date)+' '+web+'</div></div><div class="e-score">⌀ '+(e.average||'–')+'</div></div><div class="e-ratings">'+rh+'</div>'+(e.notes?'<div class="e-notes">"'+e.notes+'"</div>':'')+'<div class="e-actions"><button onclick="editEntry(\''+e.id+'\')">✏️ Bearbeiten</button><button class="del" onclick="deleteEntry(\''+e.id+'\')">🗑️ Löschen</button></div></div>'}).join('')}
+return'<div class="e-card">'+(e.photo_url?'<img src="'+e.photo_url+'" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px">':'')+'<div class="e-top"><div class="e-info"><div class="e-name">'+e.name+'<span class="e-cat">'+catIcon+' '+(e.category||'Getränk')+'</span></div><div class="e-loc">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'</div><div class="e-date">'+formatDate(e.test_date)+' '+web+'</div></div><div class="e-score">⌀ '+(e.average||'–')+'</div></div><div class="e-ratings">'+rh+'</div>'+(e.notes?'<div class="e-notes">"'+e.notes+'"</div>':'')+'<div class="e-actions"><button onclick="editEntry(\''+e.id+'\')">✏️ Bearbeiten</button><button class="share" onclick="shareEntry(\''+e.id+'\')">📤 Teilen</button><button class="del" onclick="deleteEntry(\''+e.id+'\')">🗑️ Löschen</button></div></div>'}).join('')}
 
 function formatDate(d){if(!d)return'';var p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
+
+// RANKING
+function renderRanking(){
+var cat=document.getElementById('rankCat').value;
+var list=entries.slice();
+if(cat)list=list.filter(function(e){return(e.category||'Getränk')===cat});
+list.sort(function(a,b){return(b.average||0)-(a.average||0)});
+var c=document.getElementById('rankingList');
+if(!list.length){c.innerHTML='<div class="empty-state"><div class="icon">🏆</div><h3>Noch keine Tests</h3></div>';return}
+c.innerHTML=list.map(function(e,i){
+var catIcon=(e.category||'Getränk')==='Pommes'?'🍟':'🍹';
+var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+return'<div class="ranking-card"><div class="rank-top"><div class="rank-num">'+(medal||'#'+(i+1))+'</div><div class="rank-info"><div class="rank-name">'+catIcon+' '+e.name+'</div><div class="rank-loc">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'</div></div><div class="rank-score">⌀ '+(e.average||'–')+'</div></div></div>'}).join('')}
 
 // MAIN MAP
 function initMap(){
 if(map){map.remove();map=null}
 map=L.map('map',{center:[46.8,8.2],zoom:8});
-var karte=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>',maxZoom:18});
-var luft=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>',maxZoom:20});
-karte.addTo(map);
-L.control.layers({'Karte':karte,'Luftbild':luft},null,{position:'topright',collapsed:false}).addTo(map);
+var karte=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'&copy; swisstopo',maxZoom:18});
+var luft=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'&copy; swisstopo',maxZoom:20});
+karte.addTo(map);L.control.layers({'Karte':karte,'Luftbild':luft},null,{position:'topright',collapsed:false}).addTo(map);
 updateMapMarkers()}
 
 function updateMapMarkers(){
@@ -524,12 +561,13 @@ if(!map)return;mapMarkers.forEach(function(m){map.removeLayer(m)});mapMarkers=[]
 var geo=entries.filter(function(e){return e.lat&&e.lng});
 geo.forEach(function(e){
 var avg=e.average||0;var color=avg>=7?'#22c55e':avg>=4?'#f59e0b':'#ef4444';
+var catIcon=(e.category||'Getränk')==='Pommes'?'🍟':'🍹';
 var icon=L.divIcon({className:'',
 html:'<div style="background:'+color+';color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;font-family:DM Sans,sans-serif;border:3px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.3)">'+avg+'</div>',
 iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-19]});
 var r=e.ratings||{};
 var rh=Object.keys(r).map(function(k){return'<span style="color:#8b8a88">'+k+':</span> <b>'+r[k]+'</b>'}).join(' · ');
-var popup=(e.photo_url?'<img src="'+e.photo_url+'" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin-bottom:8px">':'')+'<div class="popup-title">'+e.name+'</div><div class="popup-meta">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'<br>'+formatDate(e.test_date)+'</div><div class="popup-score">⌀ '+avg+' / 10</div><div class="popup-criteria">'+rh+'</div>'+(e.notes?'<div style="margin-top:5px;font-size:.72rem;color:#8b8a88;font-style:italic">"'+e.notes+'"</div>':'')+(e.website?'<div style="margin-top:6px"><a href="'+e.website+'" target="_blank" style="color:#f59e0b;font-size:.75rem">🔗 Webseite</a></div>':'')+'<div style="margin-top:8px;padding-top:6px;border-top:1px solid #2a2d3a"><a href="#" onclick="editEntry(\''+e.id+'\');return false" style="color:#f59e0b;font-size:.78rem;text-decoration:none">✏️ Bearbeiten</a></div>';
+var popup=(e.photo_url?'<img src="'+e.photo_url+'" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin-bottom:8px">':'')+'<div class="popup-title">'+catIcon+' '+e.name+'</div><div class="popup-meta">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'<br>'+formatDate(e.test_date)+'</div><div class="popup-score">⌀ '+avg+' / 10</div><div class="popup-criteria">'+rh+'</div>'+(e.notes?'<div style="margin-top:5px;font-size:.72rem;color:#8b8a88;font-style:italic">"'+e.notes+'"</div>':'')+(e.website?'<div style="margin-top:6px"><a href="'+e.website+'" target="_blank" style="color:#f59e0b;font-size:.75rem">🔗 Webseite</a></div>':'')+'<div style="margin-top:8px;padding-top:6px;border-top:1px solid #2a2d3a"><a href="#" onclick="editEntry(\''+e.id+'\');return false" style="color:#f59e0b;font-size:.78rem;text-decoration:none">✏️ Bearbeiten</a></div>';
 mapMarkers.push(L.marker([e.lat,e.lng],{icon:icon}).addTo(map).bindPopup(popup))});
 if(geo.length)map.fitBounds(L.featureGroup(mapMarkers).getBounds().pad(0.15))}
 
@@ -539,20 +577,29 @@ var loc=document.getElementById('locationName').value.trim();
 return name!==''||loc!==''}
 
 function switchView(v){
-if(v!=='form'&&hasUnsavedChanges()){
-if(!confirm('Du hast ungespeicherte Änderungen. Trotzdem wechseln?'))return}
+if(v!=='form'&&hasUnsavedChanges()){if(!confirm('Du hast ungespeicherte Änderungen. Trotzdem wechseln?'))return}
 document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});
 document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});
-var idx={form:0,list:1,map:2};
+var idx={form:0,list:1,ranking:2,map:3};
 document.getElementById(v+'View').classList.add('active');
 document.querySelectorAll('.nav-tab')[idx[v]].classList.add('active');
-if(v==='list')renderEntries();if(v==='map')setTimeout(function(){initMap()},100);
+if(v==='list')renderEntries();if(v==='ranking')renderRanking();if(v==='map')setTimeout(function(){initMap()},100);
 try{localStorage.setItem('gt_view',v)}catch(e){}}
 
 function showLoading(s){document.getElementById('loading').classList.toggle('show',s)}
 function showToast(msg,err){var t=document.getElementById('toast');t.textContent=msg;t.classList.toggle('error',!!err);t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3000)}
 
+function toggleTheme(){
+document.body.classList.toggle('light');
+var isLight=document.body.classList.contains('light');
+document.getElementById('themeBtn').textContent=isLight?'☀️':'🌙';
+try{localStorage.setItem('gt_theme',isLight?'light':'dark')}catch(e){}}
+
+function loadTheme(){
+try{var t=localStorage.getItem('gt_theme');if(t==='light'){document.body.classList.add('light');document.getElementById('themeBtn').textContent='☀️'}}catch(e){}}
+
 document.getElementById('testDate').value=new Date().toISOString().split('T')[0];
+loadTheme();
 window.addEventListener('beforeunload',function(e){if(hasUnsavedChanges()){e.preventDefault();e.returnValue=''}});
 init();
 </script>
