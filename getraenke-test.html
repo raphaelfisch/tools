@@ -607,7 +607,7 @@ scoreGrad.addColorStop(0,scoreColor);scoreGrad.addColorStop(1,scoreColor+'bb');
 ctx.fillStyle=scoreGrad;ctx.fill();
 ctx.restore();
 ctx.font='800 64px "Syne",sans-serif';ctx.fillStyle='#fff';
-ctx.fillText(avg+' / 10',W/2,y+88);
+ctx.fillText(avg.toString(),W/2,y+88);
 
 y+=scoreH+60;
 
@@ -740,7 +740,7 @@ function updateMapMarkers(){
 if(!map)return;mapMarkers.forEach(function(m){map.removeLayer(m)});mapMarkers=[];
 var geo=entries.filter(function(e){return e.lat&&e.lng});
 geo.forEach(function(e){
-var avg=e.average||0;var color=avg>=7?'#22c55e':avg>=4?accentColor:'#ef4444';
+var avg=e.average||0;var color=avg>=7?'#22c55e':avg>=4?'#f59e0b':'#ef4444';
 var catIcon=(e.category||'Getränk')==='Pommes'?'🍟':'🍹';
 var icon=L.divIcon({className:'',
 html:'<div style="background:'+color+';color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;font-family:Outfit,sans-serif;border:3px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.3)">'+avg+'</div>',
