@@ -89,8 +89,10 @@
         .bopt{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);padding:6px;border-radius:7px;font-size:11px;font-family:inherit;cursor:pointer;transition:all .2s;text-align:center}
         .bopt.active{background:rgba(230,57,70,.25);border-color:#e63946;color:#fff}.bopt:hover{border-color:rgba(230,57,70,.5)}
 
-        .prog-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin:8px 0;overflow:hidden}
-        .prog-bar{height:100%;background:#e63946;border-radius:2px;width:0%;transition:width .1s linear}
+        .prog-wrap{height:16px;background:rgba(255,255,255,.06);border-radius:8px;margin:8px 0;position:relative;cursor:pointer;touch-action:none}
+        .prog-bar{height:100%;background:rgba(230,57,70,.4);border-radius:8px;width:0%;pointer-events:none;position:absolute;top:0;left:0}
+        .prog-handle{width:14px;height:14px;border-radius:50%;background:#e63946;border:2px solid #fff;position:absolute;top:1px;left:0%;transform:translateX(-50%);pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:none}
+        .prog-time{font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin:-2px 0 4px}
         .preload-status{font-size:10px;color:rgba(255,255,255,.35);text-align:center;padding:4px 0;display:none}
         .preload-status.active{display:block}
 
@@ -228,26 +230,32 @@
             <div class="p3d-body" id="p3dBody">
                 <div class="sec">Flugmodus</div>
                 <div class="hmode-row">
-                    <button class="hmode-btn active" id="hmFix" onclick="setHMode('fix')">Fixe Höhe (m ü.M.)</button>
-                    <button class="hmode-btn" id="hmTerr" onclick="setHMode('terrain')">Über Terrain</button>
+                    <button class="hmode-btn" id="hmFix" onclick="setHMode('fix')">Fixe Höhe (m ü.M.)</button>
+                    <button class="hmode-btn active" id="hmTerr" onclick="setHMode('terrain')">Über Terrain</button>
                 </div>
-                <div class="slider-row"><label id="hLabel">Flughöhe</label><input type="range" min="50" max="5000" value="500" step="50" id="sH" oninput="updS()"><span class="val" id="vH">500 m</span></div>
-                <div class="slider-row"><label>Flugdauer</label><input type="range" min="5" max="180" value="30" step="5" id="sS" oninput="updS()"><span class="val" id="vS">30 s</span></div>
-                <div class="slider-row"><label>Neigung</label><input type="range" min="-60" max="0" value="-20" step="5" id="sP" oninput="updS()"><span class="val" id="vP">-20°</span></div>
+                <div class="slider-row"><label id="hLabel">Höhe ü.Terrain</label><input type="range" min="50" max="2000" value="500" step="50" id="sH" oninput="updS()"><span class="val" id="vH">500 m</span></div>
+                <div class="slider-row"><label>Geschwind.</label><input type="range" min="50" max="2000" value="300" step="50" id="sSpeed" oninput="updS()"><span class="val" id="vSpeed">300 km/h</span></div>
+                <div style="font-size:11px;color:rgba(255,255,255,.4);padding:0 0 4px;text-align:right" id="estDuration">≈ 30 s</div>
+                <div class="slider-row"><label>Neigung</label><input type="range" min="-60" max="0" value="-10" step="5" id="sP" oninput="updS()"><span class="val" id="vP">-10°</span></div>
                 <div class="slider-row"><label>Kurvenneig.</label><input type="range" min="0" max="35" value="15" step="1" id="sBank" oninput="updS()"><span class="val" id="vBank">15°</span></div>
                 <div class="slider-row"><label>Smoothing</label><input type="range" min="1" max="20" value="10" step="1" id="sSmooth" oninput="updS()"><span class="val" id="vSmooth">10</span></div>
 
                 <div class="sec">Ebenen</div>
                 <div class="tog-row"><label><span class="dot" style="background:#FFB74D"></span>Ortsnamen</label><div class="sw"><input type="checkbox" id="togNames" checked onchange="toggleLayer('names',this.checked)"><span class="sl" onclick="this.previousElementSibling.click()"></span></div></div>
-                <div class="tog-row"><label><span class="dot" style="background:#90A4AE"></span>Gebäude</label><div class="sw"><input type="checkbox" id="togBldg" checked onchange="toggleLayer('bldg',this.checked)"><span class="sl" onclick="this.previousElementSibling.click()"></span></div></div>
-                <div class="tog-row"><label><span class="dot" style="background:#66BB6A"></span>Vegetation</label><div class="sw"><input type="checkbox" id="togVeg" checked onchange="toggleLayer('veg',this.checked)"><span class="sl" onclick="this.previousElementSibling.click()"></span></div></div>
+                <div class="tog-row"><label><span class="dot" style="background:#90A4AE"></span>Gebäude</label><div class="sw"><input type="checkbox" id="togBldg" onchange="toggleLayer('bldg',this.checked)"><span class="sl" onclick="this.previousElementSibling.click()"></span></div></div>
+                <div class="tog-row"><label><span class="dot" style="background:#66BB6A"></span>Vegetation</label><div class="sw"><input type="checkbox" id="togVeg" onchange="toggleLayer('veg',this.checked)"><span class="sl" onclick="this.previousElementSibling.click()"></span></div></div>
 
                 <div class="sec">Abspielen & Aufnehmen</div>
                 <div class="preload-status" id="preloadStatus"></div>
-                <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
+                <div class="prog-wrap" id="progWrap">
+                    <div class="prog-bar" id="progBar"></div>
+                    <div class="prog-handle" id="progHandle"></div>
+                </div>
+                <div class="prog-time"><span id="progTime">0:00</span> / <span id="progTotal">0:00</span></div>
                 <div class="btn-row" id="playBtns">
                     <button class="btn btn-secondary" onclick="previewFlight()" id="btnPreview">▶ Vorschau</button>
-                    <button class="btn btn-primary" onclick="recordFlight()" id="btnRecord">⏺ Aufnehmen</button>
+                    <button class="btn btn-primary" onclick="recordFlight(false)" id="btnRecord">⏺ Schnell</button>
+                    <button class="btn btn-primary" onclick="recordFlight(true)" id="btnRecordPerfect" style="background:#b71c1c">⏺ Perfekt</button>
                 </div>
                 <div class="btn-row" id="flyingBtns" style="display:none">
                     <button class="btn btn-secondary" onclick="pauseResume()" id="btnPause">⏸ Pause</button>
@@ -256,8 +264,8 @@
 
                 <div class="sec">Hintergrund</div>
                 <div class="brow">
-                    <button class="bopt active" id="bMap" onclick="setImg('map')">Karte</button>
-                    <button class="bopt" id="bSat" onclick="setImg('sat')">Luftbild</button>
+                    <button class="bopt" id="bMap" onclick="setImg('map')">Karte</button>
+                    <button class="bopt active" id="bSat" onclick="setImg('sat')">Luftbild</button>
                 </div>
                 <div style="height:8px"></div>
                 <button class="btn btn-secondary" onclick="switchTab('2d')">← Zurück zur Route</button>
@@ -276,7 +284,7 @@
 var waypoints=[];
 var currentTab='2d';
 var cesiumReady=false, viewer=null, scene=null;
-var heightMode='fix';
+var heightMode='terrain';
 
 // ═══════════════════════════════════════
 // TAB SWITCHING
@@ -350,6 +358,8 @@ leafMap.on('click',function(e){
         waypoints.push({lat:e.latlng.lat,lon:e.latlng.lng,height:0});
         rebuildMap();
         updateWPUI();
+        updS();
+        _preloaded=false;
     } else {
         // Label mode: show prompt
         showLabelPrompt(e.latlng.lat,e.latlng.lng);
@@ -491,7 +501,8 @@ function updateWPUI(){
     document.getElementById('wpCount2d').textContent='('+n+')';
     document.getElementById('btnClear2d').style.display=n?'':'none';
     document.getElementById('btnTo3d').disabled=n<2;
-    document.getElementById('tabHint').textContent=n<2?'Setze mindestens 2 Wegpunkte':'Route bereit ('+n+' Punkte)';
+    var km=getRouteLengthKm();
+    document.getElementById('tabHint').textContent=n<2?'Setze mindestens 2 Wegpunkte':'Route: '+km.toFixed(1)+' km ('+n+' Punkte)';
 
     var list=document.getElementById('wpList2d');
     if(!n){list.innerHTML='<div class="wp-empty">Klicke auf die Karte</div>';return}
@@ -503,8 +514,23 @@ function updateWPUI(){
     });
 }
 
-function removeWP(i){waypoints.splice(i,1);rebuildMap();updateWPUI()}
-function clearWP(){waypoints=[];rebuildMap();updateWPUI()}
+function removeWP(i){waypoints.splice(i,1);rebuildMap();updateWPUI();updS();_preloaded=false}
+function clearWP(){waypoints=[];rebuildMap();updateWPUI();updS();_preloaded=false}
+
+// Route length in km (haversine)
+function getRouteLengthKm(){
+    if(waypoints.length<2)return 0;
+    var pts=getSpline2D(100);
+    var total=0;
+    for(var i=1;i<pts.length;i++){
+        var R=6371;
+        var dLat=(pts[i].lat-pts[i-1].lat)*Math.PI/180;
+        var dLon=(pts[i].lon-pts[i-1].lon)*Math.PI/180;
+        var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(pts[i-1].lat*Math.PI/180)*Math.cos(pts[i].lat*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+        total+=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+    }
+    return total;
+}
 
 // ═══════════════════════════════════════
 // SPLINE
@@ -554,7 +580,7 @@ function initCesium(){
         imageryProvider:new Cesium.OpenStreetMapImageryProvider({url:'https://tile.openstreetmap.org/'}),
         terrainProvider:new Cesium.CesiumTerrainProvider({url:'https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/',credit:new Cesium.Credit('© swisstopo',true)})
     });
-    viewer.imageryLayers.addImageryProvider(swissImg('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swisstlm3d-karte-farbe.3d/default/current/4326/{z}/{x}/{y}.jpeg'));
+    viewer.imageryLayers.addImageryProvider(swissImg('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage-product/default/current/4326/{z}/{x}/{y}.jpeg'));
 
     scene=viewer.scene;
     scene.globe.maximumScreenSpaceError=1.5;scene.fog.enabled=true;scene.skyAtmosphere.show=true;scene.globe.depthTestAgainstTerrain=true;
@@ -562,6 +588,9 @@ function initCesium(){
     function addTS(u){try{var t=new Cesium.Cesium3DTileset({url:u});scene.primitives.add(t);return t}catch(e){return null}}
     bldgTS=addTS('https://3d.geo.admin.ch/ch.swisstopo.swissbuildings3d.3d/v1/tileset.json');
     vegTS=addTS('https://3d.geo.admin.ch/ch.swisstopo.vegetation.3d/v1/tileset.json');
+    // Default: off
+    if(bldgTS)bldgTS.show=false;
+    if(vegTS)vegTS.show=false;
 
     // Event isolation for 3D panel
     var evts=['pointerdown','pointermove','pointerup','touchstart','touchmove','touchend','wheel','mousedown','mousemove','mouseup','click','dblclick','contextmenu'];
@@ -648,7 +677,6 @@ function loadPlaceNames(){
                     style:Cesium.LabelStyle.FILL,
                     verticalOrigin:Cesium.VerticalOrigin.CENTER,
                     horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
-                    disableDepthTestDistance:Number.POSITIVE_INFINITY,
                     scaleByDistance:new Cesium.NearFarScalar(300,1.4,30000,.35),
                     translucencyByDistance:new Cesium.NearFarScalar(200,1,60000,.15)
                 }
@@ -674,14 +702,25 @@ function open3dPanel(){document.getElementById('panel3d').classList.remove('coll
 // FLIGHT
 // ═══════════════════════════════════════
 var isFlying=false,isRecording=false,isPaused=false,flightRaf=null,mediaRecorder=null,recordedChunks=[];
-var flightPausedAt=0,flightT0=0,flightPauseOffset=0;
+var flightDur=0,flightFrac=0,flightLastTime=0;
+var isScrubbing=false;
+
+function fmtTime(s){var m=Math.floor(s/60);var ss=Math.floor(s%60);return m+':'+(ss<10?'0':'')+ss}
 
 function updS(){
     document.getElementById('vH').textContent=document.getElementById('sH').value+' m';
-    document.getElementById('vS').textContent=document.getElementById('sS').value+' s';
+    document.getElementById('vSpeed').textContent=document.getElementById('sSpeed').value+' km/h';
     document.getElementById('vP').textContent=document.getElementById('sP').value+'°';
     document.getElementById('vBank').textContent=document.getElementById('sBank').value+'°';
     document.getElementById('vSmooth').textContent=document.getElementById('sSmooth').value;
+    // Update estimated duration
+    var km=getRouteLengthKm();
+    var speed=parseInt(document.getElementById('sSpeed').value);
+    if(km>0&&speed>0){
+        var secs=Math.round((km/speed)*3600);
+        var min=Math.floor(secs/60),sec=secs%60;
+        document.getElementById('estDuration').textContent='≈ '+(min>0?min+' min '+sec+' s':secs+' s')+' ('+km.toFixed(1)+' km)';
+    }
 }
 
 function setHMode(m){
@@ -694,218 +733,529 @@ function setHMode(m){
     updS();
 }
 
-function previewFlight(){doFlight(false)}
-function recordFlight(){doFlight(true)}
+function previewFlight(){doFlight(false,false)}
+function recordFlight(perfect){doFlight(true,perfect||false)}
 
-function doFlight(rec){
+// Cache key to detect if route changed
+var _splineCacheKey='';
+var _preloaded=false;
+
+function getRouteKey(){
+    return waypoints.map(function(w){return w.lat.toFixed(6)+','+w.lon.toFixed(6)}).join('|');
+}
+
+function doFlight(rec,perfect){
     if(waypoints.length<2||isFlying)return;
 
-    var st=document.getElementById('preloadStatus');st.classList.add('active');
-    st.textContent='Terrain-Höhen werden geladen…';
+    var st=document.getElementById('preloadStatus');
+    var routeKey=getRouteKey();
+    var fh=parseInt(document.getElementById('sH').value);
 
-    // 1) Generate lat/lon spline (no height yet)
+    // If spline already cached and preloaded, skip directly to flight
+    if(window._flightSpline&&_splineCacheKey===routeKey&&_preloaded&&window._cachedSH){
+        st.classList.add('active');st.textContent='Bereit!';
+        var sp=window._flightSpline[0];
+        viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(sp.lon,sp.lat,heightMode==='terrain'?sp.height+fh:fh),orientation:{heading:window._cachedSH[0],pitch:Cesium.Math.toRadians(-90),roll:0}});
+        setTimeout(function(){st.classList.remove('active');startFlight(rec,perfect)},500);
+        return;
+    }
+
+    st.classList.add('active');
+    st.textContent='Terrain-Höhen laden… 0%';
+
     var rawSpline=getSpline2D(500);
+    var allHeights=new Array(rawSpline.length);
 
-    // 2) Sample REAL terrain height for EVERY spline point
-    var cartos=rawSpline.map(function(p){return Cesium.Cartographic.fromDegrees(p.lon,p.lat)});
-    Cesium.sampleTerrainMostDetailed(viewer.terrainProvider,cartos).then(function(sampled){
-        // Build raw heights
-        var rawHeights=[];
-        for(var i=0;i<rawSpline.length;i++){
-            rawHeights.push(sampled[i].height||0);
+    // Sample terrain in batches for progress feedback
+    var batchSize=50;
+    var numBatches=Math.ceil(rawSpline.length/batchSize);
+    var batchIdx=0;
+
+    function sampleBatch(){
+        if(batchIdx>=numBatches){
+            // All done – continue with terrain smoothing
+            processTerrain();
+            return;
         }
+        var start=batchIdx*batchSize;
+        var end=Math.min(start+batchSize,rawSpline.length);
+        var batchCartos=[];
+        for(var i=start;i<end;i++){
+            batchCartos.push(Cesium.Cartographic.fromDegrees(rawSpline[i].lon,rawSpline[i].lat));
+        }
+        var pct=Math.round((batchIdx/numBatches)*100);
+        st.textContent='Terrain-Höhen laden… '+pct+'%';
+        document.getElementById('progBar').style.width=pct*0.3+'%'; // 0-30% for terrain
 
-        // Realistic airplane terrain following:
-        // - Forward-looking: airplane "sees" terrain ahead and starts climbing early
-        // - Gentle descents: airplane sinks slowly after passing a peak
-        // - Never goes below actual terrain
+        Cesium.sampleTerrainMostDetailed(viewer.terrainProvider,batchCartos).then(function(sampled){
+            for(var i=0;i<sampled.length;i++){
+                allHeights[start+i]=sampled[i].height||0;
+            }
+            batchIdx++;
+            sampleBatch();
+        }).catch(function(){
+            // Fallback: fill with 0
+            for(var i=start;i<end;i++)allHeights[i]=0;
+            batchIdx++;
+            sampleBatch();
+        });
+    }
+
+    function processTerrain(){
+        st.textContent='Route berechnen…';
+        document.getElementById('progBar').style.width='30%';
+        var rawHeights=allHeights;
+
+        // Terrain following: look-ahead, gentle descent
+        // Terrain following: long look-ahead for smooth anticipation
         var smoothedH=[];
-        var lookAhead=40; // look 40 points ahead (~8% of route)
-        var climbRate=0.7; // how fast it reacts upward (0-1, higher=more responsive)
-        var descentRate=0.15; // how fast it sinks (lower=smoother descent)
+        var lookAhead=100; // look 20% of route ahead – starts climbing very early
+        var climbRate=0.15; // gentle climb (was 0.7)
+        var descentRate=0.08; // even gentler descent
 
         // Forward pass: find max terrain in look-ahead window
         var targetH=[];
         for(var i=0;i<rawHeights.length;i++){
             var maxH=rawHeights[i];
-            for(var j=i;j<=Math.min(rawHeights.length-1,i+lookAhead);j++){
-                if(rawHeights[j]>maxH)maxH=rawHeights[j];
-            }
+            for(var j=i;j<=Math.min(rawHeights.length-1,i+lookAhead);j++){if(rawHeights[j]>maxH)maxH=rawHeights[j]}
             targetH.push(maxH);
         }
 
-        // Simulate airplane: smoothly track targetH
+        // Forward simulation: smooth climb/descent
         var currentH=targetH[0];
+        var rawSmoothed=[];
         for(var i=0;i<targetH.length;i++){
             var target=targetH[i];
-            if(target>currentH){
-                // Need to climb – respond relatively quickly
-                currentH+=(target-currentH)*climbRate;
-            } else {
-                // Can descend – do it gently
-                currentH+=(target-currentH)*descentRate;
-            }
-            // Safety: never below actual terrain
+            if(target>currentH)currentH+=(target-currentH)*climbRate;
+            else currentH+=(target-currentH)*descentRate;
             if(currentH<rawHeights[i])currentH=rawHeights[i];
-            smoothedH.push(currentH);
+            rawSmoothed.push(currentH);
+        }
+
+        // Second pass: backward smoothing to anticipate climbs even earlier
+        var backSmoothed=new Array(rawSmoothed.length);
+        backSmoothed[rawSmoothed.length-1]=rawSmoothed[rawSmoothed.length-1];
+        for(var i=rawSmoothed.length-2;i>=0;i--){
+            var target=rawSmoothed[i];
+            var ahead=backSmoothed[i+1];
+            // If next point is higher, start climbing from here
+            if(ahead>target)backSmoothed[i]=target+(ahead-target)*0.3;
+            else backSmoothed[i]=target;
+            if(backSmoothed[i]<rawHeights[i])backSmoothed[i]=rawHeights[i];
+        }
+
+        // Merge: take the higher of forward and backward pass
+        for(var i=0;i<backSmoothed.length;i++){
+            smoothedH.push(Math.max(rawSmoothed[i],backSmoothed[i]));
         }
 
         var fullSpline=[];
         for(var i=0;i<rawSpline.length;i++){
             fullSpline.push({lat:rawSpline[i].lat,lon:rawSpline[i].lon,height:smoothedH[i]});
         }
-        window._flightSpline=fullSpline;
 
-        // 3) Smart preload: fly to each point and WAIT for tiles to load
+        // ARC-LENGTH REPARAMETRIZATION for constant speed
+        // 1) Compute cumulative distance along spline
+        var cumDist=[0];
+        for(var i=1;i<fullSpline.length;i++){
+            var a=fullSpline[i-1],b=fullSpline[i];
+            var dLat=(b.lat-a.lat)*111320;
+            var dLon=(b.lon-a.lon)*111320*Math.cos(a.lat*Math.PI/180);
+            var dH=(b.height-a.height)/1000; // km
+            cumDist.push(cumDist[i-1]+Math.sqrt(dLat*dLat+dLon*dLon+dH*dH));
+        }
+        var totalDist=cumDist[cumDist.length-1];
+
+        // 2) Build lookup: for any distance d, find interpolated spline point
+        // Store as _arcSpline with uniform distance spacing
+        var numArcPts=500;
+        var arcSpline=[];
+        var si=0; // search index
+        for(var k=0;k<=numArcPts;k++){
+            var targetDist=(k/numArcPts)*totalDist;
+            // Find segment
+            while(si<cumDist.length-2&&cumDist[si+1]<targetDist)si++;
+            var segLen=cumDist[si+1]-cumDist[si];
+            var frac=segLen>0?(targetDist-cumDist[si])/segLen:0;
+            var a=fullSpline[si],b=fullSpline[Math.min(si+1,fullSpline.length-1)];
+            arcSpline.push({
+                lat:a.lat+(b.lat-a.lat)*frac,
+                lon:a.lon+(b.lon-a.lon)*frac,
+                height:a.height+(b.height-a.height)*frac
+            });
+        }
+
+        window._flightSpline=arcSpline;
+        _splineCacheKey=routeKey;
+
+        // Pre-compute headings and rolls for the spline (needed for preload AND flight)
+        var sf=parseInt(document.getElementById('sSmooth').value);
+        var maxBankDeg=parseInt(document.getElementById('sBank').value);
+
+        var tangentH=[];
+        var tanWin=Math.max(3,Math.floor(sf*1.5));
+        for(var i=0;i<arcSpline.length;i++){
+            var i0=Math.max(0,i-tanWin);
+            var i1=Math.min(arcSpline.length-1,i+tanWin);
+            var a=arcSpline[i0],b=arcSpline[i1];
+            var dLon=(b.lon-a.lon)*Math.PI/180;
+            var la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;
+            tangentH.push(Math.atan2(
+                Math.sin(dLon)*Math.cos(la2),
+                Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dLon)
+            ));
+        }
+        var cachedSH=[];
+        var hWin=Math.max(4,sf*2);
+        for(var i=0;i<tangentH.length;i++){
+            var ss=0,sc=0,cn=0;
+            for(var j=Math.max(0,i-hWin);j<=Math.min(tangentH.length-1,i+hWin);j++){
+                ss+=Math.sin(tangentH[j]);sc+=Math.cos(tangentH[j]);cn++;
+            }
+            cachedSH.push(Math.atan2(ss/cn,sc/cn));
+        }
+
+        var angVel=[];
+        var avWin=Math.max(8,sf*3);
+        for(var i=0;i<cachedSH.length;i++){
+            var i0=Math.max(0,i-avWin);
+            var i1=Math.min(cachedSH.length-1,i+avWin);
+            var dH=cachedSH[i1]-cachedSH[i0];
+            while(dH>Math.PI)dH-=2*Math.PI;while(dH<-Math.PI)dH+=2*Math.PI;
+            angVel.push(dH/(i1-i0+1));
+        }
+        var rolls=[];
+        var deadZone=0.00005,sensitivity=8000;
+        for(var i=0;i<angVel.length;i++){
+            var av=angVel[i];
+            if(Math.abs(av)<deadZone)rolls.push(0);
+            else rolls.push(maxBankDeg*Math.tanh(av*sensitivity/maxBankDeg));
+        }
+        var cachedSR=[];
+        var rW=Math.max(2,Math.floor(sf*0.8));
+        for(var i=0;i<rolls.length;i++){
+            var sm=rolls[i]*2,cn=2;
+            for(var j=Math.max(0,i-rW);j<=Math.min(rolls.length-1,i+rW);j++){
+                if(j!==i){sm+=rolls[j];cn++}
+            }
+            cachedSR.push(sm/cn);
+        }
+
+        window._cachedSH=cachedSH;
+        window._cachedSR=cachedSR;
+
+        // Preload tiles with CORRECT flight camera perspective
         st.textContent='Kacheln vorladen…';
-        var fh=parseInt(document.getElementById('sH').value);
-        var numPrePts=20;
-        var step=Math.max(1,Math.floor(fullSpline.length/numPrePts));
-        var prePts=[];for(var k=0;k<fullSpline.length;k+=step)prePts.push(fullSpline[k]);
-        prePts.push(fullSpline[fullSpline.length-1]);
+        // Boost quality during preload too
+        scene.globe.maximumScreenSpaceError=1.0;
+
+        var routeKm=getRouteLengthKm();
+        var numPrePts=Math.max(10,Math.min(60,Math.round(routeKm*2)));
+        var step=Math.max(1,Math.floor(arcSpline.length/numPrePts));
+        var pitchRad=Cesium.Math.toRadians(parseInt(document.getElementById('sP').value));
+
+        // Build preload list: hover-start views + route + approach views
+        var preViews=[];
+
+        // 1) Hover start: -90° looking down at start point, at 100m and cruise height
+        var startH=heightMode==='terrain'?arcSpline[0].height+fh:fh;
+        preViews.push({lon:arcSpline[0].lon,lat:arcSpline[0].lat,h:arcSpline[0].height+100,heading:cachedSH[0],pitch:Cesium.Math.toRadians(-90)});
+        preViews.push({lon:arcSpline[0].lon,lat:arcSpline[0].lat,h:startH,heading:cachedSH[0],pitch:Cesium.Math.toRadians(-90)});
+        preViews.push({lon:arcSpline[0].lon,lat:arcSpline[0].lat,h:startH,heading:cachedSH[0],pitch:pitchRad});
+
+        // 2) Route points with flight perspective
+        for(var k=0;k<arcSpline.length;k+=step){
+            var p=arcSpline[k];
+            preViews.push({lon:p.lon,lat:p.lat,h:heightMode==='terrain'?p.height+fh:fh,heading:cachedSH[k],pitch:pitchRad});
+        }
+
+        // 3) Approach/landing: last few points at descending height and steeper pitch
+        var endIdx=arcSpline.length-1;
+        var approachPitchRad=Cesium.Math.toRadians(-50);
+        for(var ap=0.8;ap<=1;ap+=0.05){
+            var ai=Math.min(Math.floor(ap*(arcSpline.length-1)),endIdx);
+            var aP=arcSpline[ai];
+            var aH=heightMode==='terrain'?aP.height+150:Math.max(arcSpline[endIdx].height+150,fh*0.3);
+            var mixPitch=pitchRad+(approachPitchRad-pitchRad)*((ap-0.8)/0.2);
+            preViews.push({lon:aP.lon,lat:aP.lat,h:aH,heading:cachedSH[ai],pitch:mixPitch});
+        }
+
         var preIdx=0;
 
         function pre(){
-            if(preIdx>=prePts.length){st.textContent='Bereit!';setTimeout(function(){st.classList.remove('active');go()},400);return}
-            var p=prePts[preIdx];
-            st.textContent='Vorladen… '+(preIdx+1)+'/'+prePts.length;
-            viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(p.lon,p.lat,heightMode==='terrain'?p.height+fh:fh),orientation:{heading:0,pitch:Cesium.Math.toRadians(-30),roll:0}});
+            if(preIdx>=preViews.length){
+                _preloaded=true;
+                scene.globe.maximumScreenSpaceError=1.5; // restore
+                st.textContent='Bereit!';
+                document.getElementById('progBar').style.width='100%';
+                setTimeout(function(){st.classList.remove('active');document.getElementById('progBar').style.width='0%';go()},400);
+                return;
+            }
+            var v=preViews[preIdx];
+            var pct=30+Math.round((preIdx/preViews.length)*70);
+            st.textContent='Kacheln vorladen… '+(preIdx+1)+'/'+preViews.length;
+            document.getElementById('progBar').style.width=pct+'%';
+            viewer.camera.setView({
+                destination:Cesium.Cartesian3.fromDegrees(v.lon,v.lat,v.h),
+                orientation:{heading:v.heading,pitch:v.pitch,roll:0}
+            });
             preIdx++;
-            // Wait for tiles to finish loading (or timeout after 3s)
             waitForTiles(function(){pre()});
         }
 
         function waitForTiles(cb){
-            var waited=0;
-            var maxWait=3000; // max 3s per point
-            var checkInterval=150;
-            function check(){
-                var pending=scene.globe._surface._tilesToRender?scene.globe._surface._tilesToRender.length:0;
-                // Also check general tile load queue
-                var loading=scene.globe.tilesLoaded;
-                waited+=checkInterval;
-                if((loading||waited>=maxWait)){cb()}
-                else{setTimeout(check,checkInterval)}
+            var maxWait=5000; // max 5s per point
+            var startTime=performance.now();
+            var settled=0; // count consecutive frames where tiles are loaded
+
+            // Use tileLoadProgressEvent if available
+            var removeListener=null;
+            var done=false;
+
+            function finish(){
+                if(done)return;
+                done=true;
+                if(removeListener)removeListener();
+                cb();
             }
-            // Give a moment for tile requests to start
-            setTimeout(check,200);
+
+            function check(){
+                if(done)return;
+                var elapsed=performance.now()-startTime;
+                if(elapsed>=maxWait){finish();return}
+
+                if(scene.globe.tilesLoaded){
+                    settled++;
+                    // Wait for 3 consecutive checks (~450ms) of "loaded" to be sure
+                    if(settled>=3){finish();return}
+                } else {
+                    settled=0;
+                }
+                setTimeout(check,150);
+            }
+
+            // Also listen for the event-based signal
+            if(scene.globe.tileLoadProgressEvent){
+                removeListener=scene.globe.tileLoadProgressEvent.addEventListener(function(pending){
+                    if(pending===0){
+                        settled++;
+                        if(settled>=2)finish();
+                    }
+                });
+            }
+
+            // Start checking after a brief delay to let tile requests begin
+            setTimeout(check,300);
         }
+
         function go(){
-            var sp=fullSpline[0];
-            viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(sp.lon,sp.lat,heightMode==='terrain'?sp.height+fh:fh),orientation:{heading:0,pitch:Cesium.Math.toRadians(-20),roll:0}});
-            setTimeout(function(){startFlight(rec)},500);
+            var sp=arcSpline[0];
+            viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(sp.lon,sp.lat,heightMode==='terrain'?sp.height+fh:fh),orientation:{heading:cachedSH[0],pitch:Cesium.Math.toRadians(-90),roll:0}});
+            setTimeout(function(){startFlight(rec,perfect)},500);
         }
         pre();
-    }).catch(function(err){
-        st.textContent='Fehler: '+err;setTimeout(function(){st.classList.remove('active')},3000);
-    });
+    }
+    sampleBatch();
 }
 
-function startFlight(rec){
-    isFlying=true;isRecording=rec;isPaused=false;flightPauseOffset=0;
+function startFlight(rec,perfect){
+    isFlying=true;isRecording=rec;isPaused=false;
+    flightFrac=0;flightLastTime=performance.now();
     document.getElementById('playBtns').style.display='none';
     document.getElementById('flyingBtns').style.display='';
     document.getElementById('btnPause').textContent='⏸ Pause';
-    if(rec){document.getElementById('recBadge').classList.add('active');startRec()}
 
-    var dur=parseInt(document.getElementById('sS').value)*1000;
+    var speedKmh=parseInt(document.getElementById('sSpeed').value);
+    var km=getRouteLengthKm();
+    var dur=Math.max(3000,Math.round((km/speedKmh)*3600*1000));
     var fh=parseInt(document.getElementById('sH').value);
     var pitchDeg=parseInt(document.getElementById('sP').value);
-    var maxBankDeg=parseInt(document.getElementById('sBank').value);
-    var sf=parseInt(document.getElementById('sSmooth').value);
 
-    var spline=window._flightSpline||getSpline3D(2000);
-    flightT0=performance.now();
-
-    // Pre-compute heading as tangent of the spline
-    // Use wider window for stable tangent calculation
-    var tangentH=[];
-    var tanWin=Math.max(3,Math.floor(sf*1.5)); // wider tangent window
-    for(var i=0;i<spline.length;i++){
-        var i0=Math.max(0,i-tanWin);
-        var i1=Math.min(spline.length-1,i+tanWin);
-        var a=spline[i0],b=spline[i1];
-        var dLon=(b.lon-a.lon)*Math.PI/180;
-        var la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;
-        tangentH.push(Math.atan2(
-            Math.sin(dLon)*Math.cos(la2),
-            Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dLon)
-        ));
-    }
-
-    // Heading smoothing (circular mean) – removes remaining jitter
-    var sH=[];
-    var hWin=Math.max(4,sf*2);
-    for(var i=0;i<tangentH.length;i++){
-        var ss=0,sc=0,cn=0;
-        for(var j=Math.max(0,i-hWin);j<=Math.min(tangentH.length-1,i+hWin);j++){
-            ss+=Math.sin(tangentH[j]);sc+=Math.cos(tangentH[j]);cn++;
-        }
-        sH.push(Math.atan2(ss/cn,sc/cn));
-    }
-
-    // Compute angular velocity for banking
-    var angVel=[];
-    var avWin=Math.max(8,sf*3);
-    for(var i=0;i<sH.length;i++){
-        var i0=Math.max(0,i-avWin);
-        var i1=Math.min(sH.length-1,i+avWin);
-        var dH=sH[i1]-sH[i0];
-        while(dH>Math.PI)dH-=2*Math.PI;while(dH<-Math.PI)dH+=2*Math.PI;
-        angVel.push(dH/(i1-i0+1));
-    }
-
-    // Convert to bank angle with dead-zone
-    var rolls=[];
-    var deadZone=0.00005;
-    var sensitivity=8000;
-    for(var i=0;i<angVel.length;i++){
-        var av=angVel[i];
-        if(Math.abs(av)<deadZone){rolls.push(0)}
-        else{rolls.push(maxBankDeg*Math.tanh(av*sensitivity/maxBankDeg))}
-    }
-
-    // Minimal roll smoothing
-    var sR=[];
-    var rW=Math.max(2,Math.floor(sf*0.8));
-    for(var i=0;i<rolls.length;i++){
-        var sm=rolls[i]*2,cn=2;
-        for(var j=Math.max(0,i-rW);j<=Math.min(rolls.length-1,i+rW);j++){
-            if(j!==i){sm+=rolls[j];cn++}
-        }
-        sR.push(sm/cn);
-    }
+    var spline=window._flightSpline;
+    var sH=window._cachedSH;
+    var sR=window._cachedSR;
 
     scene.screenSpaceCameraController.enableInputs=false;
 
-    function tick(now){
-        if(isPaused)return;
-        var t=Math.min((now-flightT0-flightPauseOffset)/dur,1);
-        var e=t<.05?20*t*t:t>.95?1-20*(1-t)*(1-t):t;
-        document.getElementById('progBar').style.width=(t*100)+'%';
-
-        var fi=e*(spline.length-1);
-        var idx=Math.min(Math.floor(fi),spline.length-2);
-        var frac=fi-idx;
-        var cur=spline[idx],nxt=spline[idx+1];
-        var lat=cur.lat+(nxt.lat-cur.lat)*frac;
-        var lon=cur.lon+(nxt.lon-cur.lon)*frac;
-        var terrH=cur.height+(nxt.height-cur.height)*frac;
-        var camH=heightMode==='terrain'?terrH+fh:fh;
-
-        // Interpolate heading between spline points
-        var h0=sH[idx],h1=sH[Math.min(idx+1,sH.length-1)];
-        // Handle wrap-around for interpolation
-        var dh=h1-h0;while(dh>Math.PI)dh-=2*Math.PI;while(dh<-Math.PI)dh+=2*Math.PI;
-        var heading=h0+dh*frac;
-
-        var roll=Cesium.Math.toRadians(sR[Math.min(idx,sR.length-1)]);
-
-        viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(lon,lat,camH),orientation:{heading:heading,pitch:Cesium.Math.toRadians(pitchDeg),roll:roll}});
-        if(t<1)flightRaf=requestAnimationFrame(tick);else endFlight();
+    // Quality boost for recording
+    if(rec){
+        scene.globe.maximumScreenSpaceError=perfect?0.8:1.2;
     }
-    window._flightTick=tick;
-    flightRaf=requestAnimationFrame(tick);
+
+    // Add 4s hover at START only. Landing is integrated into cruise.
+    var hoverTime=4000;
+    var totalDur=dur+hoverTime; // only start hover added
+    flightDur=totalDur;
+    document.getElementById('progTotal').textContent=fmtTime(totalDur/1000);
+
+    var startTerrH=spline[0].height;
+    var endTerrH=spline[spline.length-1].height;
+    var startCruiseH=heightMode==='terrain'?startTerrH+fh:fh;
+
+    // Landing parameters
+    var landingEndH=150; // end at 150m above terrain
+    var landingEndPitch=-50; // final pitch: steep angle looking down at scenery
+    // Landing starts ~1km before end (as fraction of spline)
+    var routeKmTotal=getRouteLengthKm();
+    var landingFrac=routeKmTotal>1.5?Math.max(0.7,1-(1/routeKmTotal)):0.85;
+
+    // Stop flight ~130m before endpoint so endpoint is visible in oblique view
+    // At 150m height and -50° pitch, look-at point is ~126m ahead
+    var stopOffsetKm=0.15; // 150m before endpoint
+    var stopFrac=Math.max(0.9,1-(stopOffsetKm/routeKmTotal)); // where on spline to stop
+
+    function smooth5(x){x=Math.max(0,Math.min(1,x));return x*x*x*(x*(x*6-15)+10)}
+
+    function renderAt(frac){
+        var elapsed=frac*totalDur;
+        var lat,lon,camH,heading,pitch,roll;
+
+        if(elapsed<hoverTime){
+            // ═══ HOVER START ═══
+            var p=elapsed/hoverTime;
+            lat=spline[0].lat;
+            lon=spline[0].lon;
+            heading=sH[0];
+            roll=0;
+            if(p<0.5){
+                var cp=smooth5(p*2);
+                camH=startTerrH+100+(startCruiseH-startTerrH-100)*cp;
+                pitch=-90;
+            } else {
+                var pp=smooth5((p-0.5)*2);
+                camH=startCruiseH;
+                pitch=-90+(90+pitchDeg)*pp;
+            }
+        } else {
+            // ═══ CRUISE (with integrated landing approach) ═══
+            var cruiseT=Math.max(0,Math.min(1,(elapsed-hoverTime)/dur));
+            // Remap: cruiseT 0→1 maps to spline 0→stopFrac (stop before endpoint)
+            var splineT=cruiseT*stopFrac;
+            var fi=splineT*(spline.length-1);
+            var idx=Math.min(Math.floor(fi),spline.length-2);
+            var frac2=fi-idx;
+            var cur=spline[idx],nxt=spline[idx+1];
+            lat=cur.lat+(nxt.lat-cur.lat)*frac2;
+            lon=cur.lon+(nxt.lon-cur.lon)*frac2;
+            var terrH=cur.height+(nxt.height-cur.height)*frac2;
+
+            // Normal cruise height
+            var normalH=heightMode==='terrain'?terrH+fh:fh;
+
+            // Heading
+            var h0=sH[idx],h1=sH[Math.min(idx+1,sH.length-1)];
+            var dh=h1-h0;while(dh>Math.PI)dh-=2*Math.PI;while(dh<-Math.PI)dh+=2*Math.PI;
+            heading=h0+dh*frac2;
+
+            if(cruiseT<landingFrac){
+                // Normal flight
+                camH=normalH;
+                pitch=pitchDeg;
+                roll=sR[Math.min(idx,sR.length-1)];
+            } else {
+                // ═══ APPROACH/LANDING ═══
+                // p goes 0→1 over the landing segment
+                var p=smooth5((cruiseT-landingFrac)/(1-landingFrac));
+
+                // Descend from cruise to landingEndH above terrain
+                var targetH=heightMode==='terrain'?terrH+landingEndH:Math.max(endTerrH+landingEndH,fh*0.3);
+                camH=normalH+(targetH-normalH)*p;
+
+                // Pitch from cruise to landing angle
+                pitch=pitchDeg+(landingEndPitch-pitchDeg)*p;
+
+                // Roll fades out during approach
+                roll=sR[Math.min(idx,sR.length-1)]*(1-p);
+            }
+        }
+
+        viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(lon,lat,camH),orientation:{heading:heading,pitch:Cesium.Math.toRadians(pitch),roll:Cesium.Math.toRadians(roll)}});
+    }
+
+    function updateUI(frac){
+        document.getElementById('progBar').style.width=(frac*100)+'%';
+        document.getElementById('progHandle').style.left=(frac*100)+'%';
+        document.getElementById('progTime').textContent=fmtTime(frac*totalDur/1000);
+    }
+
+    // Wait until tiles are loaded (fast version)
+    function waitAllTilesLoaded(cb){
+        var maxWait=3000;
+        var start=performance.now();
+
+        function check(){
+            if(performance.now()-start>maxWait){cb();return}
+            var globeDone=scene.globe.tilesLoaded;
+            if(globeDone){cb();return}
+            setTimeout(check,50);
+        }
+        scene.render();
+        // If already loaded, callback immediately
+        if(scene.globe.tilesLoaded){cb();return}
+        setTimeout(check,50);
+    }
+
+    if(rec&&perfect){
+        // ═══ PERFECT RECORDING: Frame-by-frame, wait for tiles at every frame ═══
+        document.getElementById('recBadge').classList.add('active');
+        startRec();
+        var fps=30;
+        var totalFrames=Math.ceil(totalDur/1000*fps);
+        var frameIdx=0;
+
+        function recordFrame(){
+            if(!isFlying){return}
+            if(frameIdx>totalFrames){
+                endFlight();
+                return;
+            }
+            var frac=Math.min(1,frameIdx/totalFrames);
+            flightFrac=frac;
+            updateUI(frac);
+            renderAt(frac);
+
+            waitAllTilesLoaded(function(){
+                scene.render();
+                frameIdx++;
+                requestAnimationFrame(function(){
+                    setTimeout(recordFrame,0);
+                });
+            });
+        }
+        recordFrame();
+    } else if(rec){
+        // ═══ FAST RECORDING: Real-time with MediaRecorder ═══
+        document.getElementById('recBadge').classList.add('active');
+        startRec();
+        function tickRec(now){
+            if(isPaused||isScrubbing)return;
+            var dt=now-flightLastTime;
+            flightLastTime=now;
+            flightFrac=Math.min(1,flightFrac+dt/totalDur);
+            updateUI(flightFrac);
+            renderAt(flightFrac);
+            if(flightFrac<1)flightRaf=requestAnimationFrame(tickRec);
+            else endFlight();
+        }
+        window._flightTick=tickRec;
+        flightRaf=requestAnimationFrame(tickRec);
+    } else {
+        // ═══ PREVIEW MODE: Real-time playback ═══
+        function tick(now){
+            if(isPaused||isScrubbing)return;
+            var dt=now-flightLastTime;
+            flightLastTime=now;
+            flightFrac=Math.min(1,flightFrac+dt/totalDur);
+            updateUI(flightFrac);
+            renderAt(flightFrac);
+            if(flightFrac<1)flightRaf=requestAnimationFrame(tick);
+            else endFlight();
+        }
+        window._flightTick=tick;
+        flightRaf=requestAnimationFrame(tick);
+    }
+
+    window._renderAt=renderAt;
 }
 
 function endFlight(){
@@ -913,23 +1263,41 @@ function endFlight(){
     document.getElementById('playBtns').style.display='';
     document.getElementById('flyingBtns').style.display='none';
     document.getElementById('progBar').style.width='0%';
-    if(isRecording){document.getElementById('recBadge').classList.remove('active');stopRec();isRecording=false}
+    document.getElementById('progHandle').style.left='0%';
+    document.getElementById('progTime').textContent='0:00';
+    if(isRecording){
+        document.getElementById('recBadge').classList.remove('active');
+        scene.globe.maximumScreenSpaceError=1.5;
+        stopRec();isRecording=false;
+    }
 }
 function stopFlight(){if(flightRaf)cancelAnimationFrame(flightRaf);endFlight()}
+
+function seekTo(frac){
+    if(!isFlying||!flightDur)return;
+    frac=Math.max(0,Math.min(1,frac));
+    flightFrac=frac;
+    // Update UI
+    document.getElementById('progBar').style.width=(frac*100)+'%';
+    document.getElementById('progHandle').style.left=(frac*100)+'%';
+    document.getElementById('progTime').textContent=fmtTime(frac*flightDur/1000);
+    // Render frame at this position
+    if(window._renderAt)window._renderAt(frac);
+}
 
 function pauseResume(){
     if(!isFlying)return;
     if(isPaused){
         // Resume
         isPaused=false;
-        flightPauseOffset+=performance.now()-flightPausedAt;
+        isScrubbing=false;
+        flightLastTime=performance.now();
         document.getElementById('btnPause').textContent='⏸ Pause';
         scene.screenSpaceCameraController.enableInputs=false;
-        flightRaf=requestAnimationFrame(window._flightTick);
+        if(window._flightTick)flightRaf=requestAnimationFrame(window._flightTick);
     } else {
         // Pause
         isPaused=true;
-        flightPausedAt=performance.now();
         document.getElementById('btnPause').textContent='▶ Weiter';
         if(flightRaf)cancelAnimationFrame(flightRaf);
         scene.screenSpaceCameraController.enableInputs=true;
@@ -958,6 +1326,49 @@ function setImg(type){
 // Stop 2D panel events from reaching Leaflet
 var evts2d=['touchstart','touchmove','touchend','wheel','mousedown','pointerdown','pointermove'];
 evts2d.forEach(function(e){document.getElementById('panel2d').addEventListener(e,function(ev){ev.stopPropagation()},{passive:false})});
+
+// ═══ SCRUBBER (timeline drag/click) ═══
+(function(){
+    var wrap=document.getElementById('progWrap');
+
+    function getFrac(e){
+        var rect=wrap.getBoundingClientRect();
+        var x=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+        return Math.max(0,Math.min(1,x/rect.width));
+    }
+
+    function onDown(e){
+        if(!isFlying)return;
+        e.preventDefault();e.stopPropagation();
+        isScrubbing=true;
+        // Auto-pause when scrubbing
+        if(!isPaused){
+            isPaused=true;
+            if(flightRaf)cancelAnimationFrame(flightRaf);
+            document.getElementById('btnPause').textContent='▶ Weiter';
+            scene.screenSpaceCameraController.enableInputs=true;
+        }
+        seekTo(getFrac(e));
+    }
+
+    function onMove(e){
+        if(!isScrubbing)return;
+        e.preventDefault();e.stopPropagation();
+        seekTo(getFrac(e));
+    }
+
+    function onUp(e){
+        if(!isScrubbing)return;
+        isScrubbing=false;
+    }
+
+    wrap.addEventListener('mousedown',onDown);
+    wrap.addEventListener('touchstart',onDown,{passive:false});
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onUp);
+    document.addEventListener('touchend',onUp);
+})();
 </script>
 
 <!-- Cesium loaded on-demand when switching to 3D tab -->
