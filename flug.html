@@ -893,7 +893,7 @@ function doFlight(rec,perfect){
         var maxBankDeg=parseInt(document.getElementById('sBank').value);
 
         var tangentH=[];
-        var tanWin=Math.max(3,Math.floor(sf*1.5));
+        var tanWin=Math.max(10,Math.floor(sf*3)); // much wider: ±30 at sf=10
         for(var i=0;i<arcSpline.length;i++){
             var i0=Math.max(0,i-tanWin);
             var i1=Math.min(arcSpline.length-1,i+tanWin);
@@ -905,8 +905,9 @@ function doFlight(rec,perfect){
                 Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dLon)
             ));
         }
+        // Double smoothing pass for extra stability
         var cachedSH=[];
-        var hWin=Math.max(4,sf*2);
+        var hWin=Math.max(10,sf*4); // much wider: ±40 at sf=10
         for(var i=0;i<tangentH.length;i++){
             var ss=0,sc=0,cn=0;
             for(var j=Math.max(0,i-hWin);j<=Math.min(tangentH.length-1,i+hWin);j++){
@@ -914,6 +915,16 @@ function doFlight(rec,perfect){
             }
             cachedSH.push(Math.atan2(ss/cn,sc/cn));
         }
+        // Second smoothing pass
+        var cachedSH2=[];
+        for(var i=0;i<cachedSH.length;i++){
+            var ss=0,sc=0,cn=0;
+            for(var j=Math.max(0,i-hWin);j<=Math.min(cachedSH.length-1,i+hWin);j++){
+                ss+=Math.sin(cachedSH[j]);sc+=Math.cos(cachedSH[j]);cn++;
+            }
+            cachedSH2.push(Math.atan2(ss/cn,sc/cn));
+        }
+        cachedSH=cachedSH2;
 
         var angVel=[];
         var avWin=Math.max(8,sf*3);
@@ -932,7 +943,7 @@ function doFlight(rec,perfect){
             else rolls.push(maxBankDeg*Math.tanh(av*sensitivity/maxBankDeg));
         }
         var cachedSR=[];
-        var rW=Math.max(2,Math.floor(sf*0.8));
+        var rW=Math.max(5,Math.floor(sf*2));
         for(var i=0;i<rolls.length;i++){
             var sm=rolls[i]*2,cn=2;
             for(var j=Math.max(0,i-rW);j<=Math.min(rolls.length-1,i+rW);j++){
