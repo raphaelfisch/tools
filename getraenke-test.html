@@ -512,7 +512,7 @@ setTimeout(function(){if(e.ratings){Object.keys(e.ratings).forEach(function(c){
 var sid='crit_'+c.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_äöüÄÖÜ]/g,'');
 var el=document.getElementById(sid);var v=document.getElementById(sid+'_val');
 if(el){el.value=e.ratings[c];if(v)v.textContent=e.ratings[c]}})}},50);
-switchView('form');window.scrollTo(0,0);setTimeout(function(){markSaved()},100)}
+isEditing=true;switchView('form');isEditing=false;window.scrollTo(0,0);setTimeout(function(){markSaved()},100)}
 
 async function deleteEntry(id){
 if(!confirm('Eintrag löschen?'))return;showLoading(true);
@@ -790,6 +790,7 @@ map.addLayer(clusterGroup);
 if(geo.length)map.fitBounds(clusterGroup.getBounds().pad(0.15))}
 
 var savedState='';
+var isEditing=false;
 
 function getFormState(){
 return document.getElementById('drinkName').value.trim()+'|'+document.getElementById('locationName').value.trim()+'|'+document.getElementById('category').value+'|'+document.getElementById('priceChf').value+'|'+document.getElementById('website').value+'|'+document.getElementById('notes').value.trim()+'|'+activeCriteria.join(',')}
@@ -803,7 +804,7 @@ return current!==savedState}
 
 function switchView(v){
 if(v!=='form'&&hasUnsavedChanges()){if(!confirm('Du hast ungespeicherte Änderungen. Trotzdem wechseln?'))return}
-if(v==='form'&&editingId){resetForm()}
+if(v==='form'&&editingId&&!isEditing){resetForm()}
 document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});
 document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});
 var idx={form:0,list:1,ranking:2,map:3};
