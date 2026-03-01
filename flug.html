@@ -114,6 +114,13 @@
         .ibar .v{color:rgba(255,255,255,.8);font-weight:500}
         .attr{position:fixed;bottom:8px;right:10px;font-size:9px;color:rgba(255,255,255,.2);z-index:1500}.attr a{color:rgba(255,255,255,.35);text-decoration:none}
 
+        .lbl-prompt{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(15,15,15,.96);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:20px;z-index:3000;width:280px;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+        .lbl-prompt h3{font-size:14px;margin-bottom:10px}
+        .lbl-prompt input{width:100%;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:10px}
+        .lbl-prompt input:focus{border-color:#e63946}
+        .lbl-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:2999}
+        .lbl-marker{background:rgba(25,25,25,.9);color:#fff;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap;border:1px solid rgba(255,255,255,.15);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+
         .lov{position:fixed;inset:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s}
         .lov.hidden{opacity:0;pointer-events:none}
         .lov h1{font-size:22px;font-weight:700;margin-bottom:5px}
@@ -158,9 +165,21 @@
                     <input class="search-input" type="text" placeholder="Ort suchen…" id="searchIn" autocomplete="off">
                     <div class="search-results" id="searchRes"></div>
                 </div>
+
+                <div class="sec">Modus</div>
+                <div class="hmode-row">
+                    <button class="hmode-btn active" id="mode2dWP" onclick="set2DMode('wp')">📍 Wegpunkte</button>
+                    <button class="hmode-btn" id="mode2dLbl" onclick="set2DMode('label')">🏷 Beschriftung</button>
+                </div>
+
                 <div class="sec">Wegpunkte <span id="wpCount2d">(0)</span></div>
                 <div class="wp-list" id="wpList2d"><div class="wp-empty">Klicke auf die Karte</div></div>
                 <button class="btn btn-danger" onclick="clearWP()" id="btnClear2d" style="display:none">Alle löschen</button>
+
+                <div class="sec">Beschriftungen <span id="lblCount">(0)</span></div>
+                <div class="wp-list" id="lblList"><div class="wp-empty">Wechsle zu «Beschriftung» und klicke auf die Karte</div></div>
+                <button class="btn btn-danger" onclick="clearLabels()" id="btnClearLbl" style="display:none">Alle Beschr. löschen</button>
+
                 <div style="height:8px"></div>
                 <button class="btn btn-primary" onclick="switchTab('3d')" id="btnTo3d" disabled>✈️ Zum 3D-Überflug →</button>
             </div>
@@ -317,16 +336,87 @@ L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/defau
 }).addTo(leafMap);
 
 var wpMarkers=[],routePolyline=null;
+var mapMode='wp'; // 'wp' or 'label'
+var labels=[],lblMarkers=[];
+
+function set2DMode(m){
+    mapMode=m;
+    document.getElementById('mode2dWP').classList.toggle('active',m==='wp');
+    document.getElementById('mode2dLbl').classList.toggle('active',m==='label');
+}
 
 leafMap.on('click',function(e){
-    waypoints.push({lat:e.latlng.lat,lon:e.latlng.lng,height:0});
-    rebuildMap();
-    updateWPUI();
+    if(mapMode==='wp'){
+        waypoints.push({lat:e.latlng.lat,lon:e.latlng.lng,height:0});
+        rebuildMap();
+        updateWPUI();
+    } else {
+        // Label mode: show prompt
+        showLabelPrompt(e.latlng.lat,e.latlng.lng);
+    }
 });
+
+function showLabelPrompt(lat,lon){
+    // Remove existing prompt
+    var old=document.getElementById('lblPrompt');if(old)old.remove();
+    var oldOv=document.getElementById('lblOverlay');if(oldOv)oldOv.remove();
+
+    var ov=document.createElement('div');ov.className='lbl-overlay';ov.id='lblOverlay';
+    ov.onclick=function(){ov.remove();dlg.remove()};
+    document.body.appendChild(ov);
+
+    var dlg=document.createElement('div');dlg.className='lbl-prompt';dlg.id='lblPrompt';
+    dlg.innerHTML='<h3>🏷 Beschriftung</h3><input type="text" id="lblInput" placeholder="z.B. Zürich, Pilatus, Vierwaldstättersee…" autofocus><div class="btn-row"><button class="btn btn-secondary" onclick="closeLblPrompt()">Abbrechen</button><button class="btn btn-primary" onclick="confirmLabel()">Setzen</button></div>';
+    document.body.appendChild(dlg);
+
+    // Store coordinates
+    dlg.dataset.lat=lat;dlg.dataset.lon=lon;
+
+    setTimeout(function(){document.getElementById('lblInput').focus()},100);
+    document.getElementById('lblInput').addEventListener('keydown',function(e){
+        if(e.key==='Enter')confirmLabel();
+        if(e.key==='Escape')closeLblPrompt();
+    });
+}
+
+function confirmLabel(){
+    var dlg=document.getElementById('lblPrompt');
+    var inp=document.getElementById('lblInput');
+    var txt=inp.value.trim();
+    if(!txt){inp.focus();return}
+    labels.push({lat:parseFloat(dlg.dataset.lat),lon:parseFloat(dlg.dataset.lon),text:txt});
+    closeLblPrompt();
+    rebuildMap();
+    updateLblUI();
+}
+
+function closeLblPrompt(){
+    var d=document.getElementById('lblPrompt');if(d)d.remove();
+    var o=document.getElementById('lblOverlay');if(o)o.remove();
+}
+
+function updateLblUI(){
+    var n=labels.length;
+    document.getElementById('lblCount').textContent='('+n+')';
+    document.getElementById('btnClearLbl').style.display=n?'':'none';
+    var list=document.getElementById('lblList');
+    if(!n){list.innerHTML='<div class="wp-empty">Wechsle zu «Beschriftung»<br>und klicke auf die Karte</div>';return}
+    list.innerHTML='';
+    labels.forEach(function(l,i){
+        var d=document.createElement('div');d.className='wp-item';
+        d.innerHTML='<span class="wp-num" style="background:#FFB74D;font-size:8px">🏷</span><span class="wp-coords" style="color:rgba(255,255,255,.8)">'+l.text+'</span><button class="wp-del" onclick="removeLabel('+i+')">✕</button>';
+        list.appendChild(d);
+    });
+}
+
+function removeLabel(i){labels.splice(i,1);rebuildMap();updateLblUI()}
+function clearLabels(){labels=[];rebuildMap();updateLblUI()}
 
 function rebuildMap(){
     wpMarkers.forEach(function(m){leafMap.removeLayer(m)});
     wpMarkers=[];
+    lblMarkers.forEach(function(m){leafMap.removeLayer(m)});
+    lblMarkers=[];
     if(routePolyline){leafMap.removeLayer(routePolyline);routePolyline=null}
 
     waypoints.forEach(function(w,i){
@@ -338,6 +428,18 @@ function rebuildMap(){
             })
         }).addTo(leafMap);
         wpMarkers.push(m);
+    });
+
+    // Label markers
+    labels.forEach(function(l){
+        var m=L.marker([l.lat,l.lon],{
+            icon:L.divIcon({
+                className:'',
+                html:'<div class="lbl-marker">'+l.text+'</div>',
+                iconSize:null,iconAnchor:[0,0]
+            })
+        }).addTo(leafMap);
+        lblMarkers.push(m);
     });
 
     if(waypoints.length>=2){
@@ -527,76 +629,32 @@ function update3DRoute(){
 function loadPlaceNames(){
     if(!viewer)return;
     nameEntities.forEach(function(e){viewer.entities.remove(e)});nameEntities=[];
+    if(!labels.length)return;
 
-    var pts=getSpline2D(8);
-    var allNames={};
-    var pending=pts.length;
-
-    // WGS84 to LV03 (CH1903) – bbox MUST be in LV03!
-    function wgs84toLV03(lat,lon){
-        var phi=(lat*3600-169028.66)/10000;
-        var lam=(lon*3600-26782.5)/10000;
-        var y=600072.37+211455.93*lam-10938.51*lam*phi-0.36*lam*phi*phi-44.54*lam*lam*lam;
-        var x=200147.07+308807.95*phi+3745.25*lam*lam+76.63*phi*phi-194.56*lam*lam*phi+119.79*phi*phi*phi;
-        return {y:Math.round(y),x:Math.round(x)};
-    }
-
-    function done(){
-        pending--;
-        if(pending>0)return;
-        var names=Object.values(allNames);
-        console.log('Place names found:',names.length,names.map(function(n){return n.name}));
-        if(!names.length)return;
-
-        var cartos=names.map(function(n){return Cesium.Cartographic.fromDegrees(n.lon,n.lat)});
-        Cesium.sampleTerrainMostDetailed(viewer.terrainProvider,cartos).then(function(updated){
-            names.forEach(function(n,i){
-                var h=(updated[i].height||0)+150;
-                var isCity=n.rank<=4;
-                var e=viewer.entities.add({
-                    position:Cesium.Cartesian3.fromDegrees(n.lon,n.lat,h),
-                    label:{
-                        text:n.name,
-                        font:(isCity?'bold 20px':'bold 15px')+' DM Sans, sans-serif',
-                        fillColor:Cesium.Color.WHITE,
-                        backgroundColor:Cesium.Color.fromCssColorString(isCity?'rgba(230,57,70,0.85)':'rgba(25,25,25,0.85)'),
-                        showBackground:true,
-                        backgroundPadding:new Cesium.Cartesian2(12,7),
-                        style:Cesium.LabelStyle.FILL,
-                        verticalOrigin:Cesium.VerticalOrigin.CENTER,
-                        horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
-                        disableDepthTestDistance:Number.POSITIVE_INFINITY,
-                        scaleByDistance:new Cesium.NearFarScalar(300,1.4,30000,.35),
-                        translucencyByDistance:new Cesium.NearFarScalar(200,1,60000,.2)
-                    }
-                });
-                nameEntities.push(e);
+    // Sample terrain for all label positions
+    var cartos=labels.map(function(l){return Cesium.Cartographic.fromDegrees(l.lon,l.lat)});
+    Cesium.sampleTerrainMostDetailed(viewer.terrainProvider,cartos).then(function(updated){
+        labels.forEach(function(l,i){
+            var h=(updated[i].height||0)+120;
+            var e=viewer.entities.add({
+                position:Cesium.Cartesian3.fromDegrees(l.lon,l.lat,h),
+                label:{
+                    text:l.text,
+                    font:'bold 18px DM Sans, sans-serif',
+                    fillColor:Cesium.Color.WHITE,
+                    backgroundColor:Cesium.Color.fromCssColorString('rgba(25,25,25,0.85)'),
+                    showBackground:true,
+                    backgroundPadding:new Cesium.Cartesian2(12,7),
+                    style:Cesium.LabelStyle.FILL,
+                    verticalOrigin:Cesium.VerticalOrigin.CENTER,
+                    horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
+                    disableDepthTestDistance:Number.POSITIVE_INFINITY,
+                    scaleByDistance:new Cesium.NearFarScalar(300,1.4,30000,.35),
+                    translucencyByDistance:new Cesium.NearFarScalar(200,1,60000,.15)
+                }
             });
+            nameEntities.push(e);
         });
-    }
-
-    pts.forEach(function(p){
-        // Convert to LV03 for bbox (API requires SRID 21781)
-        var lv=wgs84toLV03(p.lat,p.lon);
-        var d=3000; // 3km in meters
-        var bbox=(lv.y-d)+','+(lv.x-d)+','+(lv.y+d)+','+(lv.x+d);
-        // sr=4326 for OUTPUT coordinates (lat/lon in results)
-        var url='https://api3.geo.admin.ch/rest/services/api/SearchServer?sr=4326&type=locations&origins=gazetteer,gg25&limit=15&bbox='+bbox;
-
-        fetch(url).then(function(r){return r.json()}).then(function(data){
-            if(!data.results){done();return}
-            data.results.forEach(function(r){
-                if(!r.attrs||!r.attrs.label)return;
-                var raw=r.attrs.label.replace(/<[^>]+>/g,'').trim();
-                // Remove type prefixes
-                raw=raw.replace(/^(Populated Place|Localité|Ortschaft|Lieu-dit|Flurname|Mountain|Pass|Lake|Valley|Region|Tal|See|Berg)\s+/i,'').trim();
-                var name=raw.split('(')[0].split(' - ')[0].trim();
-                if(!name||name.length<2||/^\d/.test(name)||allNames[name])return;
-                if(raw.indexOf(',')!==-1&&raw.split(',').length>2)return;
-                allNames[name]={name:name,lat:r.attrs.lat,lon:r.attrs.lon,rank:r.attrs.rank||10};
-            });
-            done();
-        }).catch(function(err){console.warn('Place name fetch error:',err);done()});
     });
 }
 
@@ -698,19 +756,39 @@ function doFlight(rec){
         }
         window._flightSpline=fullSpline;
 
-        // 3) Preload tiles along route
+        // 3) Smart preload: fly to each point and WAIT for tiles to load
         st.textContent='Kacheln vorladen…';
         var fh=parseInt(document.getElementById('sH').value);
-        var step=Math.max(1,Math.floor(fullSpline.length/15));
+        var numPrePts=20;
+        var step=Math.max(1,Math.floor(fullSpline.length/numPrePts));
         var prePts=[];for(var k=0;k<fullSpline.length;k+=step)prePts.push(fullSpline[k]);
         prePts.push(fullSpline[fullSpline.length-1]);
         var preIdx=0;
 
         function pre(){
             if(preIdx>=prePts.length){st.textContent='Bereit!';setTimeout(function(){st.classList.remove('active');go()},400);return}
-            var p=prePts[preIdx];st.textContent='Vorladen… '+(preIdx+1)+'/'+prePts.length;
+            var p=prePts[preIdx];
+            st.textContent='Vorladen… '+(preIdx+1)+'/'+prePts.length;
             viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(p.lon,p.lat,heightMode==='terrain'?p.height+fh:fh),orientation:{heading:0,pitch:Cesium.Math.toRadians(-30),roll:0}});
-            preIdx++;setTimeout(pre,350);
+            preIdx++;
+            // Wait for tiles to finish loading (or timeout after 3s)
+            waitForTiles(function(){pre()});
+        }
+
+        function waitForTiles(cb){
+            var waited=0;
+            var maxWait=3000; // max 3s per point
+            var checkInterval=150;
+            function check(){
+                var pending=scene.globe._surface._tilesToRender?scene.globe._surface._tilesToRender.length:0;
+                // Also check general tile load queue
+                var loading=scene.globe.tilesLoaded;
+                waited+=checkInterval;
+                if((loading||waited>=maxWait)){cb()}
+                else{setTimeout(check,checkInterval)}
+            }
+            // Give a moment for tile requests to start
+            setTimeout(check,200);
         }
         function go(){
             var sp=fullSpline[0];
