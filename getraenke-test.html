@@ -469,9 +469,10 @@ lat:parseFloat(document.getElementById('coordLat').value)||null,lng:parseFloat(d
 ratings:ratings,average:Math.round(avg*10)/10,notes:document.getElementById('notes').value.trim()||null,photo_url:currentPhotoUrl||null};
 showLoading(true);
 try{
-if(editingId){var res=await sb.from('drinks').update(rec).eq('id',editingId);if(res.error)throw res.error;showToast('Aktualisiert!');markSaved()}
-else{var res=await sb.from('drinks').insert(rec).select();if(res.error)throw res.error;if(res.data&&res.data[0])editingId=res.data[0].id;showToast('Gespeichert!');markSaved()}
-await loadEntries();
+if(editingId){var res=await sb.from('drinks').update(rec).eq('id',editingId);if(res.error)throw res.error;showToast('Aktualisiert!');markSaved();
+await loadEntries();switchView('list')}
+else{var res=await sb.from('drinks').insert(rec).select();if(res.error)throw res.error;if(res.data&&res.data[0])editingId=res.data[0].id;showToast('Gespeichert!');markSaved();
+await loadEntries()}
 }catch(e){showToast('Fehler: '+e.message,true)}showLoading(false)}
 
 function editEntry(id){
@@ -765,7 +766,7 @@ iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-19]});
 var r=e.ratings||{};
 var rh=Object.keys(r).map(function(k){return'<span style="color:#8b8a88">'+k+':</span> <b>'+r[k]+'</b>'}).join(' · ');
 var popup=(e.photo_url?'<img src="'+e.photo_url+'" onclick="openImgOverlay(this.src)" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin-bottom:8px;cursor:zoom-in">':'')+'<div class="popup-title">'+catIcon+' '+e.name+'</div><div class="popup-meta">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'<br>'+formatDate(e.test_date)+'</div><div class="popup-score">⌀ '+avg+' / 10</div><div class="popup-criteria">'+rh+'</div>'+(e.notes?'<div style="margin-top:5px;font-size:.72rem;color:#8b8a88;font-style:italic">"'+e.notes+'"</div>':'')+(e.website?'<div style="margin-top:6px"><a href="'+e.website+'" target="_blank" style="color:var(--accent);font-size:.75rem">🔗 Webseite</a></div>':'')+'<div style="margin-top:8px;padding-top:6px;border-top:1px solid #2a2d3a"><a href="#" onclick="editEntry(\''+e.id+'\');return false" style="color:var(--accent);font-size:.78rem;text-decoration:none">✏️ Bearbeiten</a></div>';
-var marker=L.marker([e.lat,e.lng],{icon:icon}).bindPopup(popup);
+var marker=L.marker([e.lat,e.lng],{icon:icon}).bindPopup(popup,{autoPan:true,autoPanPadding:[40,40],maxWidth:300,maxHeight:400});
 clusterGroup.addLayer(marker);mapMarkers.push(marker)});
 map.addLayer(clusterGroup);
 if(geo.length)map.fitBounds(clusterGroup.getBounds().pad(0.15))}
