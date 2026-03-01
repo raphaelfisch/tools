@@ -144,13 +144,25 @@ body.light .e-score{color:#000}
 .empty-state h3{font-family:'Syne',sans-serif;color:var(--text);margin-bottom:6px}
 
 /* RANKING */
-.ranking-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
-.ranking-card .rank-num{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--accent);margin-right:10px}
-.ranking-card .rank-top{display:flex;align-items:center}
+.ranking-card{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;cursor:pointer;transition:border-color .2s;overflow:hidden}
+.ranking-card:hover{border-color:var(--accent-dim)}
+.ranking-card:nth-child(even){background:#22253a}
+body.light .ranking-card:nth-child(even){background:#ededea}
+.ranking-card .rank-top{display:flex;align-items:center;padding:14px}
+.ranking-card .rank-num{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--accent);margin-right:10px;min-width:40px;text-align:center}
 .ranking-card .rank-info{flex:1}
 .ranking-card .rank-name{font-weight:600;font-size:.95rem}
 .ranking-card .rank-loc{font-size:.75rem;color:var(--text-dim)}
 .ranking-card .rank-score{font-weight:800;font-size:1rem;color:var(--accent)}
+.rank-detail{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.rank-detail.open{display:block}
+.rank-detail .rd-photo{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin:10px 0;cursor:zoom-in}
+.rank-detail .rd-ratings{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.rank-detail .rd-notes{font-size:.78rem;color:var(--text-dim);font-style:italic;margin:6px 0}
+.rank-detail .rd-actions{display:flex;gap:6px;margin-top:8px}
+.rank-detail .rd-actions button{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:.78rem;font-family:'Outfit',sans-serif;transition:all .2s}
+.rank-detail .rd-actions button:hover{border-color:var(--accent);color:var(--accent)}
+.rank-detail .rd-actions button.del:hover{border-color:var(--danger);color:var(--danger)}
 
 .loading-overlay{position:fixed;inset:0;background:rgba(15,17,23,.7);display:none;align-items:center;justify-content:center;z-index:3000}
 .loading-overlay.show{display:flex}
@@ -740,7 +752,13 @@ if(!list.length){c.innerHTML='<div class="empty-state"><div class="icon">🏆</d
 c.innerHTML=list.map(function(e,i){
 var catIcon=(e.category||'Getränk')==='Pommes'?'🍟':'🍹';
 var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-return'<div class="ranking-card"><div class="rank-top"><div class="rank-num">'+(medal||'#'+(i+1))+'</div><div class="rank-info"><div class="rank-name">'+catIcon+' '+e.name+'</div><div class="rank-loc">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'</div></div><div class="rank-score">⌀ '+(e.average||'–')+'</div></div></div>'}).join('')}
+var r=e.ratings||{};
+var rh=Object.keys(r).map(function(k){return'<div class="e-r"><span class="l">'+k+':</span><span class="v">'+r[k]+'</span></div>'}).join('');
+var photo=e.photo_url?'<img class="rd-photo" src="'+e.photo_url+'" onclick="event.stopPropagation();openImgOverlay(this.src)">':'';
+var web=e.website?'<a href="'+e.website+'" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent);font-size:.72rem;text-decoration:none">🔗 Webseite</a>':'';
+return'<div class="ranking-card" onclick="toggleRankDetail(\'rd_'+i+'\')"><div class="rank-top"><div class="rank-num">'+(medal||'#'+(i+1))+'</div><div class="rank-info"><div class="rank-name">'+catIcon+' '+e.name+'</div><div class="rank-loc">📍 '+e.location+(e.price?' · '+Number(e.price).toFixed(2)+' CHF':'')+'</div></div><div class="rank-score">⌀ '+(e.average||'–')+'</div></div><div class="rank-detail" id="rd_'+i+'">'+photo+'<div style="font-size:.75rem;color:var(--text-dim);margin-bottom:6px">'+formatDate(e.test_date)+' '+web+'</div><div class="rd-ratings">'+rh+'</div>'+(e.notes?'<div class="rd-notes">"'+e.notes+'"</div>':'')+'<div class="rd-actions"><button onclick="event.stopPropagation();editEntry(\''+e.id+'\')">✏️ Bearbeiten</button><button class="share" onclick="event.stopPropagation();shareEntry(\''+e.id+'\')">📤 Teilen</button><button class="del" onclick="event.stopPropagation();deleteEntry(\''+e.id+'\')">🗑️ Löschen</button></div></div></div>'}).join('')}
+
+function toggleRankDetail(id){var el=document.getElementById(id);if(el)el.classList.toggle('open')}
 
 // MAIN MAP
 function initMap(){
@@ -784,8 +802,8 @@ if(current==='||Getränk||||')return false;
 return current!==savedState}
 
 function switchView(v){
-if(v==='form'&&editingId){resetForm()}
 if(v!=='form'&&hasUnsavedChanges()){if(!confirm('Du hast ungespeicherte Änderungen. Trotzdem wechseln?'))return}
+if(v==='form'&&editingId){resetForm()}
 document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});
 document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});
 var idx={form:0,list:1,ranking:2,map:3};
