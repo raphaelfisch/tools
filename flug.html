@@ -567,6 +567,121 @@ var nameEntities=[];
 var routeLine3d=null,wpEntities3d=[];
 
 function initCesium(){
+    // ═══ TILE CACHE: intercept fetch/XHR, store in IndexedDB ═══
+    var tileDB=null;
+    var tileCacheEnabled=false;
+    var cacheHits=0,cacheMisses=0;
+
+    function openTileDB(cb){
+        if(tileDB){cb(tileDB);return}
+        var req=indexedDB.open('flightTileCache',1);
+        req.onupgradeneeded=function(e){e.target.result.createObjectStore('tiles')};
+        req.onsuccess=function(e){tileDB=e.target.result;cb(tileDB)};
+        req.onerror=function(){cb(null)};
+    }
+
+    function putTile(url,data){
+        if(!tileDB)return;
+        try{var tx=tileDB.transaction('tiles','readwrite');tx.objectStore('tiles').put(data,url)}catch(e){}
+    }
+
+    function getTile(url,cb){
+        if(!tileDB){cb(null);return}
+        try{
+            var tx=tileDB.transaction('tiles','readonly');
+            var req=tx.objectStore('tiles').get(url);
+            req.onsuccess=function(){cb(req.result||null)};
+            req.onerror=function(){cb(null)};
+        }catch(e){cb(null)}
+    }
+
+    // Domains to cache
+    var cacheDomains=['geo.admin.ch','swisstopo'];
+
+    function shouldCache(url){
+        if(!tileCacheEnabled)return false;
+        for(var i=0;i<cacheDomains.length;i++){
+            if(url.indexOf(cacheDomains[i])!==-1)return true;
+        }
+        return false;
+    }
+
+    // Intercept fetch
+    var origFetch=window.fetch;
+    window.fetch=function(input,init){
+        var url=(typeof input==='string')?input:(input&&input.url)||'';
+        if(!shouldCache(url))return origFetch.call(window,input,init);
+        return new Promise(function(resolve,reject){
+            getTile(url,function(cached){
+                if(cached){
+                    cacheHits++;
+                    resolve(new Response(cached));
+                    return;
+                }
+                cacheMisses++;
+                origFetch.call(window,input,init).then(function(resp){
+                    if(resp.ok){
+                        var r2=resp.clone();
+                        r2.arrayBuffer().then(function(buf){putTile(url,buf)});
+                    }
+                    resolve(resp);
+                }).catch(reject);
+            });
+        });
+    };
+
+    // Intercept XMLHttpRequest
+    var origXHROpen=XMLHttpRequest.prototype.open;
+    var origXHRSend=XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open=function(method,url){
+        this._cacheUrl=url;
+        this._shouldCache=shouldCache(url);
+        return origXHROpen.apply(this,arguments);
+    };
+    XMLHttpRequest.prototype.send=function(body){
+        var xhr=this;
+        if(!xhr._shouldCache)return origXHRSend.apply(this,arguments);
+
+        getTile(xhr._cacheUrl,function(cached){
+            if(cached){
+                cacheHits++;
+                // Simulate successful XHR response
+                Object.defineProperty(xhr,'status',{get:function(){return 200}});
+                Object.defineProperty(xhr,'readyState',{get:function(){return 4}});
+                Object.defineProperty(xhr,'response',{get:function(){return cached}});
+                Object.defineProperty(xhr,'responseType',{writable:true,value:xhr.responseType});
+                if(xhr.onreadystatechange)xhr.onreadystatechange();
+                if(xhr.onload)xhr.onload();
+                return;
+            }
+            cacheMisses++;
+            var origOnLoad=xhr.onload;
+            xhr.onload=function(){
+                try{
+                    if(xhr.status===200&&xhr.response){
+                        var data=xhr.response;
+                        if(data instanceof ArrayBuffer){
+                            putTile(xhr._cacheUrl,data);
+                        }
+                    }
+                }catch(e){}
+                if(origOnLoad)origOnLoad.apply(xhr,arguments);
+            };
+            origXHRSend.apply(xhr,[body]);
+        });
+    };
+
+    // Expose controls
+    window._tileCacheEnabled=function(v){tileCacheEnabled=v};
+    window._tileCacheStats=function(){return{hits:cacheHits,misses:cacheMisses}};
+    window._clearTileCache=function(){
+        if(tileDB){try{tileDB.transaction('tiles','readwrite').objectStore('tiles').clear()}catch(e){}}
+        cacheHits=0;cacheMisses=0;
+    };
+
+    // Open DB immediately
+    openTileDB(function(){});
+
     Cesium.Ion.defaultAccessToken=null;
     var RECT=Cesium.Rectangle.fromDegrees(5.01,45.35,11.48,48.28);
 
@@ -584,6 +699,8 @@ function initCesium(){
 
     scene=viewer.scene;
     scene.globe.maximumScreenSpaceError=1.5;scene.fog.enabled=true;scene.skyAtmosphere.show=true;scene.globe.depthTestAgainstTerrain=true;
+    // Massive tile cache to keep tiles in memory during flight
+    scene.globe.tileCacheSize=1000; // default ~100, we need much more
 
     function addTS(u){try{var t=new Cesium.Cesium3DTileset({url:u});scene.primitives.add(t);return t}catch(e){return null}}
     bldgTS=addTS('https://3d.geo.admin.ch/ch.swisstopo.swissbuildings3d.3d/v1/tileset.json');
@@ -1189,55 +1306,83 @@ function startFlight(rec,perfect){
         document.getElementById('progTime').textContent=fmtTime(frac*totalDur/1000);
     }
 
-    // Wait until tiles are loaded (fast version)
-    function waitAllTilesLoaded(cb){
-        var maxWait=3000;
+    // Wait until tiles are loaded
+    function waitTiles(cb,maxMs){
+        var maxWait=maxMs||2000;
         var start=performance.now();
-
         function check(){
             if(performance.now()-start>maxWait){cb();return}
-            var globeDone=scene.globe.tilesLoaded;
-            if(globeDone){cb();return}
-            setTimeout(check,50);
+            if(scene.globe.tilesLoaded){cb();return}
+            setTimeout(check,30);
         }
         scene.render();
-        // If already loaded, callback immediately
         if(scene.globe.tilesLoaded){cb();return}
-        setTimeout(check,50);
+        setTimeout(check,30);
     }
 
     if(rec&&perfect){
-        // ═══ PERFECT RECORDING: Frame-by-frame, wait for tiles at every frame ═══
-        document.getElementById('recBadge').classList.add('active');
-        startRec();
-        var fps=30;
-        var totalFrames=Math.ceil(totalDur/1000*fps);
-        var frameIdx=0;
+        // ═══ PERFECT RECORDING: Two-pass with IndexedDB tile cache ═══
+        // Pass 1: Fly through slowly, all tiles get cached to IndexedDB
+        // Pass 2: Record – tiles come from local cache, no network needed
+        window._tileCacheEnabled(true);
+        var st=document.getElementById('preloadStatus');
+        st.classList.add('active');
+        scene.globe.maximumScreenSpaceError=0.8;
 
-        function recordFrame(){
-            if(!isFlying){return}
-            if(frameIdx>totalFrames){
+        var cacheFrames=200;
+        var cacheIdx=0;
+
+        function cachePass(){
+            if(!isFlying){window._tileCacheEnabled(false);return}
+            if(cacheIdx>cacheFrames){
+                var stats=window._tileCacheStats();
+                st.textContent='Cache: '+stats.hits+' lokal / '+stats.misses+' geladen. Aufnahme startet…';
+                setTimeout(function(){
+                    // Pass 2: Record with cache
+                    document.getElementById('recBadge').classList.add('active');
+                    startRec(true); // manual frame mode
+                    doRecordPass(Math.ceil(totalDur/1000*30),0);
+                },500);
+                return;
+            }
+            var frac=cacheIdx/cacheFrames;
+            var stats=window._tileCacheStats();
+            st.textContent='Tiles laden… '+Math.round(frac*100)+'% ('+stats.misses+' Tiles)';
+            updateUI(frac);
+            renderAt(frac);
+            cacheIdx++;
+            waitTiles(function(){
+                requestAnimationFrame(function(){cachePass()});
+            },2000);
+        }
+
+        function doRecordPass(totalRecFrames,frameIdx){
+            if(!isFlying){window._tileCacheEnabled(false);return}
+            if(frameIdx>totalRecFrames){
+                window._tileCacheEnabled(false);
                 endFlight();
                 return;
             }
-            var frac=Math.min(1,frameIdx/totalFrames);
+            var frac=Math.min(1,frameIdx/totalRecFrames);
             flightFrac=frac;
+            st.textContent='Aufnahme… '+Math.round(frac*100)+'%';
             updateUI(frac);
             renderAt(frac);
 
-            waitAllTilesLoaded(function(){
+            // Tiles should be in IndexedDB cache – minimal wait
+            waitTiles(function(){
                 scene.render();
-                frameIdx++;
+                pushFrame(); // manually push this frame to video at constant timing
                 requestAnimationFrame(function(){
-                    setTimeout(recordFrame,0);
+                    doRecordPass(totalRecFrames,frameIdx+1);
                 });
-            });
+            },300);
         }
-        recordFrame();
+        cachePass();
     } else if(rec){
         // ═══ FAST RECORDING: Real-time with MediaRecorder ═══
         document.getElementById('recBadge').classList.add('active');
-        startRec();
+        startRec(false); // real-time 30fps mode
         function tickRec(now){
             if(isPaused||isScrubbing)return;
             var dt=now-flightLastTime;
@@ -1276,9 +1421,12 @@ function endFlight(){
     document.getElementById('progBar').style.width='0%';
     document.getElementById('progHandle').style.left='0%';
     document.getElementById('progTime').textContent='0:00';
+    var st=document.getElementById('preloadStatus');
+    st.classList.remove('active');st.textContent='';
+    if(window._tileCacheEnabled)window._tileCacheEnabled(false);
+    scene.globe.maximumScreenSpaceError=1.5;
     if(isRecording){
         document.getElementById('recBadge').classList.remove('active');
-        scene.globe.maximumScreenSpaceError=1.5;
         stopRec();isRecording=false;
     }
 }
@@ -1316,13 +1464,24 @@ function pauseResume(){
 }
 
 // Recording
-function startRec(){
-    recordedChunks=[];var stream=scene.canvas.captureStream(30);
+var recStream=null;
+function startRec(manual){
+    recordedChunks=[];
+    // manual=true: captureStream(0) – we push frames manually
+    // manual=false: captureStream(30) – real-time 30fps
+    recStream=scene.canvas.captureStream(manual?0:30);
     var mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm;codecs=vp8';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';
-    mediaRecorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8000000});
+    mediaRecorder=new MediaRecorder(recStream,{mimeType:mime,videoBitsPerSecond:12000000});
     mediaRecorder.ondataavailable=function(e){if(e.data&&e.data.size>0)recordedChunks.push(e.data)};
     mediaRecorder.onstop=function(){var blob=new Blob(recordedChunks,{type:mime});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ueberflug-'+new Date().toISOString().slice(0,10)+'.webm';document.body.appendChild(a);a.click();document.body.removeChild(a)};
     mediaRecorder.start(100);
+}
+// Push one frame to the manual stream (for perfect mode)
+function pushFrame(){
+    if(recStream){
+        var track=recStream.getVideoTracks()[0];
+        if(track&&track.requestFrame)track.requestFrame();
+    }
 }
 function stopRec(){if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop()}
 
