@@ -455,18 +455,15 @@ function renderPreview(){
         const hdrRow = `<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${cc}">${sub.label}</td>` +
           ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:1px solid ${cc}22;padding:2px">${l}</td>`).join('') + `</tr>`;
         const hdrHtml = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:0">${hdrCols}${hdrRow}</table>`;
-        // Continuation header (shown when table breaks across pages)
-        const contHdrHtml = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:0">${hdrCols}<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${cc}">${sub.label} <span style="font-weight:400;font-size:7px">(Forts.)</span></td>` +
-          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:1px solid ${cc}22;padding:2px">${l}</td>`).join('') + `</tr></table>`;
 
-        blocks.push({ html: hdrHtml, type: 'rubric-header', contHtml: contHdrHtml });
+        blocks.push({ html: hdrHtml, type: 'rubric-header' });
 
         si.forEach((idx, pos) => {
           let rH = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:${pos === si.length - 1 ? '5px' : '0'}"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
           rH += `<tr><td style="font-size:7.5px;padding:3px 8px;color:#444;border:1px solid #E5E3E0">${getIndText(sub.id, idx, sub)}</td>`;
           for (let c = 0; c < 4; c++) rH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
           rH += `</tr></table>`;
-          blocks.push({ html: rH, type: 'rubric-row', contHtml: contHdrHtml });
+          blocks.push({ html: rH, type: 'rubric-row' });
         });
       });
     });
@@ -527,14 +524,6 @@ function renderPreview(){
   const allBlocks = [...blocks, ...reflBlocks];
   let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:520px;padding:28px 24px;font-size:10px;">`;
   allBlocks.forEach((b, i) => measH += `<div data-block="${i}">${b.html}</div>`);
-  // Also measure continuation headers
-  const contHeaders = {};
-  allBlocks.forEach((b, i) => {
-    if (b.contHtml && !contHeaders[b.contHtml]) {
-      contHeaders[b.contHtml] = `cont-${i}`;
-      measH += `<div data-block="cont-${i}">${b.contHtml}</div>`;
-    }
-  });
   measH += `</div>`;
   document.getElementById('preview').innerHTML = measH;
 
@@ -548,30 +537,21 @@ function renderPreview(){
     const el = measureEl.querySelector(`[data-block="${i}"]`);
     b.h = el ? el.offsetHeight : 0;
   });
-  // Measure cont headers
-  const contHeaderHeights = {};
-  Object.entries(contHeaders).forEach(([html, id]) => {
-    const el = measureEl.querySelector(`[data-block="${id}"]`);
-    contHeaderHeights[html] = el ? el.offsetHeight : 0;
-  });
 
-  // Step 3: Distribute blocks into pages with header repeat
+  // Step 3: Distribute blocks into pages
   function distributeBlocks(blockList) {
     const pages = [];
     let currentPage = [];
     let currentH = 0;
-    let lastRubricHeader = null;
 
     for (let bi = 0; bi < blockList.length; bi++) {
       const block = blockList[bi];
 
       if (block.type === 'rubric-header') {
-        lastRubricHeader = block;
         // Check if header + at least one next row fits on current page
         const nextBlock = blockList[bi + 1];
         const neededH = block.h + (nextBlock ? nextBlock.h : 0);
         if (currentH + neededH > usableH && currentPage.length > 0) {
-          // Header alone would be orphaned — push to next page
           pages.push(currentPage);
           currentPage = [];
           currentH = 0;
@@ -585,12 +565,6 @@ function renderPreview(){
         pages.push(currentPage);
         currentPage = [];
         currentH = 0;
-        // If we're breaking inside a rubric, repeat the header
-        if (block.type === 'rubric-row' && lastRubricHeader && block.contHtml) {
-          const contH = contHeaderHeights[block.contHtml] || 0;
-          currentPage.push(block.contHtml);
-          currentH += contH;
-        }
       }
       currentPage.push(block.html);
       currentH += block.h;
@@ -660,7 +634,7 @@ function generatePDF(){
   const active=getActiveComps(),title=document.getElementById('docTitle').value||'CHALLENGE-BEURTEILUNG',subtitle=document.getElementById('docSubtitle').value||'',school=document.getElementById('schoolName').value,assignment=document.getElementById('assignmentText').value;
   const flds = getActiveFields();
   let rubric='';
-  active.forEach(comp=>{const cc=dc(comp.color),cl=dcLight(comp.colorLight);const subs=comp.subs.filter(s=>(selections[s.id]||[]).length>0);if(!subs.length)return;subs.forEach(sub=>{const si=selections[sub.id]||[],inds=si.map(i=>getIndText(sub.id,i,sub)),box=`<div style="width:13px;height:13px;border:1.5px solid #999;display:inline-block;border-radius:1px"></div>`;rubric+=`<table class="rubric"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup><tr class="rub-hdr"><td style="background:${cc};color:white;font-weight:700;font-size:9px">${sub.label}</td><td style="background:${cc}15;color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">−−</td><td style="background:${cc}08;color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">−</td><td style="background:${cc}15;color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">+</td><td style="background:${cc}08;color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">++</td></tr>`;inds.forEach(ind=>{rubric+=`<tr><td style="font-size:8.5px;padding:4px 10px;color:#333">${ind}</td>`;for(let c=0;c<4;c++)rubric+=`<td style="text-align:center;padding:3px">${box}</td>`;rubric+=`</tr>`;});rubric+=`</table><div style="height:6px"></div>`;});});
+  active.forEach(comp=>{const cc=dc(comp.color),cl=dcLight(comp.colorLight);const subs=comp.subs.filter(s=>(selections[s.id]||[]).length>0);if(!subs.length)return;subs.forEach(sub=>{const si=selections[sub.id]||[],inds=si.map(i=>getIndText(sub.id,i,sub)),box=`<div style="width:13px;height:13px;border:1.5px solid #999;display:inline-block;border-radius:1px"></div>`;rubric+=`<table class="rubric"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup><tr class="rub-hdr"><td style="background:${cc};color:white;font-weight:700;font-size:9px">${sub.label}</td><td style="background:${cl};color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">−−</td><td style="background:${cl};color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">−</td><td style="background:${cl};color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">+</td><td style="background:${cl};color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">++</td></tr>`;inds.forEach(ind=>{rubric+=`<tr><td style="font-size:8.5px;padding:4px 10px;color:#333">${ind}</td>`;for(let c=0;c<4;c++)rubric+=`<td style="text-align:center;padding:3px">${box}</td>`;rubric+=`</tr>`;});rubric+=`</table><div style="height:6px"></div>`;});});
   let refl='';
   active.forEach(comp=>{if(!comp.subs.some(s=>(selections[s.id]||[]).length>0))return;refl+=`<div class="refl-box" style="border-left:4px solid ${dc(comp.color)}"><div class="refl-title" style="color:${dc(comp.color)}">${comp.label} <span style="font-weight:400;color:#999;font-size:9px;font-style:italic">(${comp.shortLabel})</span></div>`;for(let i=0;i<3;i++)refl+=`<div class="refl-line"></div>`;refl+=`</div>`;});
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
