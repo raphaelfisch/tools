@@ -88,6 +88,7 @@
     font-size: 10px;
     transform-origin: top left;
   }
+  .a4-inner table { border-spacing: 0; }
   .a4-page-label {
     position: absolute; top: -18px; right: 4px;
     font-size: 9px; color: var(--dim); font-weight: 500;
@@ -655,7 +656,7 @@ function generatePDF(){
   const w = window.open('','_blank','width=800,height=1000');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35}</style>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35}table{border-spacing:0;border-collapse:collapse;margin:0;padding:0}div,p{margin:0;padding:0}</style>
 </head><body><div id="m" style="width:${pageW}px;padding:28px 24px;position:absolute;visibility:hidden"></div></body></html>`);
   w.document.close();
 
@@ -712,6 +713,7 @@ function generatePDF(){
 @page{size:A4;margin:0}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
 body{font-family:'DM Sans',sans-serif;margin:0;padding:0}
+table{border-spacing:0;border-collapse:collapse}div,p{margin:0;padding:0}
 .pw{width:210mm;height:297mm;overflow:hidden;page-break-after:always;position:relative}
 .pw:last-child{page-break-after:auto}
 .pi{width:${pageW}px;height:${pageH}px;padding:28px 24px;font-size:10px;color:#1A1A1A;line-height:1.35;transform-origin:top left}
