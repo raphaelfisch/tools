@@ -521,7 +521,12 @@ function renderPreview(){
   }
 
   // Step 1: Render all blocks into a hidden measuring container
+  // Mark refl blocks
+  reflBlocks.forEach(b => b._refl = true);
   const allBlocks = [...blocks, ...reflBlocks];
+  
+  // Store for PDF reuse
+  window._lastBlocks = allBlocks.map(b => ({...b}));
   let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:520px;padding:28px 24px;font-size:10px;">`;
   allBlocks.forEach((b, i) => measH += `<div data-block="${i}">${b.html}</div>`);
   measH += `</div>`;
@@ -634,67 +639,104 @@ function scaleA4Pages() {
 }
 
 function generatePDF(){
-  const pages = window._lastPages;
-  if (!pages || !pages.length) return;
-
-  // Use exact same dimensions as preview: 520px wide, aspect ratio 210:297
-  // A4 in mm: 210x297. With 25mm margins: content = 160x247mm
-  // Preview uses: 520px wide, 28px top/bottom padding, 24px left/right padding
-  // Content area: 520-48=472px wide, page height: 520*297/210 = 735px
-  const pageW = 520;
-  const pageH = Math.round(520 * 297 / 210); // 735px
+  // Get the same blocks from preview
+  // We need to rebuild them - trigger a preview render first to ensure blocks are fresh
+  renderPreview();
   
-  // Scale factor: 210mm / 520px (to fill A4 width)
-  // We use CSS transform to scale the pixel-based pages to A4
+  const pages = window._lastPages;
+  const blocks = window._lastBlocks; // all block objects with html
+  if (!blocks || !blocks.length) return;
 
-  let html=`<!DOCTYPE html><html><head><meta charset="utf-8">
+  const pageW = 520;
+  const pageH = Math.round(520 * 297 / 210);
+  const pad = 56; // 28px top + 28px bottom
+
+  // Open window and measure blocks there
+  const w = window.open('','_blank','width=800,height=1000');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35}</style>
+</head><body><div id="m" style="width:${pageW}px;padding:28px 24px;position:absolute;visibility:hidden"></div></body></html>`);
+  w.document.close();
+
+  // Wait for font to load in the new window
+  setTimeout(() => {
+    const mDiv = w.document.getElementById('m');
+    
+    // Render all blocks for measurement
+    let mH = '';
+    blocks.forEach((b, i) => mH += '<div data-b="' + i + '">' + b.html + '</div>');
+    mDiv.innerHTML = mH;
+    void mDiv.offsetHeight;
+
+    // Measure each block
+    blocks.forEach((b, i) => {
+      const el = mDiv.querySelector('[data-b="' + i + '"]');
+      b.h = el ? el.offsetHeight : 0;
+    });
+
+    const usableH = pageH - pad;
+
+    // Distribute with same algorithm as preview
+    function distribute(blockList) {
+      const pgs = [];
+      let cur = [], curH = 0;
+      for (let bi = 0; bi < blockList.length; bi++) {
+        const block = blockList[bi];
+        if (block.type === 'rubric-header') {
+          const next = blockList[bi + 1];
+          const needed = block.h + (next ? next.h : 0);
+          if (curH + needed > usableH && cur.length > 0) { pgs.push(cur); cur = []; curH = 0; }
+          cur.push(block.html); curH += block.h; continue;
+        }
+        if (curH + block.h > usableH && cur.length > 0) { pgs.push(cur); cur = []; curH = 0; }
+        cur.push(block.html); curH += block.h;
+      }
+      if (cur.length > 0) pgs.push(cur);
+      return pgs;
+    }
+
+    // Split blocks into main and refl (find where reflBlocks start)
+    const reflStart = blocks.findIndex(b => b._refl);
+    const mainB = reflStart >= 0 ? blocks.slice(0, reflStart) : blocks;
+    const reflB = reflStart >= 0 ? blocks.slice(reflStart) : [];
+
+    const mainPages = distribute(mainB);
+    const reflPages = distribute(reflB);
+    const allPages = [...mainPages, ...reflPages];
+
+    // Build final HTML
+    let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 @page{size:A4;margin:0}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
 body{font-family:'DM Sans',sans-serif;margin:0;padding:0}
-.page-wrap{
-  width:210mm;height:297mm;
-  overflow:hidden;
-  page-break-after:always;
-  position:relative;
-}
-.page-wrap:last-child{page-break-after:auto}
-.page-inner{
-  width:${pageW}px;
-  height:${pageH}px;
-  padding:28px 24px;
-  font-size:10px;
-  color:#1A1A1A;
-  line-height:1.35;
-  transform-origin:top left;
-  transform:scale(calc(210mm / ${pageW}px));
-}
+.pw{width:210mm;height:297mm;overflow:hidden;page-break-after:always;position:relative}
+.pw:last-child{page-break-after:auto}
+.pi{width:${pageW}px;height:${pageH}px;padding:28px 24px;font-size:10px;color:#1A1A1A;line-height:1.35;transform-origin:top left}
 @media print{.print-hint{display:none!important}}
 </style></head><body>
 <div class="print-hint" style="position:fixed;top:0;left:0;right:0;background:#FEF3C7;color:#92400E;padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;text-align:center;z-index:9999;border-bottom:1px solid #F59E0B"><strong>Tipp:</strong> Im Druckdialog «Hintergrundgrafiken» aktivieren, damit die Farben gedruckt werden.</div>`;
 
-  pages.forEach(pg => {
-    html += `<div class="page-wrap"><div class="page-inner">${pg.join('')}</div></div>`;
-  });
+    allPages.forEach(pg => {
+      html += `<div class="pw"><div class="pi">${pg.join('')}</div></div>`;
+    });
 
-  html += `<script>
-// Calculate exact scale after font loads
-document.fonts.ready.then(() => {
-  const wrap = document.querySelector('.page-wrap');
-  if (!wrap) return;
-  const wrapW = wrap.offsetWidth;
-  const scale = wrapW / ${pageW};
-  document.querySelectorAll('.page-inner').forEach(p => {
-    p.style.transform = 'scale(' + scale + ')';
-  });
+    html += `<script>
+document.fonts.ready.then(function(){
+  var pw=document.querySelector('.pw');
+  if(!pw)return;
+  var scale=pw.offsetWidth/${pageW};
+  document.querySelectorAll('.pi').forEach(function(p){p.style.transform='scale('+scale+')'});
 });
 <\/script></body></html>`;
 
-  const w = window.open('','_blank','width=800,height=1000');
-  w.document.write(html);
-  w.document.close();
-  setTimeout(() => w.print(), 1000);
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 1000);
+  }, 600);
 }
 
 render();
