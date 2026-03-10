@@ -637,28 +637,64 @@ function generatePDF(){
   const pages = window._lastPages;
   if (!pages || !pages.length) return;
 
+  // Use exact same dimensions as preview: 520px wide, aspect ratio 210:297
+  // A4 in mm: 210x297. With 25mm margins: content = 160x247mm
+  // Preview uses: 520px wide, 28px top/bottom padding, 24px left/right padding
+  // Content area: 520-48=472px wide, page height: 520*297/210 = 735px
+  const pageW = 520;
+  const pageH = Math.round(520 * 297 / 210); // 735px
+  
+  // Scale factor: 210mm / 520px (to fill A4 width)
+  // We use CSS transform to scale the pixel-based pages to A4
+
   let html=`<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 @page{size:A4;margin:0}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
-body{font-family:'DM Sans',sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35;margin:0;padding:0}
-.page{width:210mm;height:297mm;padding:25mm;overflow:hidden;page-break-after:always}
-.page:last-child{page-break-after:auto}
+body{font-family:'DM Sans',sans-serif;margin:0;padding:0}
+.page-wrap{
+  width:210mm;height:297mm;
+  overflow:hidden;
+  page-break-after:always;
+  position:relative;
+}
+.page-wrap:last-child{page-break-after:auto}
+.page-inner{
+  width:${pageW}px;
+  height:${pageH}px;
+  padding:28px 24px;
+  font-size:10px;
+  color:#1A1A1A;
+  line-height:1.35;
+  transform-origin:top left;
+  transform:scale(calc(210mm / ${pageW}px));
+}
 @media print{.print-hint{display:none!important}}
 </style></head><body>
 <div class="print-hint" style="position:fixed;top:0;left:0;right:0;background:#FEF3C7;color:#92400E;padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;text-align:center;z-index:9999;border-bottom:1px solid #F59E0B"><strong>Tipp:</strong> Im Druckdialog «Hintergrundgrafiken» aktivieren, damit die Farben gedruckt werden.</div>`;
 
   pages.forEach(pg => {
-    html += `<div class="page">${pg.join('')}</div>`;
+    html += `<div class="page-wrap"><div class="page-inner">${pg.join('')}</div></div>`;
   });
 
-  html += `</body></html>`;
+  html += `<script>
+// Calculate exact scale after font loads
+document.fonts.ready.then(() => {
+  const wrap = document.querySelector('.page-wrap');
+  if (!wrap) return;
+  const wrapW = wrap.offsetWidth;
+  const scale = wrapW / ${pageW};
+  document.querySelectorAll('.page-inner').forEach(p => {
+    p.style.transform = 'scale(' + scale + ')';
+  });
+});
+<\/script></body></html>`;
 
   const w = window.open('','_blank','width=800,height=1000');
   w.document.write(html);
   w.document.close();
-  setTimeout(() => w.print(), 800);
+  setTimeout(() => w.print(), 1000);
 }
 
 render();
