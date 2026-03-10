@@ -575,6 +575,9 @@ function renderPreview(){
 
   const mainPages = distributeBlocks(blocks);
   const reflPages = distributeBlocks(reflBlocks);
+  
+  // Store for PDF reuse
+  window._lastPages = [...mainPages, ...reflPages];
 
   // Step 4: Render pages
   let out = `<div class="a4-wrapper">`;
@@ -631,183 +634,31 @@ function scaleA4Pages() {
 }
 
 function generatePDF(){
-  // Re-use the same blocks from the last renderPreview
-  // We need to rebuild them here for the PDF context
-  const active=getActiveComps(),title=document.getElementById('docTitle').value||'CHALLENGE-BEURTEILUNG',subtitle=document.getElementById('docSubtitle').value||'',school=document.getElementById('schoolName').value,assignment=document.getElementById('assignmentText').value;
-  const flds = getActiveFields();
+  const pages = window._lastPages;
+  if (!pages || !pages.length) return;
 
-  // Build blocks identical to preview
-  const blocks = [];
-  
-  // Title
-  let titleH = `<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #222"><div style="font-size:16px;font-weight:800;letter-spacing:-0.2px;color:#222">${esc(title)}</div>`;
-  if(subtitle||school) titleH+=`<div style="font-size:9px;color:#888;margin-top:2px">${esc(subtitle)}${school?' · '+esc(school):''}</div>`;
-  titleH+=`</div>`;
-  blocks.push(titleH);
-
-  // Fields
-  if(flds.length>0){
-    let fH='';
-    for(let r=0;r<flds.length;r+=2){
-      const isLast=r+2>=flds.length, hasPair=!!flds[r+1];
-      fH+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:${isLast?'10':'5'}px;font-size:9px;color:#444">`;
-      fH+=`<div style="display:flex;align-items:baseline;gap:4px;padding-right:5px"><span style="font-weight:600;white-space:nowrap">${esc(flds[r].label)}:</span><span style="flex:1;border-bottom:0.75px solid #888;min-width:20px"></span></div>`;
-      if(hasPair) fH+=`<div style="display:flex;align-items:baseline;gap:4px;padding-left:5px"><span style="font-weight:600;white-space:nowrap">${esc(flds[r+1].label)}:</span><span style="flex:1;border-bottom:0.75px solid #888;min-width:20px"></span></div>`;
-      fH+=`</div>`;
-    }
-    blocks.push(fH);
-  }
-
-  // Assignment
-  if(assignment) blocks.push(`<div style="background:#F7F7F5;border:1px solid #E5E3E0;border-radius:3px;padding:6px 10px;margin-bottom:8px;font-size:8px;color:#555"><strong style="font-size:9px;color:#222">Auftrag:</strong><br>${esc(assignment)}</div>`);
-
-  // Rubric blocks (row by row)
-  active.forEach(comp=>{
-    const cc=dc(comp.color),cl=dcLight(comp.colorLight);
-    const subs=comp.subs.filter(s=>(selections[s.id]||[]).length>0);
-    if(!subs.length) return;
-    subs.forEach(sub=>{
-      const si=selections[sub.id]||[];
-      const hdrCols=`<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-      const hdrRow=`<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${cc}">${sub.label}</td>`+
-        ['−−','−','+','++'].map(l=>`<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:1px solid ${cc}22;padding:2px">${l}</td>`).join('')+`</tr>`;
-      blocks.push({html:`<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:0">${hdrCols}${hdrRow}</table>`,type:'rubric-header'});
-      si.forEach((idx,pos)=>{
-        let rH=`<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:${pos===si.length-1?'5px':'0'}"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-        rH+=`<tr><td style="font-size:7.5px;padding:3px 8px;color:#444;border:1px solid #E5E3E0">${getIndText(sub.id,idx,sub)}</td>`;
-        for(let c=0;c<4;c++) rH+=`<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
-        rH+=`</tr></table>`;
-        blocks.push({html:rH,type:'rubric-row'});
-      });
-    });
-  });
-
-  // Legend
-  blocks.push(`<div style="font-size:7px;color:#AAA;font-style:italic;margin:3px 0 8px 0">−− nicht genügend · − genügend · + gut · ++ sehr gut</div>`);
-
-  // Gesamtbeurteilung
-  let gH=`<div style="border:2px solid #222;border-radius:3px;padding:8px 10px;margin-top:4px"><div style="font-weight:800;font-size:9px;color:#222;margin-bottom:5px">GESAMTBEURTEILUNG</div><table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-  gH+=`<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;background:#F7F7F5"></td>`;
-  ['−−','−','+','++'].forEach(l=>gH+=`<td style="text-align:center;border:1px solid #E5E3E0;padding:2px;background:#F7F7F5;font-weight:700;font-size:9px">${l}</td>`);
-  gH+=`</tr>`;
-  active.forEach(comp=>{
-    gH+=`<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;font-weight:600;color:${dc(comp.color)};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
-    for(let c=0;c<4;c++) gH+=`<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:10px;height:10px;border:2px solid ${dc(comp.color)};border-radius:1px"></span></td>`;
-    gH+=`</tr>`;
-  });
-  gH+=`<tr><td style="border:1px solid #CCC;padding:3px 6px;font-weight:800;background:#F7F7F5;font-size:9px">GESAMT</td>`;
-  for(let c=0;c<4;c++) gH+=`<td style="text-align:center;border:1px solid #CCC;padding:2px;background:#F7F7F5"><span style="display:inline-block;width:12px;height:12px;border:2.5px solid #222;border-radius:1px"></span></td>`;
-  gH+=`</tr></table></div>`;
-  blocks.push(gH);
-
-  // Reflexion blocks
-  const reflBlocks=[];
-  let rTitle=`<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #222"><div style="font-size:16px;font-weight:800;letter-spacing:-0.2px;color:#222">REFLEXION & BEGRÜNDUNG</div><div style="font-size:9px;color:#888;margin-top:2px">${esc(title)}</div></div>`;
-  reflBlocks.push(rTitle);
-  reflBlocks.push(`<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:10px;font-size:9px;color:#444"><span style="font-weight:600">Name:</span><span style="flex:1;border-bottom:0.75px solid #888;max-width:200px"></span></div>`);
-  reflBlocks.push(`<div style="font-size:7.5px;color:#AAA;font-style:italic;margin-bottom:10px">Begründe pro Kompetenz in 1–2 Sätzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!</div>`);
-  active.forEach(comp=>{
-    if(!comp.subs.some(s=>(selections[s.id]||[]).length>0)) return;
-    const gespBorder=colorMode?dc(comp.color):'#555';
-    let rB=`<div style="border:1px solid #E5E3E0;border-left:3px solid ${dc(comp.color)};border-radius:3px;padding:8px 10px;margin-bottom:8px"><div style="font-weight:700;font-size:9px;color:${dc(comp.color)};margin-bottom:4px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7.5px;font-style:italic">(${comp.shortLabel})</span></div>`;
-    for(let i=0;i<3;i++) rB+=`<div style="border-bottom:0.75px solid #DDD;height:16px;margin:2px 0"></div>`;
-    rB+=`</div>`;
-    reflBlocks.push(rB);
-  });
-  const gespBg=colorMode?'#FFFBEB':'#F5F5F3',gespBorder=colorMode?'#F59E0B':'#999',gespLine=colorMode?'#FDE68A':'#DDD';
-  let gespH=`<div style="background:${gespBg};border:1px solid ${gespBorder};border-radius:3px;padding:8px 10px;margin-top:10px"><div style="font-weight:700;font-size:9px;color:#222;margin-bottom:3px">2-MINUTEN-GESPRÄCH (Lehrperson)</div><div style="font-size:7.5px;color:#AAA;font-style:italic;margin-bottom:6px">Kurze Notizen / Abweichungen zur Selbsteinschätzung:</div>`;
-  for(let i=0;i<4;i++) gespH+=`<div style="border-bottom:0.75px solid ${gespLine};height:16px;margin:2px 0"></div>`;
-  gespH+=`</div>`;
-  reflBlocks.push(gespH);
-
-  // Normalize blocks to {html, type} objects
-  const normBlock = b => typeof b === 'string' ? {html:b,type:'fixed'} : b;
-  const allB = blocks.map(normBlock);
-  const allR = reflBlocks.map(normBlock);
-
-  // Measure blocks using a hidden container in a new window (same font!)
-  const w = window.open('','_blank','width=800,height=1000');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35}</style></head><body><div id="measure" style="width:160mm;padding:25mm;visibility:hidden;position:absolute"></div></body></html>`);
-  w.document.close();
-
-  // Wait for font to load, then measure and build pages
-  setTimeout(()=>{
-    const measureDiv = w.document.getElementById('measure');
-    const allBlocks = [...allB, ...allR];
-    
-    // Render blocks for measurement
-    let mH='';
-    allBlocks.forEach((b,i)=> mH+=`<div data-b="${i}">${b.html}</div>`);
-    measureDiv.innerHTML=mH;
-
-    // Force reflow
-    void measureDiv.offsetHeight;
-
-    // Measure
-    allBlocks.forEach((b,i)=>{
-      const el=measureDiv.querySelector(`[data-b="${i}"]`);
-      b.h=el?el.offsetHeight:0;
-    });
-
-    // A4 usable height: 297mm - 50mm (25mm top + 25mm bottom) = 247mm
-    // At 160mm content width, we need to convert. Use px measurement.
-    // Measure the container height for reference
-    const pageUsableH = 247 * (measureDiv.offsetWidth - 2*25*3.78) / 160; // approximate
-    // Better: just use mm directly. 247mm in px at screen DPI.
-    // Actually, let's measure properly: create a 247mm tall div
-    const ruler = w.document.createElement('div');
-    ruler.style.cssText='width:1px;height:247mm;position:absolute;visibility:hidden';
-    w.document.body.appendChild(ruler);
-    const usableH = ruler.offsetHeight;
-    ruler.remove();
-
-    // Distribute blocks
-    function distribute(blockList){
-      const pages=[];
-      let cur=[],curH=0;
-      for(let bi=0;bi<blockList.length;bi++){
-        const block=blockList[bi];
-        if(block.type==='rubric-header'){
-          const next=blockList[bi+1];
-          const needed=block.h+(next?next.h:0);
-          if(curH+needed>usableH&&cur.length>0){pages.push(cur);cur=[];curH=0;}
-          cur.push(block.html);curH+=block.h;continue;
-        }
-        if(curH+block.h>usableH&&cur.length>0){pages.push(cur);cur=[];curH=0;}
-        cur.push(block.html);curH+=block.h;
-      }
-      if(cur.length>0) pages.push(cur);
-      return pages;
-    }
-
-    const mainPages=distribute(allB);
-    const reflPages=distribute(allR);
-    const allPages=[...mainPages,...reflPages];
-
-    // Build final HTML with fixed pages
-    let html=`<!DOCTYPE html><html><head><meta charset="utf-8">
+  let html=`<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 @page{size:A4;margin:0}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
 body{font-family:'DM Sans',sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35;margin:0;padding:0}
-.page{width:210mm;height:297mm;padding:25mm;position:relative;overflow:hidden;page-break-after:always}
+.page{width:210mm;height:297mm;padding:25mm;overflow:hidden;page-break-after:always}
 .page:last-child{page-break-after:auto}
 @media print{.print-hint{display:none!important}}
 </style></head><body>
 <div class="print-hint" style="position:fixed;top:0;left:0;right:0;background:#FEF3C7;color:#92400E;padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;text-align:center;z-index:9999;border-bottom:1px solid #F59E0B"><strong>Tipp:</strong> Im Druckdialog «Hintergrundgrafiken» aktivieren, damit die Farben gedruckt werden.</div>`;
 
-    allPages.forEach(pg=>{
-      html+=`<div class="page">${pg.join('')}</div>`;
-    });
+  pages.forEach(pg => {
+    html += `<div class="page">${pg.join('')}</div>`;
+  });
 
-    html+=`</body></html>`;
+  html += `</body></html>`;
 
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-    setTimeout(()=>w.print(),800);
-  }, 500);
+  const w = window.open('','_blank','width=800,height=1000');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 800);
 }
 
 render();
