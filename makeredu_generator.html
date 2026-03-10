@@ -80,6 +80,7 @@
     box-shadow: 0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04);
     position: relative;
     overflow: hidden;
+    margin: 0 auto;
   }
   .a4-inner {
     width: 520px;
@@ -131,6 +132,10 @@
         <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border-lt)">
           <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Felder auf dem Blatt</div>
           <div id="fields-list"></div>
+        </div>
+        <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border-lt);display:flex;align-items:center;gap:8px">
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Druckmodus</div>
+          <button id="colorToggle" onclick="toggleColorMode()" style="font-size:11px;padding:4px 10px;border-radius:100px;border:1px solid var(--border);background:none;cursor:pointer;font-family:var(--font);font-weight:600;color:#444;transition:all 0.15s">🎨 Farbig</button>
         </div>
       </div>
     </div>
@@ -185,6 +190,29 @@ const DATA = {
 
 
 let selections={}, openComps={}, openSubs={}, customTexts={}, customAdded={}, editingInd=null;
+let colorMode = true; // true = farbig, false = schwarzweiss
+
+function toggleColorMode() {
+  colorMode = !colorMode;
+  const btn = document.getElementById('colorToggle');
+  btn.textContent = colorMode ? '🎨 Farbig' : '🖨 Schwarzweiss';
+  btn.style.background = colorMode ? 'none' : '#F3F3F1';
+  render();
+}
+
+// Returns the display color: original if colorMode, grey if not
+function dc(color) {
+  if (colorMode) return color;
+  return '#555';
+}
+function dcBg(color) {
+  if (colorMode) return color;
+  return '#E8E8E6';
+}
+function dcLight(colorLight) {
+  if (colorMode) return colorLight;
+  return '#F5F5F3';
+}
 
 // Document fields
 let docFields = [
@@ -262,6 +290,7 @@ function saveToUrl(){
     ct: customTexts,
     ca: customAdded,
     df: docFields,
+    cm: colorMode,
     t: document.getElementById('docTitle').value,
     st: document.getElementById('docSubtitle').value,
     sn: document.getElementById('schoolName').value,
@@ -289,6 +318,7 @@ function loadFromUrl(){
     if (state.ct) customTexts = state.ct;
     if (state.ca) customAdded = state.ca;
     if (state.df) docFields = state.df;
+    if (state.cm !== undefined) { colorMode = state.cm; const btn=document.getElementById('colorToggle'); btn.textContent=colorMode?'🎨 Farbig':'🖨 Schwarzweiss'; btn.style.background=colorMode?'none':'#F3F3F1'; }
     if (state.t) document.getElementById('docTitle').value = state.t;
     if (state.st) document.getElementById('docSubtitle').value = state.st;
     if (state.sn) document.getElementById('schoolName').value = state.sn;
@@ -382,14 +412,16 @@ function renderPreview(){
       if (!subs.length) return;
       subs.forEach(sub => {
         const si = selections[sub.id] || [];
+        const cc = dc(comp.color);
+        const cl = dcLight(comp.colorLight);
         // Table header row (sub label + column headers)
         const hdrCols = `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-        const hdrRow = `<tr><td style="background:${comp.color};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${comp.color}">${sub.label}</td>` +
-          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${comp.color};background:${comp.colorLight};border:1px solid ${comp.color}22;padding:2px">${l}</td>`).join('') + `</tr>`;
-        const hdrHtml = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:0">${hdrCols}${hdrRow}</table>`;
+        const hdrRow = `<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${cc}">${sub.label}</td>` +
+          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:1px solid ${cc}22;padding:2px">${l}</td>`).join('') + `</tr>`;
+        const hdrHtml = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:0">${hdrCols}${hdrRow}</table>`;
         // Continuation header (shown when table breaks across pages)
-        const contHdrHtml = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:0">${hdrCols}<tr><td style="background:${comp.color};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${comp.color}">${sub.label} <span style="font-weight:400;font-size:7px">(Forts.)</span></td>` +
-          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${comp.color};background:${comp.colorLight};border:1px solid ${comp.color}22;padding:2px">${l}</td>`).join('') + `</tr></table>`;
+        const contHdrHtml = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:0">${hdrCols}<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${cc}">${sub.label} <span style="font-weight:400;font-size:7px">(Forts.)</span></td>` +
+          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:1px solid ${cc}22;padding:2px">${l}</td>`).join('') + `</tr></table>`;
 
         blocks.push({ html: hdrHtml, type: 'rubric-header', contHtml: contHdrHtml });
 
@@ -409,13 +441,14 @@ function renderPreview(){
     // Gesamtbeurteilung block
     let gH = `<div style="border:2px solid #222;border-radius:3px;padding:8px 10px;margin-top:4px">`;
     gH += `<div style="font-weight:800;font-size:9px;color:#222;margin-bottom:5px">GESAMTBEURTEILUNG</div>`;
-    gH += `<table style="width:100%;border-collapse:collapse;font-size:8px">`;
+    gH += `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px">`;
+    gH += `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
     gH += `<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;background:#F7F7F5"></td>`;
     ['−−','−','+','++'].forEach(l => gH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px;background:#F7F7F5;font-weight:700;font-size:9px">${l}</td>`);
     gH += `</tr>`;
     active.forEach(comp => {
-      gH += `<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;font-weight:600;color:${comp.color};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
-      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:10px;height:10px;border:2px solid ${comp.color};border-radius:1px"></span></td>`;
+      gH += `<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;font-weight:600;color:${dc(comp.color)};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
+      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:10px;height:10px;border:2px solid ${dc(comp.color)};border-radius:1px"></span></td>`;
       gH += `</tr>`;
     });
     gH += `<tr><td style="border:1px solid #CCC;padding:3px 6px;font-weight:800;background:#F7F7F5;font-size:9px">GESAMT</td>`;
@@ -437,16 +470,19 @@ function renderPreview(){
     reflBlocks.push({ html: `<div style="font-size:7.5px;color:#AAA;font-style:italic;margin-bottom:10px">Begründe pro Kompetenz in 1–2 Sätzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!</div>`, type: 'fixed' });
     active.forEach(comp => {
       if (!comp.subs.some(s => (selections[s.id] || []).length > 0)) return;
-      let rB = `<div style="border:1px solid #E5E3E0;border-left:3px solid ${comp.color};border-radius:3px;padding:8px 10px;margin-bottom:8px">`;
-      rB += `<div style="font-weight:700;font-size:9px;color:${comp.color};margin-bottom:4px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7.5px;font-style:italic">(${comp.shortLabel})</span></div>`;
+      let rB = `<div style="border:1px solid #E5E3E0;border-left:3px solid ${dc(comp.color)};border-radius:3px;padding:8px 10px;margin-bottom:8px">`;
+      rB += `<div style="font-weight:700;font-size:9px;color:${dc(comp.color)};margin-bottom:4px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7.5px;font-style:italic">(${comp.shortLabel})</span></div>`;
       for (let i = 0; i < 3; i++) rB += `<div style="border-bottom:0.75px solid #DDD;height:16px;margin:2px 0"></div>`;
       rB += `</div>`;
       reflBlocks.push({ html: rB, type: 'fixed' });
     });
-    let gespH = `<div style="background:#FFFBEB;border:1px solid #F59E0B;border-radius:3px;padding:8px 10px;margin-top:10px">`;
+    const gespBg = colorMode ? '#FFFBEB' : '#F5F5F3';
+    const gespBorder = colorMode ? '#F59E0B' : '#999';
+    const gespLine = colorMode ? '#FDE68A' : '#DDD';
+    let gespH = `<div style="background:${gespBg};border:1px solid ${gespBorder};border-radius:3px;padding:8px 10px;margin-top:10px">`;
     gespH += `<div style="font-weight:700;font-size:9px;color:#222;margin-bottom:3px">2-MINUTEN-GESPRÄCH (Lehrperson)</div>`;
     gespH += `<div style="font-size:7.5px;color:#AAA;font-style:italic;margin-bottom:6px">Kurze Notizen / Abweichungen zur Selbsteinschätzung:</div>`;
-    for (let i = 0; i < 4; i++) gespH += `<div style="border-bottom:0.75px solid #FDE68A;height:16px;margin:2px 0"></div>`;
+    for (let i = 0; i < 4; i++) gespH += `<div style="border-bottom:0.75px solid ${gespLine};height:16px;margin:2px 0"></div>`;
     gespH += `</div>`;
     reflBlocks.push({ html: gespH, type: 'fixed' });
   }
@@ -490,9 +526,23 @@ function renderPreview(){
     let currentH = 0;
     let lastRubricHeader = null;
 
-    blockList.forEach(block => {
+    for (let bi = 0; bi < blockList.length; bi++) {
+      const block = blockList[bi];
+
       if (block.type === 'rubric-header') {
         lastRubricHeader = block;
+        // Check if header + at least one next row fits on current page
+        const nextBlock = blockList[bi + 1];
+        const neededH = block.h + (nextBlock ? nextBlock.h : 0);
+        if (currentH + neededH > usableH && currentPage.length > 0) {
+          // Header alone would be orphaned — push to next page
+          pages.push(currentPage);
+          currentPage = [];
+          currentH = 0;
+        }
+        currentPage.push(block.html);
+        currentH += block.h;
+        continue;
       }
 
       if (currentH + block.h > usableH && currentPage.length > 0) {
@@ -508,7 +558,7 @@ function renderPreview(){
       }
       currentPage.push(block.html);
       currentH += block.h;
-    });
+    }
     if (currentPage.length > 0) pages.push(currentPage);
     return pages;
   }
@@ -531,29 +581,42 @@ function renderPreview(){
 }
 
 function scaleA4Pages() {
-  document.querySelectorAll('.a4-frame').forEach(frame => {
+  const frames = document.querySelectorAll('.a4-frame');
+  if (!frames.length) return;
+  
+  // First pass: find the minimum scale needed across all pages
+  let minScale = Infinity;
+  const measurements = [];
+  
+  frames.forEach(frame => {
     const inner = frame.querySelector('.a4-inner');
-    if (!inner) return;
-    // Reset to measure natural size
-    inner.style.transform = 'scale(1)';
+    if (!inner) { measurements.push(null); return; }
+    inner.style.transform = 'none';
     inner.style.width = '520px';
-    
-    // Wait for reflow
     void inner.offsetHeight;
     
     const frameW = frame.clientWidth;
     const frameH = frame.clientHeight;
     const contentH = inner.scrollHeight;
+    const widthScale = frameW / 520;
     
-    // Scale to fit width
-    let scale = frameW / 520;
-    
-    // If content still too tall after width-scale, shrink further
+    let scale = widthScale;
     if (contentH * scale > frameH) {
       scale = frameH / contentH;
     }
+    scale = Math.min(scale, widthScale);
     
-    inner.style.transform = `scale(${scale})`;
+    if (scale < minScale) minScale = scale;
+    measurements.push({ inner, frameW, scale: widthScale });
+  });
+  
+  // Second pass: apply uniform scale to all pages
+  measurements.forEach(m => {
+    if (!m) return;
+    const scaledW = 520 * minScale;
+    const offsetX = (m.frameW - scaledW) / 2;
+    m.inner.style.transform = `translateX(${offsetX}px) scale(${minScale})`;
+    m.inner.style.transformOrigin = 'top left';
   });
 }
 
@@ -561,11 +624,11 @@ function generatePDF(){
   const active=getActiveComps(),title=document.getElementById('docTitle').value||'CHALLENGE-BEURTEILUNG',subtitle=document.getElementById('docSubtitle').value||'',school=document.getElementById('schoolName').value,assignment=document.getElementById('assignmentText').value;
   const flds = getActiveFields();
   let rubric='';
-  active.forEach(comp=>{const subs=comp.subs.filter(s=>(selections[s.id]||[]).length>0);if(!subs.length)return;subs.forEach(sub=>{const si=selections[sub.id]||[],inds=si.map(i=>getIndText(sub.id,i,sub)),box=`<div style="width:13px;height:13px;border:1.5px solid #999;display:inline-block;border-radius:1px"></div>`;rubric+=`<table class="rubric"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup><tr><td style="background:${comp.color};color:white;font-weight:700;font-size:9px;padding:5px 10px">${sub.label}</td><td style="background:${comp.color}15;color:${comp.color};font-weight:800;font-size:13px;text-align:center;padding:4px">−−</td><td style="background:${comp.color}08;color:${comp.color};font-weight:800;font-size:13px;text-align:center;padding:4px">−</td><td style="background:${comp.color}15;color:${comp.color};font-weight:800;font-size:13px;text-align:center;padding:4px">+</td><td style="background:${comp.color}08;color:${comp.color};font-weight:800;font-size:13px;text-align:center;padding:4px">++</td></tr>`;inds.forEach(ind=>{rubric+=`<tr><td style="font-size:8.5px;padding:4px 10px;color:#333">${ind}</td>`;for(let c=0;c<4;c++)rubric+=`<td style="text-align:center;padding:3px">${box}</td>`;rubric+=`</tr>`;});rubric+=`</table><div style="height:6px"></div>`;});});
+  active.forEach(comp=>{const cc=dc(comp.color),cl=dcLight(comp.colorLight);const subs=comp.subs.filter(s=>(selections[s.id]||[]).length>0);if(!subs.length)return;subs.forEach(sub=>{const si=selections[sub.id]||[],inds=si.map(i=>getIndText(sub.id,i,sub)),box=`<div style="width:13px;height:13px;border:1.5px solid #999;display:inline-block;border-radius:1px"></div>`;rubric+=`<table class="rubric"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup><tr><td style="background:${cc};color:white;font-weight:700;font-size:9px;padding:5px 10px">${sub.label}</td><td style="background:${cc}15;color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">−−</td><td style="background:${cc}08;color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">−</td><td style="background:${cc}15;color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">+</td><td style="background:${cc}08;color:${cc};font-weight:800;font-size:13px;text-align:center;padding:4px">++</td></tr>`;inds.forEach(ind=>{rubric+=`<tr><td style="font-size:8.5px;padding:4px 10px;color:#333">${ind}</td>`;for(let c=0;c<4;c++)rubric+=`<td style="text-align:center;padding:3px">${box}</td>`;rubric+=`</tr>`;});rubric+=`</table><div style="height:6px"></div>`;});});
   let refl='';
-  active.forEach(comp=>{if(!comp.subs.some(s=>(selections[s.id]||[]).length>0))return;refl+=`<div class="refl-box" style="border-left:4px solid ${comp.color}"><div class="refl-title" style="color:${comp.color}">${comp.label} <span style="font-weight:400;color:#999;font-size:9px;font-style:italic">(${comp.shortLabel})</span></div>`;for(let i=0;i<3;i++)refl+=`<div class="refl-line"></div>`;refl+=`</div>`;});
+  active.forEach(comp=>{if(!comp.subs.some(s=>(selections[s.id]||[]).length>0))return;refl+=`<div class="refl-box" style="border-left:4px solid ${dc(comp.color)}"><div class="refl-title" style="color:${dc(comp.color)}">${comp.label} <span style="font-weight:400;color:#999;font-size:9px;font-style:italic">(${comp.shortLabel})</span></div>`;for(let i=0;i<3;i++)refl+=`<div class="refl-line"></div>`;refl+=`</div>`;});
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-@page{size:A4;margin:25mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35}
+@page{size:A4;margin:25mm}*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}body{font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35}
 .title{margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #222}.title h1{font-size:20px;font-weight:800;letter-spacing:-0.3px;color:#222}.title p{font-size:10px;color:#888;margin-top:2px}
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:6px;font-size:10px}.fields>div{display:flex;align-items:baseline;gap:5px}.fields>div:first-child{padding-right:5mm}.fields>div:last-child{padding-left:5mm}.fields label{font-weight:600;white-space:nowrap}.fields .line{flex:1;border-bottom:0.75px solid #888;min-width:40px;height:16px}
 .assignment{background:#F5F5F3;border:1px solid #E0E0DE;border-radius:4px;padding:10px 14px;margin-bottom:14px;font-size:9px;color:#444}.assignment strong{font-size:10px;color:#1A1A1A;display:block;margin-bottom:3px}
@@ -573,7 +636,7 @@ table.rubric{width:100%;border-collapse:collapse;margin-bottom:2px;page-break-in
 .legend{font-size:7.5px;color:#999;font-style:italic;margin:4px 0 12px 0}
 .gesamt-box{border:2px solid #222;border-radius:4px;padding:12px 14px;margin-top:8px;page-break-inside:avoid}.gesamt-box h3{font-size:12px;font-weight:800;color:#222;margin-bottom:8px}table.gesamt{width:100%;border-collapse:collapse}table.gesamt td{border:1px solid #D0D0CE;padding:6px 10px}
 .page-break{page-break-before:always}.refl-box{border:1px solid #E0E0DE;border-radius:4px;padding:10px 14px;margin-bottom:10px;page-break-inside:avoid}.refl-title{font-weight:700;font-size:11px;margin-bottom:4px}.refl-line{border-bottom:1px solid #E0E0DE;height:22px;margin:3px 0}
-.gespraech{background:#FFFBEB;border:1.5px solid #F59E0B;border-radius:4px;padding:14px 16px;margin-top:16px;page-break-inside:avoid}.gespraech h3{font-weight:700;font-size:12px;margin-bottom:4px}.gespraech .hint{font-size:9px;color:#888;font-style:italic;margin-bottom:8px}.gespraech .line{border-bottom:1px solid #FDE68A;height:20px;margin:4px 0}
+.gespraech{background:${colorMode?'#FFFBEB':'#F5F5F3'};border:1.5px solid ${colorMode?'#F59E0B':'#999'};border-radius:4px;padding:14px 16px;margin-top:16px;page-break-inside:avoid}.gespraech h3{font-weight:700;font-size:12px;margin-bottom:4px}.gespraech .hint{font-size:9px;color:#888;font-style:italic;margin-bottom:8px}.gespraech .line{border-bottom:1px solid ${colorMode?'#FDE68A':'#DDD'};height:20px;margin:4px 0}
 </style></head><body>
 <div class="title"><h1>${title}</h1>${(subtitle||school)?`<p>${subtitle}${school?' · '+school:''}</p>`:''}</div>
 ${(()=>{let fh='';for(let r=0;r<flds.length;r+=2){fh+=`<div class="fields"${r+2>=flds.length?' style="margin-bottom:14px"':''}>`;fh+=`<div><label>${flds[r].label}:</label><div class="line"></div></div>`;if(flds[r+1])fh+=`<div><label>${flds[r+1].label}:</label><div class="line"></div></div>`;fh+=`</div>`;}return fh;})()}
@@ -582,7 +645,7 @@ ${rubric}
 <div class="legend">−− nicht genügend · − genügend · + gut · ++ sehr gut</div>
 <div class="gesamt-box"><h3>GESAMTBEURTEILUNG</h3><table class="gesamt"><colgroup><col style="width:40%"><col style="width:15%"><col style="width:15%"><col style="width:15%"><col style="width:15%"></colgroup>
 <tr style="background:#F5F5F3"><td style="font-weight:700"></td><td style="text-align:center;font-weight:800;font-size:14px">−−</td><td style="text-align:center;font-weight:800;font-size:14px">−</td><td style="text-align:center;font-weight:800;font-size:14px">+</td><td style="text-align:center;font-weight:800;font-size:14px">++</td></tr>
-${active.map(comp=>`<tr><td style="font-weight:600;color:${comp.color};font-size:10px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:8px">(${comp.shortLabel})</span></td>${[0,1,2,3].map(()=>`<td style="text-align:center"><div style="width:16px;height:16px;border:2px solid ${comp.color};display:inline-block;border-radius:2px"></div></td>`).join('')}</tr>`).join('')}
+${active.map(comp=>`<tr><td style="font-weight:600;color:${dc(comp.color)};font-size:10px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:8px">(${comp.shortLabel})</span></td>${[0,1,2,3].map(()=>`<td style="text-align:center"><div style="width:16px;height:16px;border:2px solid ${dc(comp.color)};display:inline-block;border-radius:2px"></div></td>`).join('')}</tr>`).join('')}
 <tr style="background:#F5F5F3;border-top:2.5px solid #222"><td style="font-weight:800;font-size:11px;color:#222">GESAMT</td>${[0,1,2,3].map(()=>`<td style="text-align:center"><div style="width:18px;height:18px;border:2.5px solid #222;display:inline-block;border-radius:2px"></div></td>`).join('')}</tr>
 </table></div>
 <div class="page-break"></div>
@@ -592,7 +655,15 @@ ${active.map(comp=>`<tr><td style="font-weight:600;color:${comp.color};font-size
 ${refl}
 <div class="gespraech"><h3>2-MINUTEN-GESPRÄCH (Lehrperson)</h3><div class="hint">Kurze Notizen / Abweichungen zur Selbsteinschätzung:</div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div>
 </body></html>`;
-  const w=window.open('','_blank','width=800,height=1000');w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);
+  const w=window.open('','_blank','width=800,height=1000');w.document.write(html);w.document.close();
+  // Add a hint banner that disappears on print
+  const hint=w.document.createElement('div');
+  hint.style.cssText='position:fixed;top:0;left:0;right:0;background:#FEF3C7;color:#92400E;padding:8px 16px;font-size:13px;font-family:Arial,sans-serif;text-align:center;z-index:9999;border-bottom:1px solid #F59E0B';
+  hint.innerHTML='<strong>Tipp:</strong> Im Druckdialog «Hintergrundgrafiken» aktivieren, damit die Farben gedruckt werden.';
+  w.document.body.prepend(hint);
+  const style=w.document.createElement('style');style.textContent='@media print{.print-hint{display:none!important}}';w.document.head.appendChild(style);
+  hint.className='print-hint';
+  setTimeout(()=>w.print(),600);
 }
 
 render();
