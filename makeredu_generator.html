@@ -298,13 +298,49 @@ function saveToUrl(){
   };
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
   const url = window.location.origin + window.location.pathname + '?c=' + encoded;
-  navigator.clipboard.writeText(url).then(() => {
-    const btn = event.target.closest('button');
-    const orig = btn.textContent;
+  showLinkModal(url);
+}
+
+function showLinkModal(url) {
+  // Remove existing modal
+  const existing = document.getElementById('link-modal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'link-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:white;border-radius:8px;padding:20px;max-width:500px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.2);font-family:var(--font)';
+
+  modal.innerHTML = `
+    <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:4px">Link gespeichert</div>
+    <div style="font-size:11px;color:#888;margin-bottom:12px">Dieser Link enthält deine komplette Konfiguration. Bookmarke ihn oder teile ihn mit Kollegen.</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <input id="link-input" type="text" value="${url}" readonly style="flex:1;font-size:11px;padding:8px 10px;border:1px solid #E2E0DC;border-radius:6px;font-family:monospace;color:#555;outline:none;background:#F8F8F6" onclick="this.select()">
+      <button id="copy-btn" onclick="copyLink()" style="padding:8px 16px;font-size:12px;font-weight:700;background:#222;color:white;border:none;border-radius:6px;cursor:pointer;font-family:var(--font);white-space:nowrap">Kopieren</button>
+    </div>
+    <button onclick="document.getElementById('link-modal').remove()" style="font-size:11px;color:#888;background:none;border:none;cursor:pointer;font-family:var(--font)">Schliessen</button>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  document.getElementById('link-input').select();
+}
+
+function copyLink() {
+  const input = document.getElementById('link-input');
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(input.value).then(() => {
     btn.textContent = '✓ Kopiert!';
-    setTimeout(() => btn.textContent = orig, 2000);
+    btn.style.background = '#0F9D58';
+    setTimeout(() => { btn.textContent = 'Kopieren'; btn.style.background = '#222'; }, 2000);
   }).catch(() => {
-    prompt('Link kopieren:', url);
+    input.select();
+    document.execCommand('copy');
+    btn.textContent = '✓ Kopiert!';
+    setTimeout(() => btn.textContent = 'Kopieren', 2000);
   });
 }
 
@@ -669,6 +705,16 @@ ${refl}
 render();
 loadFromUrl();
 window.addEventListener('resize', () => setTimeout(scaleA4Pages, 100));
+
+// Warn before closing/refreshing if there are selections
+window.addEventListener('beforeunload', e => {
+  let total = 0;
+  Object.values(selections).forEach(a => total += a.length);
+  if (total > 0) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 </script>
 </body>
 </html>
