@@ -86,6 +86,7 @@
     width: 520px;
     padding: 28px 24px;
     font-size: 10px;
+    line-height: 1.2;
     transform-origin: top left;
   }
   .a4-inner table { border-spacing: 0; }
@@ -453,16 +454,16 @@ function renderPreview(){
         const cl = dcLight(comp.colorLight);
         // Table header row (sub label + column headers)
         const hdrCols = `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-        const hdrRow = `<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${cc}">${sub.label}</td>` +
-          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:1px solid ${cc}22;padding:2px">${l}</td>`).join('') + `</tr>`;
-        const hdrHtml = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:0">${hdrCols}${hdrRow}</table>`;
+        const hdrRow = `<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:3px 8px;line-height:1.2;border:1px solid ${cc}">${sub.label}</td>` +
+          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:1px solid ${cc}22;padding:2px;line-height:1.2">${l}</td>`).join('') + `</tr>`;
+        const hdrHtml = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:0;border-spacing:0">${hdrCols}${hdrRow}</table>`;
 
         blocks.push({ html: hdrHtml, type: 'rubric-header' });
 
         si.forEach((idx, pos) => {
-          let rH = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:${pos === si.length - 1 ? '5px' : '0'}"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-          rH += `<tr><td style="font-size:7.5px;padding:3px 8px;color:#444;border:1px solid #E5E3E0">${getIndText(sub.id, idx, sub)}</td>`;
-          for (let c = 0; c < 4; c++) rH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
+          let rH = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:${pos === si.length - 1 ? '4px' : '0'};border-spacing:0"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
+          rH += `<tr><td style="font-size:7.5px;padding:3px 8px;color:#444;border:1px solid #E5E3E0;line-height:1.2">${getIndText(sub.id, idx, sub)}</td>`;
+          for (let c = 0; c < 4; c++) rH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px;line-height:1.2"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
           rH += `</tr></table>`;
           blocks.push({ html: rH, type: 'rubric-row' });
         });
@@ -528,7 +529,7 @@ function renderPreview(){
   
   // Store for PDF reuse
   window._lastBlocks = allBlocks.map(b => ({...b}));
-  let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:520px;padding:28px 24px;font-size:10px;">`;
+  let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:520px;padding:28px 24px;font-size:10px;line-height:1.2">`;
   allBlocks.forEach((b, i) => measH += `<div data-block="${i}">${b.html}</div>`);
   measH += `</div>`;
   document.getElementById('preview').innerHTML = measH;
@@ -656,7 +657,7 @@ function generatePDF(){
   const w = window.open('','_blank','width=800,height=1000');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35}table{border-spacing:0;border-collapse:collapse;margin:0;padding:0}div,p{margin:0;padding:0}</style>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;font-size:10px;color:#1A1A1A;line-height:1.2}table{border-spacing:0;border-collapse:collapse;margin:0;padding:0}div,p{margin:0;padding:0}</style>
 </head><body><div id="m" style="width:${pageW}px;padding:28px 24px;position:absolute;visibility:hidden"></div></body></html>`);
   w.document.close();
 
@@ -716,7 +717,7 @@ body{font-family:'DM Sans',sans-serif;margin:0;padding:0}
 table{border-spacing:0;border-collapse:collapse}div,p{margin:0;padding:0}
 .pw{width:210mm;height:297mm;overflow:hidden;page-break-after:always;position:relative}
 .pw:last-child{page-break-after:auto}
-.pi{width:${pageW}px;height:${pageH}px;padding:28px 24px;font-size:10px;color:#1A1A1A;line-height:1.35;transform-origin:top left}
+.pi{width:${pageW}px;height:${pageH}px;padding:28px 24px;font-size:10px;color:#1A1A1A;line-height:1.2;transform-origin:top left}
 @media print{.print-hint{display:none!important}}
 </style></head><body>
 <div class="print-hint" style="position:fixed;top:0;left:0;right:0;background:#FEF3C7;color:#92400E;padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;text-align:center;z-index:9999;border-bottom:1px solid #F59E0B"><strong>Tipp:</strong> Im Druckdialog «Hintergrundgrafiken» aktivieren, damit die Farben gedruckt werden.</div>`;
