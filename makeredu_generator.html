@@ -16,13 +16,14 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; font-size: 13px; }
 
-  .topbar { background: #2D2D2D; padding: 0 20px; display: flex; align-items: center; gap: 12px; height: 48px; flex-shrink: 0; }
+  .topbar { background: #2D2D2D; flex-shrink: 0; }
+  .topbar-inner { max-width: 1400px; width: 100%; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 12px; height: 48px; }
   .topbar-mark { width: 24px; height: 24px; background: linear-gradient(135deg, var(--purple), var(--blue)); border-radius: 5px; display: grid; place-items: center; color: white; font-weight: 800; font-size: 12px; }
   .topbar h1 { color: #FFFFFF; font-size: 13px; font-weight: 600; flex: 1; letter-spacing: -0.2px; }
   .pill { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 100px; cursor: pointer; border: 1px solid #666; background: #444; color: #EEE; transition: all 0.15s; font-family: var(--font); }
   .pill:hover { background: #555; color: #FFF; border-color: #888; }
 
-  .main { display: flex; flex: 1; overflow: hidden; }
+  .main { display: flex; flex: 1; overflow: hidden; max-width: 1400px; width: 100%; margin: 0 auto; }
   .panel-l { width: 52%; overflow-y: auto; padding: 16px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
   .panel-r { width: 48%; overflow-y: auto; padding: 16px; background: #F0EFEC; border-left: 1px solid var(--border); scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 
@@ -69,17 +70,26 @@
   .preview-empty { text-align: center; color: var(--dim); font-size: 12px; padding: 40px 20px; border: 2px dashed var(--border); border-radius: var(--r); }
 
   /* A4 Preview */
-  .a4-wrapper { display: flex; justify-content: center; }
-  .a4-page {
+  .a4-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; padding-bottom: 20px; }
+  .a4-frame {
     width: 100%; max-width: 520px;
     aspect-ratio: 210 / 297;
     background: white;
     border: 1px solid var(--border);
     border-radius: 2px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04);
-    overflow-y: auto;
-    overflow-x: hidden;
+    position: relative;
+    overflow: hidden;
+  }
+  .a4-inner {
+    width: 520px;
+    padding: 28px 24px;
     font-size: 10px;
+    transform-origin: top left;
+  }
+  .a4-page-label {
+    position: absolute; top: -18px; right: 4px;
+    font-size: 9px; color: var(--dim); font-weight: 500;
   }
 
   @media (max-width: 768px) {
@@ -87,7 +97,7 @@
     .main { flex-direction: column; overflow: visible; }
     .panel-l, .panel-r { width: 100%; overflow: visible; }
     .panel-r { border-left: none; border-top: 1px solid var(--border); }
-    .topbar { flex-wrap: wrap; height: auto; padding: 10px 16px; gap: 8px; }
+    .topbar-inner { flex-wrap: wrap; height: auto; padding: 10px 16px; gap: 8px; }
     .topbar h1 { width: 100%; }
   }
 </style>
@@ -95,12 +105,14 @@
 <body>
 
 <div class="topbar">
-  <div class="topbar-mark">M</div>
-  <h1>MakerEdu Beurteilungs-Generator</h1>
-  <div style="display:flex;gap:6px">
-    <button class="pill" onclick="applyPreset('minimal')">Minimal</button>
-    <button class="pill" onclick="applyPreset('standard')">Standard</button>
-    <button class="pill" onclick="applyPreset('full')">Alle</button>
+  <div class="topbar-inner">
+    <div class="topbar-mark">M</div>
+    <h1>MakerEdu Beurteilungs-Generator</h1>
+    <div style="display:flex;gap:6px">
+      <button class="pill" onclick="selectAll()">Alle</button>
+      <button class="pill" onclick="resetAll()">Zurücksetzen</button>
+      <button class="pill" onclick="saveToUrl()" style="border-color:#F59E0B;color:#FDE68A">💾 Link</button>
+    </div>
   </div>
 </div>
 
@@ -126,7 +138,6 @@
       <span class="toolbar-badge" id="status-badge">0 Indikatoren</span>
       <span style="color:var(--border);font-size:11px">·</span>
       <span class="toolbar-info" id="status-comps">0 Bereiche</span>
-      <button class="btn-reset" onclick="resetAll()">Zurücksetzen</button>
     </div>
     <div id="accordions"></div>
   </div>
@@ -171,7 +182,7 @@ const DATA = {
   ]}
 };
 
-const PRESETS = { minimal:{p3:[0,1],m2:[2,3],s3:[0,1],f3:[0,2]}, standard:{p1:[0,1],p3:[0,3,4],m1:[0,2],m3:[0,1],s2:[0,1],s3:[0,1],f3:[0,1,2],f2:[1,2]} };
+
 
 let selections={}, openComps={}, openSubs={}, customTexts={}, customAdded={}, editingInd=null;
 
@@ -242,8 +253,52 @@ function cancelEdit(){editingInd=null;render();}
 function saveIndEdit(subId,idx,txt){txt=txt.trim();if(!txt){cancelEdit();return;}let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===subId)sub=s;}));if(idx<sub.inds.length){if(txt===sub.inds[idx])delete customTexts[subId+'-'+idx];else customTexts[subId+'-'+idx]=txt;}else{const ai=idx-sub.inds.length;if(!customAdded[subId])customAdded[subId]=[];customAdded[subId][ai]=txt;}editingInd=null;render();}
 function addCustomInd(subId){if(!customAdded[subId])customAdded[subId]=[];customAdded[subId].push('Neuer Indikator...');let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===subId)sub=s;}));const ni=sub.inds.length+customAdded[subId].length-1;if(!selections[subId])selections[subId]=[];selections[subId].push(ni);openSubs[subId]=true;editingInd=subId+'-'+ni;render();const el=document.getElementById('edit-input-'+subId+'-'+ni);if(el){el.focus();el.select();}}
 function removeCustomInd(subId,idx){let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===subId)sub=s;}));const ai=idx-sub.inds.length;if(!customAdded[subId])return;customAdded[subId].splice(ai,1);const pfx=subId+'-';Object.keys(customTexts).forEach(k=>{if(k.startsWith(pfx)){const ki=parseInt(k.split('-').pop());if(ki===idx)delete customTexts[k];else if(ki>idx){customTexts[pfx+(ki-1)]=customTexts[k];delete customTexts[k];}}});const sl=selections[subId]||[];selections[subId]=sl.filter(i=>i!==idx).map(i=>i>idx?i-1:i);editingInd=null;render();}
-function applyPreset(key){if(key==='full'){selections={};Object.values(DATA).forEach(c=>c.subs.forEach(s=>{selections[s.id]=s.inds.map((_,i)=>i);}));}else{selections=JSON.parse(JSON.stringify(PRESETS[key]));}Object.values(DATA).forEach(c=>{openComps[c.id]=c.subs.some(s=>(selections[s.id]||[]).length>0);});render();}
+function selectAll(){selections={};Object.values(DATA).forEach(c=>c.subs.forEach(s=>{selections[s.id]=getAllInds(s).map((_,i)=>i);}));Object.values(DATA).forEach(c=>{openComps[c.id]=true;});render();}
 function resetAll(){selections={};render();}
+
+function saveToUrl(){
+  const state = {
+    sel: selections,
+    ct: customTexts,
+    ca: customAdded,
+    df: docFields,
+    t: document.getElementById('docTitle').value,
+    st: document.getElementById('docSubtitle').value,
+    sn: document.getElementById('schoolName').value,
+    at: document.getElementById('assignmentText').value
+  };
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  const url = window.location.origin + window.location.pathname + '?c=' + encoded;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = event.target.closest('button');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Kopiert!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  }).catch(() => {
+    prompt('Link kopieren:', url);
+  });
+}
+
+function loadFromUrl(){
+  const params = new URLSearchParams(window.location.search);
+  const c = params.get('c');
+  if (!c) return;
+  try {
+    const state = JSON.parse(decodeURIComponent(escape(atob(c))));
+    if (state.sel) selections = state.sel;
+    if (state.ct) customTexts = state.ct;
+    if (state.ca) customAdded = state.ca;
+    if (state.df) docFields = state.df;
+    if (state.t) document.getElementById('docTitle').value = state.t;
+    if (state.st) document.getElementById('docSubtitle').value = state.st;
+    if (state.sn) document.getElementById('schoolName').value = state.sn;
+    if (state.at) document.getElementById('assignmentText').value = state.at;
+    Object.values(DATA).forEach(c => {
+      openComps[c.id] = c.subs.some(s => (selections[s.id] || []).length > 0);
+    });
+    render();
+  } catch(e) { console.warn('URL-Parameter konnte nicht geladen werden', e); }
+}
 document.addEventListener('input',e=>{if(['docTitle','docSubtitle','schoolName','assignmentText'].includes(e.target.id))renderPreview();});
 
 function renderAccordions(){
@@ -287,75 +342,219 @@ function renderPreview(){
   const active=getActiveComps(),title=document.getElementById('docTitle').value||'CHALLENGE-BEURTEILUNG',subtitle=document.getElementById('docSubtitle').value||'',school=document.getElementById('schoolName').value,assignment=document.getElementById('assignmentText').value;
   let total=0;Object.values(selections).forEach(a=>total+=a.length);
 
-  let h=`<div class="a4-wrapper"><div class="a4-page" style="padding:28px 24px">`;
+  // Build all content blocks as individual elements
+  const blocks = [];
 
-  // Title
-  h+=`<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #222">`;
-  h+=`<div style="font-size:16px;font-weight:800;letter-spacing:-0.2px;color:#222">${esc(title)}</div>`;
-  if(subtitle || school) h+=`<div style="font-size:9px;color:#888;margin-top:2px">${esc(subtitle)}${school?' · '+esc(school):''}</div>`;
-  h+=`</div>`;
+  // Title block
+  let titleH = `<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #222">`;
+  titleH += `<div style="font-size:16px;font-weight:800;letter-spacing:-0.2px;color:#222">${esc(title)}</div>`;
+  if(subtitle || school) titleH += `<div style="font-size:9px;color:#888;margin-top:2px">${esc(subtitle)}${school?' · '+esc(school):''}</div>`;
+  titleH += `</div>`;
+  blocks.push({ html: titleH, type: 'fixed' });
 
-  // Fields
+  // Fields block
   const af = getActiveFields();
-  for (let r = 0; r < af.length; r += 2) {
-    const isLast = r + 2 >= af.length;
-    const hasPair = !!af[r + 1];
-    h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:${isLast ? '10' : '5'}px;font-size:9px;color:#444">`;
-    h += `<div style="display:flex;align-items:baseline;gap:4px;padding-right:5px"><span style="font-weight:600;white-space:nowrap">${esc(af[r].label)}:</span><span style="flex:1;border-bottom:1.5px solid #333;min-width:20px"></span></div>`;
-    if (hasPair) {
-      h += `<div style="display:flex;align-items:baseline;gap:4px;padding-left:5px"><span style="font-weight:600;white-space:nowrap">${esc(af[r + 1].label)}:</span><span style="flex:1;border-bottom:1.5px solid #333;min-width:20px"></span></div>`;
+  if (af.length > 0) {
+    let fH = '';
+    for (let r = 0; r < af.length; r += 2) {
+      const isLast = r + 2 >= af.length;
+      const hasPair = !!af[r + 1];
+      fH += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:${isLast ? '10' : '5'}px;font-size:9px;color:#444">`;
+      fH += `<div style="display:flex;align-items:baseline;gap:4px;padding-right:5px"><span style="font-weight:600;white-space:nowrap">${esc(af[r].label)}:</span><span style="flex:1;border-bottom:0.75px solid #888;min-width:20px"></span></div>`;
+      if (hasPair) fH += `<div style="display:flex;align-items:baseline;gap:4px;padding-left:5px"><span style="font-weight:600;white-space:nowrap">${esc(af[r + 1].label)}:</span><span style="flex:1;border-bottom:0.75px solid #888;min-width:20px"></span></div>`;
+      fH += `</div>`;
     }
-    h += `</div>`;
+    blocks.push({ html: fH, type: 'fixed' });
   }
 
-  // Assignment
-  if(assignment) h+=`<div style="background:#F7F7F5;border:1px solid #E5E3E0;border-radius:3px;padding:6px 10px;margin-bottom:8px;font-size:8px;color:#555"><strong style="font-size:9px;color:#222">Auftrag:</strong><br>${esc(assignment)}</div>`;
+  // Assignment block
+  if (assignment) {
+    blocks.push({ html: `<div style="background:#F7F7F5;border:1px solid #E5E3E0;border-radius:3px;padding:6px 10px;margin-bottom:8px;font-size:8px;color:#555"><strong style="font-size:9px;color:#222">Auftrag:</strong><br>${esc(assignment)}</div>`, type: 'fixed' });
+  }
 
-  if(total===0){
-    h+=`<div style="text-align:center;color:#BBB;font-size:11px;padding:50px 20px;border:2px dashed #DDD;border-radius:4px">Wähle Kompetenzen und Indikatoren aus</div>`;
+  if (total === 0) {
+    blocks.push({ html: `<div style="text-align:center;color:#BBB;font-size:11px;padding:50px 20px;border:2px dashed #DDD;border-radius:4px">Wähle Kompetenzen und Indikatoren aus</div>`, type: 'fixed' });
   } else {
-    // Rubric tables
-    active.forEach(comp=>{
-      const subs=comp.subs.filter(s=>(selections[s.id]||[]).length>0);
-      if(!subs.length)return;
-      subs.forEach(sub=>{
-        const si=selections[sub.id]||[];
-        h+=`<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:5px">`;
-        h+=`<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-        h+=`<tr><td style="background:${comp.color};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${comp.color}">${sub.label}</td>`;
-        ['−−','−','+','++'].forEach(l=>h+=`<td style="text-align:center;font-size:10px;font-weight:700;color:${comp.color};background:${comp.colorLight};border:1px solid ${comp.color}22;padding:2px">${l}</td>`);
-        h+=`</tr>`;
-        si.forEach(i=>{
-          h+=`<tr><td style="font-size:7.5px;padding:3px 8px;color:#444;border:1px solid #E5E3E0">${getIndText(sub.id,i,sub)}</td>`;
-          for(let c=0;c<4;c++) h+=`<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
-          h+=`</tr>`;
+    // Rubric: each sub-header and each indicator row is a separate block
+    // We tag them so the distributor can repeat headers after page breaks
+    active.forEach(comp => {
+      const subs = comp.subs.filter(s => (selections[s.id] || []).length > 0);
+      if (!subs.length) return;
+      subs.forEach(sub => {
+        const si = selections[sub.id] || [];
+        // Table header row (sub label + column headers)
+        const hdrCols = `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
+        const hdrRow = `<tr><td style="background:${comp.color};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${comp.color}">${sub.label}</td>` +
+          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${comp.color};background:${comp.colorLight};border:1px solid ${comp.color}22;padding:2px">${l}</td>`).join('') + `</tr>`;
+        const hdrHtml = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:0">${hdrCols}${hdrRow}</table>`;
+        // Continuation header (shown when table breaks across pages)
+        const contHdrHtml = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:0">${hdrCols}<tr><td style="background:${comp.color};color:white;font-weight:700;font-size:8px;padding:3px 8px;border:1px solid ${comp.color}">${sub.label} <span style="font-weight:400;font-size:7px">(Forts.)</span></td>` +
+          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${comp.color};background:${comp.colorLight};border:1px solid ${comp.color}22;padding:2px">${l}</td>`).join('') + `</tr></table>`;
+
+        blocks.push({ html: hdrHtml, type: 'rubric-header', contHtml: contHdrHtml });
+
+        si.forEach((idx, pos) => {
+          let rH = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:${pos === si.length - 1 ? '5px' : '0'}"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
+          rH += `<tr><td style="font-size:7.5px;padding:3px 8px;color:#444;border:1px solid #E5E3E0">${getIndText(sub.id, idx, sub)}</td>`;
+          for (let c = 0; c < 4; c++) rH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
+          rH += `</tr></table>`;
+          blocks.push({ html: rH, type: 'rubric-row', contHtml: contHdrHtml });
         });
-        h+=`</table>`;
       });
     });
 
-    // Legend
-    h+=`<div style="font-size:7px;color:#AAA;font-style:italic;margin:3px 0 8px 0">−− nicht genügend · − genügend · + gut · ++ sehr gut</div>`;
+    // Legend block
+    blocks.push({ html: `<div style="font-size:7px;color:#AAA;font-style:italic;margin:3px 0 8px 0">−− nicht genügend · − genügend · + gut · ++ sehr gut</div>`, type: 'fixed' });
 
-    // Gesamtbeurteilung
-    h+=`<div style="border:2px solid #222;border-radius:3px;padding:8px 10px;margin-top:4px">`;
-    h+=`<div style="font-weight:800;font-size:9px;color:#222;margin-bottom:5px">GESAMTBEURTEILUNG</div>`;
-    h+=`<table style="width:100%;border-collapse:collapse;font-size:8px">`;
-    h+=`<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;background:#F7F7F5"></td>`;
-    ['−−','−','+','++'].forEach(l=>h+=`<td style="text-align:center;border:1px solid #E5E3E0;padding:2px;background:#F7F7F5;font-weight:700;font-size:9px">${l}</td>`);
-    h+=`</tr>`;
-    active.forEach(comp=>{
-      h+=`<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;font-weight:600;color:${comp.color};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
-      for(let c=0;c<4;c++) h+=`<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:10px;height:10px;border:2px solid ${comp.color};border-radius:1px"></span></td>`;
-      h+=`</tr>`;
+    // Gesamtbeurteilung block
+    let gH = `<div style="border:2px solid #222;border-radius:3px;padding:8px 10px;margin-top:4px">`;
+    gH += `<div style="font-weight:800;font-size:9px;color:#222;margin-bottom:5px">GESAMTBEURTEILUNG</div>`;
+    gH += `<table style="width:100%;border-collapse:collapse;font-size:8px">`;
+    gH += `<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;background:#F7F7F5"></td>`;
+    ['−−','−','+','++'].forEach(l => gH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px;background:#F7F7F5;font-weight:700;font-size:9px">${l}</td>`);
+    gH += `</tr>`;
+    active.forEach(comp => {
+      gH += `<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;font-weight:600;color:${comp.color};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
+      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:10px;height:10px;border:2px solid ${comp.color};border-radius:1px"></span></td>`;
+      gH += `</tr>`;
     });
-    h+=`<tr><td style="border:1px solid #CCC;padding:3px 6px;font-weight:800;background:#F7F7F5;font-size:9px">GESAMT</td>`;
-    for(let c=0;c<4;c++) h+=`<td style="text-align:center;border:1px solid #CCC;padding:2px;background:#F7F7F5"><span style="display:inline-block;width:12px;height:12px;border:2.5px solid #222;border-radius:1px"></span></td>`;
-    h+=`</tr></table></div>`;
+    gH += `<tr><td style="border:1px solid #CCC;padding:3px 6px;font-weight:800;background:#F7F7F5;font-size:9px">GESAMT</td>`;
+    for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:1px solid #CCC;padding:2px;background:#F7F7F5"><span style="display:inline-block;width:12px;height:12px;border:2.5px solid #222;border-radius:1px"></span></td>`;
+    gH += `</tr></table></div>`;
+    blocks.push({ html: gH, type: 'fixed' });
   }
 
-  h+=`</div></div>`;
-  document.getElementById('preview').innerHTML=h;
+  // Reflexion blocks
+  const reflBlocks = [];
+  if (total > 0) {
+    // Refl title
+    let rTitle = `<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #222">`;
+    rTitle += `<div style="font-size:16px;font-weight:800;letter-spacing:-0.2px;color:#222">REFLEXION & BEGRÜNDUNG</div>`;
+    rTitle += `<div style="font-size:9px;color:#888;margin-top:2px">${esc(title)}</div>`;
+    rTitle += `</div>`;
+    reflBlocks.push({ html: rTitle, type: 'fixed' });
+    reflBlocks.push({ html: `<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:10px;font-size:9px;color:#444"><span style="font-weight:600">Name:</span><span style="flex:1;border-bottom:0.75px solid #888;max-width:200px"></span></div>`, type: 'fixed' });
+    reflBlocks.push({ html: `<div style="font-size:7.5px;color:#AAA;font-style:italic;margin-bottom:10px">Begründe pro Kompetenz in 1–2 Sätzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!</div>`, type: 'fixed' });
+    active.forEach(comp => {
+      if (!comp.subs.some(s => (selections[s.id] || []).length > 0)) return;
+      let rB = `<div style="border:1px solid #E5E3E0;border-left:3px solid ${comp.color};border-radius:3px;padding:8px 10px;margin-bottom:8px">`;
+      rB += `<div style="font-weight:700;font-size:9px;color:${comp.color};margin-bottom:4px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7.5px;font-style:italic">(${comp.shortLabel})</span></div>`;
+      for (let i = 0; i < 3; i++) rB += `<div style="border-bottom:0.75px solid #DDD;height:16px;margin:2px 0"></div>`;
+      rB += `</div>`;
+      reflBlocks.push({ html: rB, type: 'fixed' });
+    });
+    let gespH = `<div style="background:#FFFBEB;border:1px solid #F59E0B;border-radius:3px;padding:8px 10px;margin-top:10px">`;
+    gespH += `<div style="font-weight:700;font-size:9px;color:#222;margin-bottom:3px">2-MINUTEN-GESPRÄCH (Lehrperson)</div>`;
+    gespH += `<div style="font-size:7.5px;color:#AAA;font-style:italic;margin-bottom:6px">Kurze Notizen / Abweichungen zur Selbsteinschätzung:</div>`;
+    for (let i = 0; i < 4; i++) gespH += `<div style="border-bottom:0.75px solid #FDE68A;height:16px;margin:2px 0"></div>`;
+    gespH += `</div>`;
+    reflBlocks.push({ html: gespH, type: 'fixed' });
+  }
+
+  // Step 1: Render all blocks into a hidden measuring container
+  const allBlocks = [...blocks, ...reflBlocks];
+  let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:520px;padding:28px 24px;font-size:10px;">`;
+  allBlocks.forEach((b, i) => measH += `<div data-block="${i}">${b.html}</div>`);
+  // Also measure continuation headers
+  const contHeaders = {};
+  allBlocks.forEach((b, i) => {
+    if (b.contHtml && !contHeaders[b.contHtml]) {
+      contHeaders[b.contHtml] = `cont-${i}`;
+      measH += `<div data-block="cont-${i}">${b.contHtml}</div>`;
+    }
+  });
+  measH += `</div>`;
+  document.getElementById('preview').innerHTML = measH;
+
+  // Step 2: Measure each block height
+  const pageH = 520 * 297 / 210;
+  const padding = 56;
+  const usableH = pageH - padding;
+
+  const measureEl = document.getElementById('a4-measure');
+  allBlocks.forEach((b, i) => {
+    const el = measureEl.querySelector(`[data-block="${i}"]`);
+    b.h = el ? el.offsetHeight : 0;
+  });
+  // Measure cont headers
+  const contHeaderHeights = {};
+  Object.entries(contHeaders).forEach(([html, id]) => {
+    const el = measureEl.querySelector(`[data-block="${id}"]`);
+    contHeaderHeights[html] = el ? el.offsetHeight : 0;
+  });
+
+  // Step 3: Distribute blocks into pages with header repeat
+  function distributeBlocks(blockList) {
+    const pages = [];
+    let currentPage = [];
+    let currentH = 0;
+    let lastRubricHeader = null;
+
+    blockList.forEach(block => {
+      if (block.type === 'rubric-header') {
+        lastRubricHeader = block;
+      }
+
+      if (currentH + block.h > usableH && currentPage.length > 0) {
+        pages.push(currentPage);
+        currentPage = [];
+        currentH = 0;
+        // If we're breaking inside a rubric, repeat the header
+        if (block.type === 'rubric-row' && lastRubricHeader && block.contHtml) {
+          const contH = contHeaderHeights[block.contHtml] || 0;
+          currentPage.push(block.contHtml);
+          currentH += contH;
+        }
+      }
+      currentPage.push(block.html);
+      currentH += block.h;
+    });
+    if (currentPage.length > 0) pages.push(currentPage);
+    return pages;
+  }
+
+  const mainPages = distributeBlocks(blocks);
+  const reflPages = distributeBlocks(reflBlocks);
+
+  // Step 4: Render pages
+  let out = `<div class="a4-wrapper">`;
+  const allPages = [...mainPages, ...reflPages];
+  allPages.forEach((pg, i) => {
+    out += `<div class="a4-frame"><div class="a4-page-label">Seite ${i + 1}</div><div class="a4-inner">`;
+    out += pg.join('');
+    out += `</div></div>`;
+  });
+  out += `</div>`;
+  document.getElementById('preview').innerHTML = out;
+
+  setTimeout(scaleA4Pages, 30);
+}
+
+function scaleA4Pages() {
+  document.querySelectorAll('.a4-frame').forEach(frame => {
+    const inner = frame.querySelector('.a4-inner');
+    if (!inner) return;
+    // Reset to measure natural size
+    inner.style.transform = 'scale(1)';
+    inner.style.width = '520px';
+    
+    // Wait for reflow
+    void inner.offsetHeight;
+    
+    const frameW = frame.clientWidth;
+    const frameH = frame.clientHeight;
+    const contentH = inner.scrollHeight;
+    
+    // Scale to fit width
+    let scale = frameW / 520;
+    
+    // If content still too tall after width-scale, shrink further
+    if (contentH * scale > frameH) {
+      scale = frameH / contentH;
+    }
+    
+    inner.style.transform = `scale(${scale})`;
+  });
 }
 
 function generatePDF(){
@@ -368,7 +567,7 @@ function generatePDF(){
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 @page{size:A4;margin:25mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#1A1A1A;line-height:1.35}
 .title{margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #222}.title h1{font-size:20px;font-weight:800;letter-spacing:-0.3px;color:#222}.title p{font-size:10px;color:#888;margin-top:2px}
-.fields{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:6px;font-size:10px}.fields>div{display:flex;align-items:baseline;gap:5px}.fields>div:first-child{padding-right:5mm}.fields>div:last-child{padding-left:5mm}.fields label{font-weight:600;white-space:nowrap}.fields .line{flex:1;border-bottom:1.5px solid #333;min-width:40px;height:16px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:6px;font-size:10px}.fields>div{display:flex;align-items:baseline;gap:5px}.fields>div:first-child{padding-right:5mm}.fields>div:last-child{padding-left:5mm}.fields label{font-weight:600;white-space:nowrap}.fields .line{flex:1;border-bottom:0.75px solid #888;min-width:40px;height:16px}
 .assignment{background:#F5F5F3;border:1px solid #E0E0DE;border-radius:4px;padding:10px 14px;margin-bottom:14px;font-size:9px;color:#444}.assignment strong{font-size:10px;color:#1A1A1A;display:block;margin-bottom:3px}
 table.rubric{width:100%;border-collapse:collapse;margin-bottom:2px;page-break-inside:avoid}table.rubric td{border:1px solid #D0D0CE}
 .legend{font-size:7.5px;color:#999;font-style:italic;margin:4px 0 12px 0}
@@ -387,7 +586,7 @@ ${active.map(comp=>`<tr><td style="font-weight:600;color:${comp.color};font-size
 <tr style="background:#F5F5F3;border-top:2.5px solid #222"><td style="font-weight:800;font-size:11px;color:#222">GESAMT</td>${[0,1,2,3].map(()=>`<td style="text-align:center"><div style="width:18px;height:18px;border:2.5px solid #222;display:inline-block;border-radius:2px"></div></td>`).join('')}</tr>
 </table></div>
 <div class="page-break"></div>
-<div class="title"><h1>REFLEXION & BEGRÜNDUNG</h1><p>Seite 2 · ${title}</p></div>
+<div class="title"><h1>REFLEXION & BEGRÜNDUNG</h1><p>${title}</p></div>
 <div class="fields" style="margin-bottom:12px"><div><label>Name:</label><div class="line"></div></div></div>
 <p style="font-size:9px;color:#888;font-style:italic;margin-bottom:14px">Begründe pro Kompetenz in 1–2 Sätzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!</p>
 ${refl}
@@ -397,6 +596,8 @@ ${refl}
 }
 
 render();
+loadFromUrl();
+window.addEventListener('resize', () => setTimeout(scaleA4Pages, 100));
 </script>
 </body>
 </html>
