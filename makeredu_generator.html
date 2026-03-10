@@ -454,16 +454,16 @@ function renderPreview(){
         const cl = dcLight(comp.colorLight);
         // Table header row (sub label + column headers)
         const hdrCols = `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-        const hdrRow = `<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:3px 8px;line-height:1.2;border:1px solid ${cc}">${sub.label}</td>` +
-          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:1px solid ${cc}22;padding:2px;line-height:1.2">${l}</td>`).join('') + `</tr>`;
+        const hdrRow = `<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:2px 8px;line-height:1.15;vertical-align:middle;border:1px solid ${cc}">${sub.label}</td>` +
+          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:1px solid ${cc}22;padding:1px;line-height:1.15;vertical-align:middle">${l}</td>`).join('') + `</tr>`;
         const hdrHtml = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:0;border-spacing:0">${hdrCols}${hdrRow}</table>`;
 
         blocks.push({ html: hdrHtml, type: 'rubric-header' });
 
         si.forEach((idx, pos) => {
           let rH = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-top:-1px;margin-bottom:${pos === si.length - 1 ? '4px' : '0'};border-spacing:0"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-          rH += `<tr><td style="font-size:7.5px;padding:3px 8px;color:#444;border:1px solid #E5E3E0;line-height:1.2">${getIndText(sub.id, idx, sub)}</td>`;
-          for (let c = 0; c < 4; c++) rH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px;line-height:1.2"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
+          rH += `<tr><td style="font-size:7.5px;padding:2px 8px;color:#444;border:1px solid #E5E3E0;line-height:1.15;vertical-align:middle">${getIndText(sub.id, idx, sub)}</td>`;
+          for (let c = 0; c < 4; c++) rH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:1px;line-height:1.15;vertical-align:middle"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
           rH += `</tr></table>`;
           blocks.push({ html: rH, type: 'rubric-row' });
         });
