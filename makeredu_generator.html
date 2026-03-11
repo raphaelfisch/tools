@@ -437,7 +437,7 @@ function renderPreview(){
 
   // Assignment block
   if (assignment) {
-    blocks.push({ html: `<div style="background:#F7F7F5;border:1px solid #E5E3E0;border-radius:3px;padding:6px 10px;margin-bottom:8px;font-size:8px;color:#555"><strong style="font-size:9px;color:#222">Auftrag:</strong><br>${esc(assignment)}</div>`, type: 'fixed' });
+    blocks.push({ html: `<div style="background:#F7F7F5;border:0.5px solid #D0D0CE;border-radius:3px;padding:6px 10px;margin-bottom:8px;font-size:8px;color:#555"><strong style="font-size:9px;color:#222">Auftrag:</strong><br>${esc(assignment)}</div>`, type: 'fixed' });
   }
 
   if (total === 0) {
@@ -461,9 +461,9 @@ function renderPreview(){
         blocks.push({ html: hdrHtml, type: 'rubric-header' });
 
         si.forEach((idx, pos) => {
-          let rH = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-top:-1px;margin-bottom:${pos === si.length - 1 ? '4px' : '0'};border-spacing:0"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-          rH += `<tr><td style="font-size:7.5px;padding:2px 8px;color:#444;border:1px solid #E5E3E0;line-height:1.15;vertical-align:middle">${getIndText(sub.id, idx, sub)}</td>`;
-          for (let c = 0; c < 4; c++) rH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:1px;line-height:1.15;vertical-align:middle"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
+          let rH = `<table style="width:100%;border-collapse:collapse;font-size:8px;margin-top:-0.5px;margin-bottom:${pos === si.length - 1 ? '4px' : '0'};border-spacing:0"><colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
+          rH += `<tr><td style="font-size:7.5px;padding:2px 8px;color:#444;border:0.5px solid #D0D0CE;line-height:1.15;vertical-align:middle">${getIndText(sub.id, idx, sub)}</td>`;
+          for (let c = 0; c < 4; c++) rH += `<td style="text-align:center;border:0.5px solid #D0D0CE;padding:1px;line-height:1.15;vertical-align:middle"><span style="display:inline-block;width:9px;height:9px;border:1.5px solid #AAA;border-radius:1px"></span></td>`;
           rH += `</tr></table>`;
           blocks.push({ html: rH, type: 'rubric-row' });
         });
@@ -478,16 +478,16 @@ function renderPreview(){
     gH += `<div style="font-weight:800;font-size:9px;color:#222;margin-bottom:5px">GESAMTBEURTEILUNG</div>`;
     gH += `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px">`;
     gH += `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-    gH += `<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;background:#F7F7F5"></td>`;
-    ['−−','−','+','++'].forEach(l => gH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px;background:#F7F7F5;font-weight:700;font-size:9px">${l}</td>`);
+    gH += `<tr><td style="border:0.5px solid #D0D0CE;padding:3px 6px;background:#F7F7F5"></td>`;
+    ['−−','−','+','++'].forEach(l => gH += `<td style="text-align:center;border:0.5px solid #D0D0CE;padding:2px;background:#F7F7F5;font-weight:700;font-size:9px">${l}</td>`);
     gH += `</tr>`;
     active.forEach(comp => {
-      gH += `<tr><td style="border:1px solid #E5E3E0;padding:3px 6px;font-weight:600;color:${dc(comp.color)};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
-      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:1px solid #E5E3E0;padding:2px"><span style="display:inline-block;width:10px;height:10px;border:2px solid ${dc(comp.color)};border-radius:1px"></span></td>`;
+      gH += `<tr><td style="border:0.5px solid #D0D0CE;padding:3px 6px;font-weight:600;color:${dc(comp.color)};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
+      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:0.5px solid #D0D0CE;padding:2px"><span style="display:inline-block;width:10px;height:10px;border:2px solid ${dc(comp.color)};border-radius:1px"></span></td>`;
       gH += `</tr>`;
     });
-    gH += `<tr><td style="border:1px solid #CCC;padding:3px 6px;font-weight:800;background:#F7F7F5;font-size:9px">GESAMT</td>`;
-    for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:1px solid #CCC;padding:2px;background:#F7F7F5"><span style="display:inline-block;width:12px;height:12px;border:2.5px solid #222;border-radius:1px"></span></td>`;
+    gH += `<tr><td style="border:0.5px solid #D0D0CE;padding:3px 6px;font-weight:800;background:#F7F7F5;font-size:9px">GESAMT</td>`;
+    for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:0.5px solid #D0D0CE;padding:2px;background:#F7F7F5"><span style="display:inline-block;width:12px;height:12px;border:2.5px solid #222;border-radius:1px"></span></td>`;
     gH += `</tr></table></div>`;
     blocks.push({ html: gH, type: 'fixed' });
   }
@@ -505,7 +505,7 @@ function renderPreview(){
     reflBlocks.push({ html: `<div style="font-size:7.5px;color:#AAA;font-style:italic;margin-bottom:10px">Begründe pro Kompetenz in 1–2 Sätzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!</div>`, type: 'fixed' });
     active.forEach(comp => {
       if (!comp.subs.some(s => (selections[s.id] || []).length > 0)) return;
-      let rB = `<div style="border:1px solid #E5E3E0;border-left:3px solid ${dc(comp.color)};border-radius:3px;padding:8px 10px;margin-bottom:8px">`;
+      let rB = `<div style="border:0.5px solid #D0D0CE;border-left:3px solid ${dc(comp.color)};border-radius:3px;padding:8px 10px;margin-bottom:8px">`;
       rB += `<div style="font-weight:700;font-size:9px;color:${dc(comp.color)};margin-bottom:4px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7.5px;font-style:italic">(${comp.shortLabel})</span></div>`;
       for (let i = 0; i < 3; i++) rB += `<div style="border-bottom:0.75px solid #DDD;height:16px;margin:2px 0"></div>`;
       rB += `</div>`;
