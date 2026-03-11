@@ -5,106 +5,76 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MakerEdu Beurteilungs-Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
-    --bg: #F8F8F6; --surface: #FFF; --border: #E2E0DC; --border-lt: #EDEBE8;
-    --text: #1A1A1A; --muted: #8A8780; --dim: #B0ADA8;
-    --purple: #7C3AED; --orange: #E8590C; --green: #0F9D58; --blue: #1A73E8;
-    --purple-bg: #F5F0FF; --orange-bg: #FFF4ED; --green-bg: #EDFCF2; --blue-bg: #EEF4FF;
-    --r: 6px; --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --bg:#F8F8F6;--surface:#FFF;--border:#E2E0DC;--border-lt:#EDEBE8;
+    --text:#1A1A1A;--muted:#8A8780;--dim:#B0ADA8;
+    --purple:#7C3AED;--orange:#E8590C;--green:#0F9D58;--blue:#1A73E8;
+    --r:6px;--font:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; font-size: 13px; }
-
-  .topbar { background: #2D2D2D; flex-shrink: 0; }
-  .topbar-inner { max-width: 1400px; width: 100%; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 12px; height: 48px; }
-  .topbar-mark { width: 24px; height: 24px; background: linear-gradient(135deg, var(--purple), var(--blue)); border-radius: 5px; display: grid; place-items: center; color: white; font-weight: 800; font-size: 12px; }
-  .topbar h1 { color: #FFFFFF; font-size: 13px; font-weight: 600; flex: 1; letter-spacing: -0.2px; }
-  .pill { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 100px; cursor: pointer; border: 1px solid #666; background: #444; color: #EEE; transition: all 0.15s; font-family: var(--font); }
-  .pill:hover { background: #555; color: #FFF; border-color: #888; }
-
-  .main { display: flex; flex: 1; overflow: hidden; max-width: 1400px; width: 100%; margin: 0 auto; }
-  .panel-l { width: 52%; overflow-y: auto; padding: 16px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-  .panel-r { width: 48%; overflow-y: auto; padding: 16px; background: #F0EFEC; border-left: 1px solid var(--border); scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-
-  .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-lt); }
-  .toolbar-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 100px; background: var(--border-lt); color: var(--muted); }
-  .toolbar-info { font-size: 11px; color: var(--muted); }
-
-  .settings { background: var(--surface); border: 1px solid var(--border-lt); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; }
-  .settings-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
-  .settings-toggle:hover { color: var(--text); }
-  .settings-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 6px; }
-  .settings-body input, .settings-body textarea { padding: 6px 10px; font-size: 12px; border: 1px solid var(--border-lt); border-radius: var(--r); outline: none; font-family: var(--font); color: var(--text); transition: border 0.15s; }
-  .settings-body input:focus, .settings-body textarea:focus { border-color: var(--muted); }
-  .settings-body textarea { resize: vertical; }
-
-  .comp-accordion { background: var(--surface); border: 1px solid var(--border-lt); border-radius: var(--r); margin-bottom: 8px; overflow: hidden; transition: border-color 0.15s; }
-  .comp-header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; transition: background 0.1s; }
-  .comp-header:hover { background: var(--bg); }
-  .comp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .comp-label { flex: 1; }
-  .comp-label strong { font-size: 12px; font-weight: 700; display: block; letter-spacing: -0.1px; }
-  .comp-label small { font-size: 10px; color: var(--muted); font-weight: 500; }
-  .comp-count { font-size: 10px; padding: 1px 7px; border-radius: 100px; font-weight: 700; min-width: 22px; text-align: center; }
-  .comp-body { padding: 4px 12px 10px; }
-  .chevron { transition: transform 0.2s; display: inline-block; font-size: 10px; color: var(--dim); }
-  .chevron.open { transform: rotate(180deg); }
-
-  .sub-header { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: var(--r); cursor: pointer; transition: background 0.1s; }
-  .sub-header:hover { background: var(--bg); }
-  .sub-label { font-weight: 600; font-size: 12px; flex: 1; }
-  .sub-count { font-size: 10px; color: var(--dim); font-weight: 500; }
-  .sub-indicators { padding-left: 30px; padding-top: 2px; padding-bottom: 4px; }
-  .ind-label { display: flex; gap: 6px; align-items: flex-start; padding: 2px 0; font-size: 11.5px; color: #444; cursor: pointer; line-height: 1.45; }
-  .ind-label input { margin-top: 2px; width: 14px; height: 14px; flex-shrink: 0; }
-
-  .right-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .right-header span { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
-  .btn-pdf { padding: 6px 14px; font-size: 12px; font-weight: 700; background: var(--text); color: white; border: none; border-radius: var(--r); cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: var(--font); transition: opacity 0.15s; }
-  .btn-pdf:hover { opacity: 0.85; }
-  .btn-pdf:disabled { opacity: 0.3; cursor: not-allowed; }
-  .btn-pdf svg { width: 13px; height: 13px; }
-  .preview-empty { text-align: center; color: var(--dim); font-size: 12px; padding: 40px 20px; border: 2px dashed var(--border); border-radius: var(--r); }
-
-  /* A4 Preview */
-  .a4-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; padding-bottom: 20px; }
-  .a4-frame {
-    width: 100%; max-width: 520px;
-    aspect-ratio: 210 / 297;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04);
-    position: relative;
-    overflow: hidden;
-    margin: 0 auto;
-  }
-  .a4-inner {
-    width: 210mm;
-    padding: 25mm 25mm 20mm 25mm;
-    font-size: 2.8mm;
-    line-height: 1.2;
-    transform-origin: top left;
-  }
-  .a4-inner table { border-spacing: 0; }
-  .a4-page-label {
-    position: absolute; top: -18px; right: 4px;
-    font-size: 9px; color: var(--dim); font-weight: 500;
-  }
-
-  @media (max-width: 768px) {
-    body { height: auto; }
-    .main { flex-direction: column; overflow: visible; }
-    .panel-l, .panel-r { width: 100%; overflow: visible; }
-    .panel-r { border-left: none; border-top: 1px solid var(--border); }
-    .topbar-inner { flex-wrap: wrap; height: auto; padding: 10px 16px; gap: 8px; }
-    .topbar h1 { width: 100%; }
-  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;font-size:13px;}
+  .topbar{background:#2D2D2D;flex-shrink:0;}
+  .topbar-inner{max-width:1400px;width:100%;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:12px;height:48px;}
+  .topbar-mark{width:24px;height:24px;background:linear-gradient(135deg,#7C3AED,#1A73E8);border-radius:5px;display:grid;place-items:center;color:white;font-weight:800;font-size:12px;}
+  .topbar h1{color:#FFF;font-size:13px;font-weight:600;flex:1;}
+  .pill{padding:4px 10px;font-size:11px;font-weight:600;border-radius:100px;cursor:pointer;border:1px solid #666;background:#444;color:#EEE;transition:all 0.15s;font-family:var(--font);}
+  .pill:hover{background:#555;color:#FFF;border-color:#888;}
+  .main{display:flex;flex:1;overflow:hidden;max-width:1400px;width:100%;margin:0 auto;}
+  .panel-l{width:52%;overflow-y:auto;padding:16px;scrollbar-width:thin;}
+  .panel-r{width:48%;overflow-y:auto;padding:16px;background:#F0EFEC;border-left:1px solid var(--border);scrollbar-width:thin;}
+  .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border-lt);}
+  .toolbar-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:var(--border-lt);color:var(--muted);}
+  .settings{background:var(--surface);border:1px solid var(--border-lt);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
+  .settings-toggle{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+  .settings-toggle:hover{color:var(--text);}
+  .settings-body{padding:0 12px 12px;display:flex;flex-direction:column;gap:6px;}
+  .settings-body input,.settings-body textarea{padding:6px 10px;font-size:12px;border:1px solid var(--border-lt);border-radius:var(--r);outline:none;font-family:var(--font);color:var(--text);}
+  .settings-body textarea{resize:vertical;}
+  .comp-accordion{background:var(--surface);border:1px solid var(--border-lt);border-radius:var(--r);margin-bottom:8px;overflow:hidden;}
+  .comp-header{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:background 0.1s;}
+  .comp-header:hover{background:var(--bg);}
+  .comp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .comp-label{flex:1;}
+  .comp-label strong{font-size:12px;font-weight:700;display:block;}
+  .comp-label small{font-size:10px;color:var(--muted);font-weight:500;}
+  .comp-count{font-size:10px;padding:1px 7px;border-radius:100px;font-weight:700;min-width:22px;text-align:center;}
+  .comp-body{padding:4px 12px 10px;}
+  .chevron{transition:transform 0.2s;display:inline-block;font-size:10px;color:var(--dim);}
+  .chevron.open{transform:rotate(180deg);}
+  .sub-header{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--r);cursor:pointer;transition:background 0.1s;}
+  .sub-header:hover{background:var(--bg);}
+  .sub-label{font-weight:600;font-size:12px;flex:1;}
+  .sub-count{font-size:10px;color:var(--dim);font-weight:500;}
+  .sub-indicators{padding-left:30px;padding-top:2px;padding-bottom:4px;}
+  .ind-label{display:flex;gap:6px;align-items:flex-start;padding:2px 0;font-size:11.5px;color:#444;cursor:pointer;line-height:1.45;}
+  .ind-label input{margin-top:2px;width:14px;height:14px;flex-shrink:0;}
+  .right-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .right-header span{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+  .btn-pdf{padding:6px 14px;font-size:12px;font-weight:700;background:var(--text);color:white;border:none;border-radius:var(--r);cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--font);transition:opacity 0.15s;}
+  .btn-pdf:hover{opacity:0.85;}
+  .btn-pdf:disabled{opacity:0.3;cursor:not-allowed;}
+  .btn-pdf svg{width:13px;height:13px;}
+  .a4-wrapper{display:flex;flex-direction:column;align-items:center;gap:20px;padding-bottom:20px;}
+  .a4-frame{width:100%;max-width:520px;aspect-ratio:210/297;background:white;border:1px solid var(--border);border-radius:2px;box-shadow:0 2px 12px rgba(0,0,0,0.1);position:relative;overflow:hidden;margin:0 auto;}
+  .a4-inner{width:210mm;padding:22mm 22mm 18mm 22mm;font-size:2.8mm;line-height:1.2;transform-origin:top left;}
+  .a4-inner table{border-spacing:0;}
+  .a4-page-label{position:absolute;top:-18px;right:4px;font-size:9px;color:var(--dim);font-weight:500;}
+  #pdf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-family:var(--font);}
+  #pdf-overlay.active{display:flex;}
+  .pdf-spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .pdf-overlay-text{color:white;font-size:14px;font-weight:700;}
+  .pdf-overlay-sub{color:rgba(255,255,255,0.55);font-size:11px;}
 </style>
 </head>
 <body>
-
+<div id="pdf-overlay">
+  <div class="pdf-spinner"></div>
+  <div class="pdf-overlay-text">PDF wird erstellt…</div>
+  <div class="pdf-overlay-sub">Einen Moment bitte</div>
+</div>
 <div class="topbar">
   <div class="topbar-inner">
     <div class="topbar-mark">M</div>
@@ -116,7 +86,6 @@
     </div>
   </div>
 </div>
-
 <div class="main">
   <div class="panel-l">
     <div class="settings">
@@ -126,23 +95,36 @@
       </div>
       <div class="settings-body" id="settings-body" style="display:none;">
         <input type="text" id="docTitle" value="CHALLENGE-BEURTEILUNG" placeholder="Titel">
-        <input type="text" id="docSubtitle" value="MakerEdu | Selbst- & Fremdeinschätzung" placeholder="Untertitel">
+        <input type="text" id="docSubtitle" value="MakerEdu | Selbst- &amp; Fremdeinschätzung" placeholder="Untertitel">
         <input type="text" id="schoolName" value="" placeholder="Schulname (optional)">
         <textarea id="assignmentText" rows="2" placeholder="Auftrag / Aufgabenstellung (optional)"></textarea>
         <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border-lt)">
           <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Felder auf dem Blatt</div>
           <div id="fields-list"></div>
         </div>
+        <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border-lt)">
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Seiten</div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#444;cursor:pointer;margin-bottom:4px">
+            <input type="checkbox" id="chkRefl" checked onchange="showRefl=this.checked;document.getElementById('chkGespRow').style.display=this.checked?'flex':'none';if(!this.checked)showGesp=false;render()" style="width:13px;height:13px">
+            Reflexionsseite
+          </label>
+          <div id="chkGespRow" style="display:flex;align-items:center;gap:6px;padding-left:20px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#444;cursor:pointer">
+              <input type="checkbox" id="chkGesp" checked onchange="showGesp=this.checked;render()" style="width:13px;height:13px">
+              2-Minuten-Gespräch
+            </label>
+          </div>
+        </div>
         <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border-lt);display:flex;align-items:center;gap:8px">
           <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Druckmodus</div>
-          <button id="colorToggle" onclick="toggleColorMode()" style="font-size:11px;padding:4px 10px;border-radius:100px;border:1px solid var(--border);background:none;cursor:pointer;font-family:var(--font);font-weight:600;color:#444;transition:all 0.15s">🎨 Farbig</button>
+          <button id="colorToggle" onclick="toggleColorMode()" style="font-size:11px;padding:4px 10px;border-radius:100px;border:1px solid var(--border);background:none;cursor:pointer;font-family:var(--font);font-weight:600;color:#444">🎨 Farbig</button>
         </div>
       </div>
     </div>
     <div class="toolbar">
       <span class="toolbar-badge" id="status-badge">0 Indikatoren</span>
       <span style="color:var(--border);font-size:11px">·</span>
-      <span class="toolbar-info" id="status-comps">0 Bereiche</span>
+      <span style="font-size:11px;color:var(--muted)" id="status-comps">0 Bereiche</span>
     </div>
     <div id="accordions"></div>
   </div>
@@ -151,7 +133,7 @@
       <span>Vorschau</span>
       <button class="btn-pdf" id="btn-pdf" disabled onclick="generatePDF()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        PDF
+        PDF herunterladen
       </button>
     </div>
     <div id="preview"></div>
@@ -161,506 +143,713 @@
 <script>
 const DATA = {
   personal: { id:"personal", label:"PERSONALKOMPETENZ", shortLabel:"Dranbleiben", color:"#7C3AED", colorLight:"#F5F0FF", subs: [
-    { id:"p1", label:"Eigenständigkeit", inds: ["Du hast dein Produkt selbständig geplant und umgesetzt.","Du hast deine eigene(n) Idee(n) umgesetzt.","Du hattest viele gute Ideen.","Du konntest etwas bauen, das dir wichtig ist.","Du hast etwas gelernt, das dich interessiert."]},
-    { id:"p2", label:"Offenheit / Risikobereitschaft", inds: ["Du hast Werkzeuge, Materialien oder Maschinen ausprobiert, die du vorher noch nicht kanntest.","Du hast Ideen umgesetzt, von denen du nicht wusstest, ob sie funktionieren.","Du hast ein Projekt gewählt, das du vorher noch nie umgesetzt hast."]},
-    { id:"p3", label:"Selbstregulation / Selbstreflexion", inds: ["Du hast so lange getüftelt, bis das Problem gelöst war.","Wenn etwas nicht funktioniert hat, wolltest du herausfinden, was der Grund dafür ist.","Du hast Fehler als Chance gesehen und etwas daraus gelernt.","Wenn es mal mühsam war, konntest du dich selbst zum Weitermachen motivieren.","Du hast die Zeit sinnvoll eingeteilt.","Du hast dein Ziel im Auge behalten und bis zum Schluss verfolgt.","Du konntest dich auf dein Projekt konzentrieren."]},
-    { id:"p4", label:"Flexibilität / Improvisation", inds: ["Wenn etwas gefehlt hat (z.B. Material), hast du etwas anderes verwendet.","Du hast Dinge verwendet, die eigentlich für etwas anderes gedacht sind."]},
-    { id:"p5", label:"Verantwortung / Haltung", inds: ["Du bist Schwierigkeiten nicht aus dem Weg gegangen.","Du hast Hilfe gesucht und angenommen, wenn du nicht mehr weiterwusstest.","Du hast deine wichtigsten Erkenntnisse dokumentiert.","Du hast deinen Arbeitsplatz aufgeräumt und sauber hinterlassen.","Du hast die Schutz- und Sicherheitsregeln beachtet."]},
+    { id:"p1", label:"Eigenst\u00e4ndigkeit", inds: ["Du hast dein Produkt selbst\u00e4ndig geplant und umgesetzt.","Du hast deine eigene(n) Idee(n) umgesetzt.","Du hattest viele gute Ideen.","Du konntest etwas bauen, das dir wichtig ist.","Du hast etwas gelernt, das dich interessiert."]},
+    { id:"p2", label:"Offenheit / Risikobereitschaft", inds: ["Du hast Werkzeuge, Materialien oder Maschinen ausprobiert, die du vorher noch nicht kanntest.","Du hast Ideen umgesetzt, von denen du nicht wusstest, ob sie funktionieren.","Du hast ein Projekt gew\u00e4hlt, das du vorher noch nie umgesetzt hast."]},
+    { id:"p3", label:"Selbstregulation / Selbstreflexion", inds: ["Du hast so lange get\u00fcftelt, bis das Problem gel\u00f6st war.","Wenn etwas nicht funktioniert hat, wolltest du herausfinden, was der Grund daf\u00fcr ist.","Du hast Fehler als Chance gesehen und etwas daraus gelernt.","Wenn es mal m\u00fchsam war, konntest du dich selbst zum Weitermachen motivieren.","Du hast die Zeit sinnvoll eingeteilt.","Du hast dein Ziel im Auge behalten und bis zum Schluss verfolgt.","Du konntest dich auf dein Projekt konzentrieren."]},
+    { id:"p4", label:"Flexibilit\u00e4t / Improvisation", inds: ["Wenn etwas gefehlt hat (z.B. Material), hast du etwas anderes verwendet.","Du hast Dinge verwendet, die eigentlich f\u00fcr etwas anderes gedacht sind."]},
+    { id:"p5", label:"Verantwortung / Haltung", inds: ["Du bist Schwierigkeiten nicht aus dem Weg gegangen.","Du hast Hilfe gesucht und angenommen, wenn du nicht mehr weiterwusstest.","Du hast deine wichtigsten Erkenntnisse dokumentiert.","Du hast deinen Arbeitsplatz aufger\u00e4umt und sauber hinterlassen.","Du hast die Schutz- und Sicherheitsregeln beachtet."]},
   ]},
   methodical: { id:"methodical", label:"METHODISCHE KOMPETENZ", shortLabel:"Denken & Zeigen", color:"#E8590C", colorLight:"#FFF4ED", subs: [
-    { id:"m1", label:"Problemanalyse / Problemverstehen", inds: ["Du hast selbst versucht, das Problem zu verstehen.","Dir war klar, welches Problem zu lösen ist.","Bei Fehlern hast du herausgefunden, was das Problem war.","Du hast Tipps zu deinem Problem im Netz oder anderswo gefunden."]},
-    { id:"m2", label:"Kreative Problemlösefähigkeiten", inds: ["Du hattest sehr viele Ideen.","Du hast Methoden zur Ideenentwicklung eingesetzt (z.B. Brainstorming, morphologischer Kasten).","Bei der Fehlersuche bist du systematisch vorgegangen.","Du konntest selbstständig Fehler beheben.","Du konntest Fehler mit Unterstützung anderer beheben."]},
-    { id:"m3", label:"Produktentwicklung", inds: ["Du hast Skizzen, Modelle und Prototypen angefertigt, bevor du das Endprodukt gebaut hast.","Du kannst deine Konstruktionsschritte und Gestaltungsentscheidungen begründen.","Du kannst dir für dein Projekt Inspirationen suchen (z.B. im Netz oder von Mitschüler:innen)."]},
-    { id:"m4", label:"Recherche- und Informationskompetenzen", inds: ["Du hast im Internet brauchbare Anregungen für dein Produkt gefunden.","Du hast KI-Tools gezielt und mit guten Prompts für die Problemlösung eingesetzt."]},
+    { id:"m1", label:"Problemanalyse / Problemverstehen", inds: ["Du hast selbst versucht, das Problem zu verstehen.","Dir war klar, welches Problem zu l\u00f6sen ist.","Bei Fehlern hast du herausgefunden, was das Problem war.","Du hast Tipps zu deinem Problem im Netz oder anderswo gefunden."]},
+    { id:"m2", label:"Kreative Probleml\u00f6sef\u00e4higkeiten", inds: ["Du hattest sehr viele Ideen.","Du hast Methoden zur Ideenentwicklung eingesetzt (z.B. Brainstorming, morphologischer Kasten).","Bei der Fehlersuche bist du systematisch vorgegangen.","Du konntest selbstst\u00e4ndig Fehler beheben.","Du konntest Fehler mit Unterst\u00fctzung anderer beheben."]},
+    { id:"m3", label:"Produktentwicklung", inds: ["Du hast Skizzen, Modelle und Prototypen angefertigt, bevor du das Endprodukt gebaut hast.","Du kannst deine Konstruktionsschritte und Gestaltungsentscheidungen begr\u00fcnden.","Du kannst dir f\u00fcr dein Projekt Inspirationen suchen (z.B. im Netz oder von Mitsch\u00fcler:innen)."]},
+    { id:"m4", label:"Recherche- und Informationskompetenzen", inds: ["Du hast im Internet brauchbare Anregungen f\u00fcr dein Produkt gefunden.","Du hast KI-Tools gezielt und mit guten Prompts f\u00fcr die Probleml\u00f6sung eingesetzt."]},
   ]},
   social: { id:"social", label:"SOZIALE KOMPETENZ", shortLabel:"Zusammenarbeiten", color:"#0F9D58", colorLight:"#EDFCF2", subs: [
-    { id:"s1", label:"Zusammenarbeit", inds: ["Du bist respektvoll mit anderen umgegangen.","Du hast dazu beigetragen, dass Meinungsverschiedenheiten gelöst wurden.","Du konntest deine Stärken einbringen.","Du hast dich aktiv an der Zusammenarbeit beteiligt."]},
-    { id:"s2", label:"Hilfs- und Unterstützungsbereitschaft", inds: ["Du hast anderen bei ihren Projekten weitergeholfen.","Du konntest anderen etwas beibringen (z.B. wie ein Werkzeug funktioniert).","Du hast dazu beigetragen, dass Ideen anderer umgesetzt werden konnten."]},
-    { id:"s3", label:"Feedback einfordern und geben", inds: ["Wenn du nicht weiterwusstest, hast du andere um Unterstützung gebeten.","Du konntest das Feedback anderer für dein Projekt nutzen.","Du konntest dich in die Produkte anderer hineindenken und Verbesserungsvorschläge machen."]},
-    { id:"s4", label:"Wertschätzung", inds: ["Du hast andere für eine gute Idee gelobt.","Du hast die Stärken anderer erkannt und gewürdigt."]},
+    { id:"s1", label:"Zusammenarbeit", inds: ["Du bist respektvoll mit anderen umgegangen.","Du hast dazu beigetragen, dass Meinungsverschiedenheiten gel\u00f6st wurden.","Du konntest deine St\u00e4rken einbringen.","Du hast dich aktiv an der Zusammenarbeit beteiligt."]},
+    { id:"s2", label:"Hilfs- und Unterst\u00fctzungsbereitschaft", inds: ["Du hast anderen bei ihren Projekten weitergeholfen.","Du konntest anderen etwas beibringen (z.B. wie ein Werkzeug funktioniert).","Du hast dazu beigetragen, dass Ideen anderer umgesetzt werden konnten."]},
+    { id:"s3", label:"Feedback einfordern und geben", inds: ["Wenn du nicht weiterwusstest, hast du andere um Unterst\u00fctzung gebeten.","Du konntest das Feedback anderer f\u00fcr dein Projekt nutzen.","Du konntest dich in die Produkte anderer hineindenken und Verbesserungsvorschl\u00e4ge machen."]},
+    { id:"s4", label:"Wertsch\u00e4tzung", inds: ["Du hast andere f\u00fcr eine gute Idee gelobt.","Du hast die St\u00e4rken anderer erkannt und gew\u00fcrdigt."]},
   ]},
   technical: { id:"technical", label:"FACHKOMPETENZ", shortLabel:"Machen", color:"#1A73E8", colorLight:"#EEF4FF", subs: [
-    { id:"f1", label:"Werkzeuge & Handwerk", inds: ["Du hast digitale Fabrikationsverfahren für die Herstellung deines Produkts verwendet.","Du weisst, wofür du einen 3D-Drucker / Laser Cutter / Plotter sinnvoll einsetzen kannst.","Du hast neue technische Verfahren kennengelernt."]},
-    { id:"f2", label:"Technik", inds: ["Du konntest deine Kenntnisse über Naturwissenschaft und Technik anwenden.","Dein Produkt funktioniert zuverlässig wie geplant.","Dein Produkt zeigt eine eigene kreative Erweiterung über die Vorlage hinaus."]},
-    { id:"f3", label:"Informatische Kompetenzen", inds: ["Du konntest Microcontroller, Sensoren und Aktoren zielführend in dein Produkt einbauen.","Du hast Programme geschrieben, in welchen Daten von Sensoren zur Steuerung von Aktoren richtig verwendet werden.","Du konntest Schleifen, Wenn-Dann-Bedingungen, Variablen und andere Programmierbausteine zu lauffähigen Programmen zusammensetzen."]},
-    { id:"f4", label:"Medienkompetenzen", inds: ["Du hast Medien zur Dokumentation deiner Arbeit sinnvoll eingesetzt.","Du kannst dein Projekt und das technische Konzept erklären."]},
+    { id:"f1", label:"Werkzeuge & Handwerk", inds: ["Du hast digitale Fabrikationsverfahren f\u00fcr die Herstellung deines Produkts verwendet.","Du weisst, wof\u00fcr du einen 3D-Drucker / Laser Cutter / Plotter sinnvoll einsetzen kannst.","Du hast neue technische Verfahren kennengelernt."]},
+    { id:"f2", label:"Technik", inds: ["Du konntest deine Kenntnisse \u00fcber Naturwissenschaft und Technik anwenden.","Dein Produkt funktioniert zuverl\u00e4ssig wie geplant.","Dein Produkt zeigt eine eigene kreative Erweiterung \u00fcber die Vorlage hinaus."]},
+    { id:"f3", label:"Informatische Kompetenzen", inds: ["Du konntest Microcontroller, Sensoren und Aktoren zielf\u00fchrend in dein Produkt einbauen.","Du hast Programme geschrieben, in welchen Daten von Sensoren zur Steuerung von Aktoren richtig verwendet werden.","Du konntest Schleifen, Wenn-Dann-Bedingungen, Variablen und andere Programmierbausteine zu lauff\u00e4higen Programmen zusammensetzen."]},
+    { id:"f4", label:"Medienkompetenzen", inds: ["Du hast Medien zur Dokumentation deiner Arbeit sinnvoll eingesetzt.","Du kannst dein Projekt und das technische Konzept erkl\u00e4ren."]},
   ]}
 };
 
+let selections={},openComps={},openSubs={},customTexts={},customAdded={},editingInd=null;
+let colorMode=true;
+let showRefl=true, showGesp=true;
 
+function toggleColorMode(){colorMode=!colorMode;const btn=document.getElementById('colorToggle');btn.textContent=colorMode?'🎨 Farbig':'🖨 Schwarzweiss';btn.style.background=colorMode?'none':'#F3F3F1';render();}
+function dc(c){return colorMode?c:'#555555';}
+function dcLight(cl){return colorMode?cl:'#F5F5F3';}
+function hexToRgb(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
 
-let selections={}, openComps={}, openSubs={}, customTexts={}, customAdded={}, editingInd=null;
-let colorMode = true; // true = farbig, false = schwarzweiss
-
-function toggleColorMode() {
-  colorMode = !colorMode;
-  const btn = document.getElementById('colorToggle');
-  btn.textContent = colorMode ? '🎨 Farbig' : '🖨 Schwarzweiss';
-  btn.style.background = colorMode ? 'none' : '#F3F3F1';
-  render();
-}
-
-// Returns the display color: original if colorMode, grey if not
-function dc(color) {
-  if (colorMode) return color;
-  return '#555';
-}
-function dcLight(colorLight) {
-  if (colorMode) return colorLight;
-  return '#F5F5F3';
-}
-
-// Document fields
-let docFields = [
-  { label: 'Name', active: true, custom: false },
-  { label: 'Challenge', active: true, custom: false },
-  { label: 'Datum', active: true, custom: false },
-  { label: 'Inspirationsquelle', active: true, custom: false },
+let docFields=[
+  {label:'Name',active:true,custom:false},
+  {label:'Challenge',active:true,custom:false},
+  {label:'Datum',active:true,custom:false},
+  {label:'Inspirationsquelle',active:true,custom:false}
 ];
 
-function renderFieldsList() {
-  let h = `<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:6px">`;
-  docFields.forEach((f, i) => {
-    h += `<div style="display:flex;align-items:center;gap:3px;font-size:11px">`;
-    // Arrow buttons
-    h += `<div style="display:flex;flex-direction:column;gap:0px;line-height:1">`;
-    h += `<button onclick="moveField(${i},-1)" ${i===0?'disabled':''} style="font-size:8px;padding:0 3px;background:none;border:none;cursor:${i===0?'default':'pointer'};color:${i===0?'var(--border-lt)':'var(--muted)'};font-family:var(--font)" title="Nach oben">▲</button>`;
-    h += `<button onclick="moveField(${i},1)" ${i===docFields.length-1?'disabled':''} style="font-size:8px;padding:0 3px;background:none;border:none;cursor:${i===docFields.length-1?'default':'pointer'};color:${i===docFields.length-1?'var(--border-lt)':'var(--muted)'};font-family:var(--font)" title="Nach unten">▼</button>`;
-    h += `</div>`;
-    // Checkbox
-    h += `<input type="checkbox" ${f.active ? 'checked' : ''} onchange="docFields[${i}].active=this.checked;render()" style="width:13px;height:13px">`;
-    // Label - all fields editable
-    h += `<input type="text" value="${f.label.replace(/"/g,'&quot;')}" onchange="docFields[${i}].label=this.value;render()" style="flex:1;max-width:140px;font-size:11px;padding:2px 5px;border:1px solid transparent;border-radius:3px;font-family:var(--font);background:none;color:#444;transition:border 0.15s" onfocus="this.style.borderColor='var(--border)';this.style.background='white'" onblur="this.style.borderColor='transparent';this.style.background='none'">`;
-    if (f.custom) {
-      h += `<button onclick="docFields.splice(${i},1);render()" style="font-size:9px;padding:1px 4px;background:none;border:none;cursor:pointer;color:var(--dim)" title="Entfernen">✕</button>`;
-    }
-    h += `</div>`;
+function renderFieldsList(){
+  let h='<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:6px">';
+  docFields.forEach((f,i)=>{
+    h+='<div style="display:flex;align-items:center;gap:3px;font-size:11px">';
+    h+='<div style="display:flex;flex-direction:column;gap:0;line-height:1">';
+    h+='<button onclick="moveField('+i+',-1)" '+(i===0?'disabled':'')+' style="font-size:8px;padding:0 3px;background:none;border:none;cursor:'+(i===0?'default':'pointer')+';color:'+(i===0?'var(--border-lt)':'var(--muted)')+';font-family:var(--font)">\u25b2</button>';
+    h+='<button onclick="moveField('+i+',1)" '+(i===docFields.length-1?'disabled':'')+' style="font-size:8px;padding:0 3px;background:none;border:none;cursor:'+(i===docFields.length-1?'default':'pointer')+';color:'+(i===docFields.length-1?'var(--border-lt)':'var(--muted)')+';font-family:var(--font)">\u25bc</button>';
+    h+='</div>';
+    h+='<input type="checkbox" '+(f.active?'checked':'')+' onchange="docFields['+i+'].active=this.checked;render()" style="width:13px;height:13px">';
+    h+='<input type="text" value="'+f.label.replace(/"/g,'&quot;')+'" onchange="docFields['+i+'].label=this.value;render()" style="flex:1;max-width:140px;font-size:11px;padding:2px 5px;border:1px solid transparent;border-radius:3px;font-family:var(--font);background:none;color:#444" onfocus="this.style.borderColor=\'var(--border)\';this.style.background=\'white\'" onblur="this.style.borderColor=\'transparent\';this.style.background=\'none\'">';
+    if(f.custom)h+='<button onclick="docFields.splice('+i+',1);render()" style="font-size:9px;padding:1px 4px;background:none;border:none;cursor:pointer;color:var(--dim)">\u2715</button>';
+    h+='</div>';
   });
-  h += `</div>`;
-  h += `<button onclick="addCustomField()" style="font-size:10px;padding:3px 8px;background:none;color:var(--muted);border:1px dashed var(--border);border-radius:4px;cursor:pointer;font-family:var(--font);transition:all 0.1s" onmouseover="this.style.borderColor='var(--muted)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Feld hinzufügen</button>`;
-  document.getElementById('fields-list').innerHTML = h;
+  h+='</div>';
+  h+='<button onclick="addCustomField()" style="font-size:10px;padding:3px 8px;background:none;color:var(--muted);border:1px dashed var(--border);border-radius:4px;cursor:pointer;font-family:var(--font)" onmouseover="this.style.borderColor=\'var(--muted)\'" onmouseout="this.style.borderColor=\'var(--border)\'">+ Feld hinzuf\u00fcgen</button>';
+  document.getElementById('fields-list').innerHTML=h;
 }
-
-function moveField(idx, dir) {
-  const target = idx + dir;
-  if (target < 0 || target >= docFields.length) return;
-  const temp = docFields[idx];
-  docFields[idx] = docFields[target];
-  docFields[target] = temp;
-  render();
-}
-
-function addCustomField() {
-  docFields.push({ label: 'Neues Feld', active: true, custom: true });
-  renderFieldsList();
-  render();
-}
-
-function getActiveFields() {
-  return docFields.filter(f => f.active);
-}
-
-function getIndText(subId,idx,sub){const k=subId+'-'+idx;if(customTexts[k]!==undefined)return customTexts[k];if(idx>=sub.inds.length)return(customAdded[subId]||[])[idx-sub.inds.length]||'';return sub.inds[idx];}
+function moveField(idx,dir){const t=idx+dir;if(t<0||t>=docFields.length)return;const tmp=docFields[idx];docFields[idx]=docFields[t];docFields[t]=tmp;render();}
+function addCustomField(){docFields.push({label:'Neues Feld',active:true,custom:true});renderFieldsList();render();}
+function getActiveFields(){return docFields.filter(f=>f.active);}
+function getIndText(sId,idx,sub){const k=sId+'-'+idx;if(customTexts[k]!==undefined)return customTexts[k];if(idx>=sub.inds.length)return(customAdded[sId]||[])[idx-sub.inds.length]||'';return sub.inds[idx];}
 function getAllInds(sub){return[...sub.inds,...(customAdded[sub.id]||[])];}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
 function getActiveComps(){return Object.values(DATA).filter(c=>c.subs.some(s=>(selections[s.id]||[]).length>0));}
-
 function render(){renderFieldsList();renderAccordions();renderPreview();updateStatus();}
 function toggleSettings(){const b=document.getElementById('settings-body'),c=document.getElementById('settings-chevron'),v=b.style.display!=='none';b.style.display=v?'none':'flex';c.classList.toggle('open',!v);}
 function updateStatus(){let t=0;Object.values(selections).forEach(a=>t+=a.length);const ac=getActiveComps().length,b=document.getElementById('status-badge');b.textContent=t+' Indikatoren';b.style.background=t>0?'#EDFCF2':'';b.style.color=t>0?'#0F9D58':'';document.getElementById('status-comps').textContent=ac+' Bereiche';document.getElementById('btn-pdf').disabled=t===0;}
 function toggleComp(id){openComps[id]=!openComps[id];render();}
 function toggleSub(id){openSubs[id]=!openSubs[id];render();}
-function toggleInd(subId,idx){const a=selections[subId]||[];if(a.includes(idx))selections[subId]=a.filter(x=>x!==idx);else selections[subId]=[...a,idx];render();}
-function toggleAllInds(subId,sel){let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===subId)sub=s;}));selections[subId]=sel?getAllInds(sub).map((_,i)=>i):[];render();}
-function startEdit(subId,idx){editingInd=subId+'-'+idx;render();const el=document.getElementById('edit-input-'+subId+'-'+idx);if(el){el.focus();el.select();}}
+function toggleInd(sId,idx){const a=selections[sId]||[];if(a.includes(idx))selections[sId]=a.filter(x=>x!==idx);else selections[sId]=[...a,idx];render();}
+function toggleAllInds(sId,sel){let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===sId)sub=s;}));selections[sId]=sel?getAllInds(sub).map((_,i)=>i):[];render();}
+function startEdit(sId,idx){editingInd=sId+'-'+idx;render();const el=document.getElementById('edit-input-'+sId+'-'+idx);if(el){el.focus();el.select();}}
 function cancelEdit(){editingInd=null;render();}
-function saveIndEdit(subId,idx,txt){txt=txt.trim();if(!txt){cancelEdit();return;}let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===subId)sub=s;}));if(idx<sub.inds.length){if(txt===sub.inds[idx])delete customTexts[subId+'-'+idx];else customTexts[subId+'-'+idx]=txt;}else{const ai=idx-sub.inds.length;if(!customAdded[subId])customAdded[subId]=[];customAdded[subId][ai]=txt;}editingInd=null;render();}
-function addCustomInd(subId){if(!customAdded[subId])customAdded[subId]=[];customAdded[subId].push('Neuer Indikator...');let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===subId)sub=s;}));const ni=sub.inds.length+customAdded[subId].length-1;if(!selections[subId])selections[subId]=[];selections[subId].push(ni);openSubs[subId]=true;editingInd=subId+'-'+ni;render();const el=document.getElementById('edit-input-'+subId+'-'+ni);if(el){el.focus();el.select();}}
-function removeCustomInd(subId,idx){let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===subId)sub=s;}));const ai=idx-sub.inds.length;if(!customAdded[subId])return;customAdded[subId].splice(ai,1);const pfx=subId+'-';Object.keys(customTexts).forEach(k=>{if(k.startsWith(pfx)){const ki=parseInt(k.split('-').pop());if(ki===idx)delete customTexts[k];else if(ki>idx){customTexts[pfx+(ki-1)]=customTexts[k];delete customTexts[k];}}});const sl=selections[subId]||[];selections[subId]=sl.filter(i=>i!==idx).map(i=>i>idx?i-1:i);editingInd=null;render();}
+function saveIndEdit(sId,idx,txt){txt=txt.trim();if(!txt){cancelEdit();return;}let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===sId)sub=s;}));if(idx<sub.inds.length){if(txt===sub.inds[idx])delete customTexts[sId+'-'+idx];else customTexts[sId+'-'+idx]=txt;}else{const ai=idx-sub.inds.length;if(!customAdded[sId])customAdded[sId]=[];customAdded[sId][ai]=txt;}editingInd=null;render();}
+function addCustomInd(sId){if(!customAdded[sId])customAdded[sId]=[];customAdded[sId].push('Neuer Indikator...');let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===sId)sub=s;}));const ni=sub.inds.length+customAdded[sId].length-1;if(!selections[sId])selections[sId]=[];selections[sId].push(ni);openSubs[sId]=true;editingInd=sId+'-'+ni;render();const el=document.getElementById('edit-input-'+sId+'-'+ni);if(el){el.focus();el.select();}}
+function removeCustomInd(sId,idx){let sub;Object.values(DATA).forEach(c=>c.subs.forEach(s=>{if(s.id===sId)sub=s;}));const ai=idx-sub.inds.length;if(!customAdded[sId])return;customAdded[sId].splice(ai,1);const pfx=sId+'-';Object.keys(customTexts).forEach(k=>{if(k.startsWith(pfx)){const ki=parseInt(k.split('-').pop());if(ki===idx)delete customTexts[k];else if(ki>idx){customTexts[pfx+(ki-1)]=customTexts[k];delete customTexts[k];}}});const sl=selections[sId]||[];selections[sId]=sl.filter(i=>i!==idx).map(i=>i>idx?i-1:i);editingInd=null;render();}
 function selectAll(){selections={};Object.values(DATA).forEach(c=>c.subs.forEach(s=>{selections[s.id]=getAllInds(s).map((_,i)=>i);}));Object.values(DATA).forEach(c=>{openComps[c.id]=true;});render();}
 function resetAll(){selections={};render();}
 
 function saveToUrl(){
-  const state = {
-    sel: selections,
-    ct: customTexts,
-    ca: customAdded,
-    df: docFields,
-    cm: colorMode,
-    t: document.getElementById('docTitle').value,
-    st: document.getElementById('docSubtitle').value,
-    sn: document.getElementById('schoolName').value,
-    at: document.getElementById('assignmentText').value
-  };
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-  const url = window.location.origin + window.location.pathname + '?c=' + encoded;
-  showLinkModal(url);
+  const state={sel:selections,ct:customTexts,ca:customAdded,df:docFields,cm:colorMode,sr:showRefl,sg:showGesp,
+    t:document.getElementById('docTitle').value,st:document.getElementById('docSubtitle').value,
+    sn:document.getElementById('schoolName').value,at:document.getElementById('assignmentText').value};
+  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  showLinkModal(window.location.origin+window.location.pathname+'?c='+encoded);
 }
-
-function showLinkModal(url) {
-  // Remove existing modal
-  const existing = document.getElementById('link-modal');
-  if (existing) existing.remove();
-
-  const overlay = document.createElement('div');
-  overlay.id = 'link-modal';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-
-  const modal = document.createElement('div');
-  modal.style.cssText = 'background:white;border-radius:8px;padding:20px;max-width:500px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.2);font-family:var(--font)';
-
-  modal.innerHTML = `
-    <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:4px">Link gespeichert</div>
-    <div style="font-size:11px;color:#888;margin-bottom:12px">Dieser Link enthält deine komplette Konfiguration. Bookmarke ihn oder teile ihn mit Kollegen.</div>
-    <div style="display:flex;gap:6px;margin-bottom:12px">
-      <input id="link-input" type="text" value="${url}" readonly style="flex:1;font-size:11px;padding:8px 10px;border:1px solid #E2E0DC;border-radius:6px;font-family:monospace;color:#555;outline:none;background:#F8F8F6" onclick="this.select()">
-      <button id="copy-btn" onclick="copyLink()" style="padding:8px 16px;font-size:12px;font-weight:700;background:#222;color:white;border:none;border-radius:6px;cursor:pointer;font-family:var(--font);white-space:nowrap">Kopieren</button>
-    </div>
-    <button onclick="document.getElementById('link-modal').remove()" style="font-size:11px;color:#888;background:none;border:none;cursor:pointer;font-family:var(--font)">Schliessen</button>
-  `;
-
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
-  document.getElementById('link-input').select();
+function showLinkModal(url){
+  const ex=document.getElementById('link-modal');if(ex)ex.remove();
+  const ov=document.createElement('div');ov.id='link-modal';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  const m=document.createElement('div');
+  m.style.cssText='background:white;border-radius:8px;padding:20px;max-width:500px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.2);font-family:var(--font)';
+  m.innerHTML='<div style="font-size:14px;font-weight:700;color:#222;margin-bottom:4px">Link gespeichert</div><div style="font-size:11px;color:#888;margin-bottom:12px">Dieser Link enth\u00e4lt deine komplette Konfiguration.</div><div style="display:flex;gap:6px;margin-bottom:12px"><input id="link-input" type="text" value="'+url+'" readonly style="flex:1;font-size:11px;padding:8px 10px;border:1px solid #E2E0DC;border-radius:6px;font-family:monospace;color:#555;outline:none;background:#F8F8F6" onclick="this.select()"><button id="copy-btn" onclick="copyLink()" style="padding:8px 16px;font-size:12px;font-weight:700;background:#222;color:white;border:none;border-radius:6px;cursor:pointer;font-family:var(--font)">Kopieren</button></div><button onclick="document.getElementById(\'link-modal\').remove()" style="font-size:11px;color:#888;background:none;border:none;cursor:pointer;font-family:var(--font)">Schliessen</button>';
+  ov.appendChild(m);document.body.appendChild(ov);document.getElementById('link-input').select();
 }
-
-function copyLink() {
-  const input = document.getElementById('link-input');
-  const btn = document.getElementById('copy-btn');
-  navigator.clipboard.writeText(input.value).then(() => {
-    btn.textContent = '✓ Kopiert!';
-    btn.style.background = '#0F9D58';
-    setTimeout(() => { btn.textContent = 'Kopieren'; btn.style.background = '#222'; }, 2000);
-  }).catch(() => {
-    input.select();
-    document.execCommand('copy');
-    btn.textContent = '✓ Kopiert!';
-    setTimeout(() => btn.textContent = 'Kopieren', 2000);
-  });
+function copyLink(){
+  const input=document.getElementById('link-input'),btn=document.getElementById('copy-btn');
+  navigator.clipboard.writeText(input.value).then(()=>{
+    btn.textContent='\u2713 Kopiert!';btn.style.background='#0F9D58';
+    setTimeout(()=>{btn.textContent='Kopieren';btn.style.background='#222';},2000);
+  }).catch(()=>{input.select();document.execCommand('copy');btn.textContent='\u2713 Kopiert!';setTimeout(()=>btn.textContent='Kopieren',2000);});
 }
-
 function loadFromUrl(){
-  const params = new URLSearchParams(window.location.search);
-  const c = params.get('c');
-  if (!c) return;
-  try {
-    const state = JSON.parse(decodeURIComponent(escape(atob(c))));
-    if (state.sel) selections = state.sel;
-    if (state.ct) customTexts = state.ct;
-    if (state.ca) customAdded = state.ca;
-    if (state.df) docFields = state.df;
-    if (state.cm !== undefined) { colorMode = state.cm; const btn=document.getElementById('colorToggle'); btn.textContent=colorMode?'🎨 Farbig':'🖨 Schwarzweiss'; btn.style.background=colorMode?'none':'#F3F3F1'; }
-    if (state.t) document.getElementById('docTitle').value = state.t;
-    if (state.st) document.getElementById('docSubtitle').value = state.st;
-    if (state.sn) document.getElementById('schoolName').value = state.sn;
-    if (state.at) document.getElementById('assignmentText').value = state.at;
-    Object.values(DATA).forEach(c => {
-      openComps[c.id] = c.subs.some(s => (selections[s.id] || []).length > 0);
-    });
+  const c=new URLSearchParams(window.location.search).get('c');if(!c)return;
+  try{
+    const s=JSON.parse(decodeURIComponent(escape(atob(c))));
+    if(s.sel)selections=s.sel;if(s.ct)customTexts=s.ct;if(s.ca)customAdded=s.ca;if(s.df)docFields=s.df;
+    if(s.cm!==undefined){colorMode=s.cm;const btn=document.getElementById('colorToggle');btn.textContent=colorMode?'🎨 Farbig':'🖨 Schwarzweiss';btn.style.background=colorMode?'none':'#F3F3F1';}
+    if(s.sr!==undefined){showRefl=s.sr;const el=document.getElementById('chkRefl');if(el){el.checked=showRefl;document.getElementById('chkGespRow').style.display=showRefl?'flex':'none';}}
+    if(s.sg!==undefined){showGesp=s.sg;const el=document.getElementById('chkGesp');if(el)el.checked=showGesp;}
+    if(s.t)document.getElementById('docTitle').value=s.t;if(s.st)document.getElementById('docSubtitle').value=s.st;
+    if(s.sn)document.getElementById('schoolName').value=s.sn;if(s.at)document.getElementById('assignmentText').value=s.at;
+    Object.values(DATA).forEach(c=>{openComps[c.id]=c.subs.some(s=>(selections[s.id]||[]).length>0);});
     render();
-  } catch(e) { console.warn('URL-Parameter konnte nicht geladen werden', e); }
+  }catch(e){console.warn(e);}
 }
 document.addEventListener('input',e=>{if(['docTitle','docSubtitle','schoolName','assignmentText'].includes(e.target.id))renderPreview();});
 
 function renderAccordions(){
   let h='';
   Object.values(DATA).forEach(comp=>{
-    const ts=comp.subs.reduce((s,sub)=>s+(selections[sub.id]||[]).length,0), io=openComps[comp.id];
-    h+=`<div class="comp-accordion" style="${io?'border-color:'+comp.color+'40':''}">`;
-    h+=`<div class="comp-header" onclick="toggleComp('${comp.id}')"><div class="comp-dot" style="background:${comp.color}"></div><div class="comp-label"><strong style="color:${comp.color}">${comp.label}</strong><small>${comp.shortLabel}</small></div><span class="comp-count" style="background:${ts>0?comp.color:'var(--border-lt)'};color:${ts>0?'white':'var(--dim)'}">${ts}</span><span class="chevron ${io?'open':''}">▼</span></div>`;
+    const ts=comp.subs.reduce((s,sub)=>s+(selections[sub.id]||[]).length,0),io=openComps[comp.id];
+    h+='<div class="comp-accordion" style="'+(io?'border-color:'+comp.color+'40':'')+'"><div class="comp-header" onclick="toggleComp(\''+comp.id+'\')"><div class="comp-dot" style="background:'+comp.color+'"></div><div class="comp-label"><strong style="color:'+comp.color+'">'+comp.label+'</strong><small>'+comp.shortLabel+'</small></div><span class="comp-count" style="background:'+(ts>0?comp.color:'var(--border-lt)')+';color:'+(ts>0?'white':'var(--dim)')+'">'+ts+'</span><span class="chevron '+(io?'open':'')+'">&#9660;</span></div>';
     if(io){
-      h+=`<div class="comp-body">`;
+      h+='<div class="comp-body">';
       comp.subs.forEach(sub=>{
-        const ai=getAllInds(sub),sl=selections[sub.id]||[],as=sl.length===ai.length&&ai.length>0,ss=sl.length>0,so=openSubs[sub.id];
-        h+=`<div style="margin-bottom:4px"><div class="sub-header" style="background:${ss?comp.color+'0A':'transparent'}" onclick="toggleSub('${sub.id}')"><input type="checkbox" ${as?'checked':''} onclick="event.stopPropagation();toggleAllInds('${sub.id}',${!as})" style="accent-color:${comp.color};width:14px;height:14px"><span class="sub-label">${sub.label}</span><span class="sub-count">${sl.length}/${ai.length}</span><span class="chevron ${so?'open':''}">▼</span></div>`;
+        const ai=getAllInds(sub),sl=selections[sub.id]||[],as=sl.length===ai.length&&ai.length>0,ss2=sl.length>0,so=openSubs[sub.id];
+        h+='<div style="margin-bottom:4px"><div class="sub-header" style="background:'+(ss2?comp.color+'0A':'transparent')+'" onclick="toggleSub(\''+sub.id+'\')"><input type="checkbox" '+(as?'checked':'')+' onclick="event.stopPropagation();toggleAllInds(\''+sub.id+'\','+ (!as)+')" style="accent-color:'+comp.color+';width:14px;height:14px"><span class="sub-label">'+sub.label+'</span><span class="sub-count">'+sl.length+'/'+ai.length+'</span><span class="chevron '+(so?'open':'')+'">&#9660;</span></div>';
         if(so){
-          h+=`<div class="sub-indicators">`;
+          h+='<div class="sub-indicators">';
           ai.forEach((_,i)=>{
             const it=getIndText(sub.id,i,sub),ck=sl.includes(i),ek=sub.id+'-'+i,ie=editingInd===ek;
             if(ie){
-              h+=`<div style="display:flex;gap:4px;align-items:center;margin:2px 0"><input type="checkbox" ${ck?'checked':''} onclick="toggleInd('${sub.id}',${i})" style="accent-color:${comp.color};width:14px;height:14px;flex-shrink:0"><input type="text" id="edit-input-${ek}" value="${it.replace(/"/g,'&quot;')}" style="flex:1;font-size:11px;padding:4px 8px;border:1.5px solid ${comp.color};border-radius:4px;outline:none;font-family:var(--font)" onkeydown="if(event.key==='Enter')saveIndEdit('${sub.id}',${i},this.value);if(event.key==='Escape')cancelEdit()"><button onclick="saveIndEdit('${sub.id}',${i},document.getElementById('edit-input-${ek}').value)" style="padding:3px 8px;background:${comp.color};color:white;border:none;border-radius:4px;cursor:pointer;font-family:var(--font);font-size:11px">✓</button><button onclick="cancelEdit()" style="padding:3px 8px;background:var(--border-lt);border:none;border-radius:4px;cursor:pointer;font-family:var(--font);font-size:11px">✕</button>`;
-              if(i>=sub.inds.length)h+=`<button onclick="removeCustomInd('${sub.id}',${i})" style="padding:3px 6px;background:#FEE2E2;color:#DC2626;border:none;border-radius:4px;cursor:pointer;font-size:10px">🗑</button>`;
-              h+=`</div>`;
-            }else{
-              h+=`<div style="display:flex;align-items:center;gap:2px" class="ind-row"><label class="ind-label" style="flex:1"><input type="checkbox" ${ck?'checked':''} onclick="toggleInd('${sub.id}',${i})" style="accent-color:${comp.color}">${it}</label><button onclick="event.stopPropagation();startEdit('${sub.id}',${i})" class="edit-btn" style="font-size:10px;padding:2px 5px;background:none;border:1px solid transparent;border-radius:3px;cursor:pointer;color:var(--dim);flex-shrink:0;opacity:0;transition:opacity 0.1s" title="Bearbeiten">✎</button>`;
-              if(i>=sub.inds.length)h+=`<button onclick="event.stopPropagation();removeCustomInd('${sub.id}',${i})" class="edit-btn" style="font-size:10px;padding:2px 5px;background:none;border:1px solid transparent;border-radius:3px;cursor:pointer;color:#E53E3E;flex-shrink:0;opacity:0;transition:opacity 0.1s" title="Löschen">✕</button>`;
-              h+=`</div>`;
+              h+='<div style="display:flex;gap:4px;align-items:center;margin:2px 0"><input type="checkbox" '+(ck?'checked':'')+' onclick="toggleInd(\''+sub.id+'\','+i+')" style="accent-color:'+comp.color+';width:14px;height:14px;flex-shrink:0"><input type="text" id="edit-input-'+ek+'" value="'+it.replace(/"/g,'&quot;')+'" style="flex:1;font-size:11px;padding:4px 8px;border:1.5px solid '+comp.color+';border-radius:4px;outline:none;font-family:var(--font)" onkeydown="if(event.key===\'Enter\')saveIndEdit(\''+sub.id+'\','+i+',this.value);if(event.key===\'Escape\')cancelEdit()"><button onclick="saveIndEdit(\''+sub.id+'\','+i+',document.getElementById(\'edit-input-'+ek+'\').value)" style="padding:3px 8px;background:'+comp.color+';color:white;border:none;border-radius:4px;cursor:pointer;font-family:var(--font);font-size:11px">\u2713</button><button onclick="cancelEdit()" style="padding:3px 8px;background:var(--border-lt);border:none;border-radius:4px;cursor:pointer;font-family:var(--font);font-size:11px">\u2715</button>';
+              if(i>=sub.inds.length)h+='<button onclick="removeCustomInd(\''+sub.id+'\','+i+')" style="padding:3px 6px;background:#FEE2E2;color:#DC2626;border:none;border-radius:4px;cursor:pointer;font-size:10px">🗑</button>';
+              h+='</div>';
+            } else {
+              h+='<div style="display:flex;align-items:center;gap:2px" class="ind-row"><label class="ind-label" style="flex:1"><input type="checkbox" '+(ck?'checked':'')+' onclick="toggleInd(\''+sub.id+'\','+i+')" style="accent-color:'+comp.color+'">'+it+'</label><button onclick="event.stopPropagation();startEdit(\''+sub.id+'\','+i+')" class="edit-btn" style="font-size:10px;padding:2px 5px;background:none;border:1px solid transparent;border-radius:3px;cursor:pointer;color:var(--dim);flex-shrink:0;opacity:0;transition:opacity 0.1s">\u270e</button>';
+              if(i>=sub.inds.length)h+='<button onclick="event.stopPropagation();removeCustomInd(\''+sub.id+'\','+i+')" class="edit-btn" style="font-size:10px;padding:2px 5px;background:none;border:1px solid transparent;border-radius:3px;cursor:pointer;color:#E53E3E;flex-shrink:0;opacity:0;transition:opacity 0.1s">\u2715</button>';
+              h+='</div>';
             }
           });
-          h+=`<button onclick="addCustomInd('${sub.id}')" style="font-size:10px;padding:4px 8px;margin-top:4px;background:none;color:${comp.color};border:1px dashed ${comp.color}44;border-radius:4px;cursor:pointer;width:100%;text-align:left;font-family:var(--font);transition:background 0.1s" onmouseover="this.style.background='${comp.colorLight}'" onmouseout="this.style.background='none'">+ Eigenen Indikator</button></div>`;
+          h+='<button onclick="addCustomInd(\''+sub.id+'\')" style="font-size:10px;padding:4px 8px;margin-top:4px;background:none;color:'+comp.color+';border:1px dashed '+comp.color+'44;border-radius:4px;cursor:pointer;width:100%;text-align:left;font-family:var(--font)" onmouseover="this.style.background=\''+comp.colorLight+'\'" onmouseout="this.style.background=\'none\'">+ Eigenen Indikator</button></div>';
         }
-        h+=`</div>`;
+        h+='</div>';
       });
-      h+=`</div>`;
+      h+='</div>';
     }
-    h+=`</div>`;
+    h+='</div>';
   });
   document.getElementById('accordions').innerHTML=h;
-  document.querySelectorAll('.ind-row').forEach(r=>{r.addEventListener('mouseenter',()=>r.querySelectorAll('.edit-btn').forEach(b=>b.style.opacity='1'));r.addEventListener('mouseleave',()=>r.querySelectorAll('.edit-btn').forEach(b=>b.style.opacity='0'));});
+  document.querySelectorAll('.ind-row').forEach(r=>{
+    r.addEventListener('mouseenter',()=>r.querySelectorAll('.edit-btn').forEach(b=>b.style.opacity='1'));
+    r.addEventListener('mouseleave',()=>r.querySelectorAll('.edit-btn').forEach(b=>b.style.opacity='0'));
+  });
 }
 
+// HTML PREVIEW
 function renderPreview(){
-  const active=getActiveComps(),title=document.getElementById('docTitle').value||'CHALLENGE-BEURTEILUNG',subtitle=document.getElementById('docSubtitle').value||'',school=document.getElementById('schoolName').value,assignment=document.getElementById('assignmentText').value;
+  const active=getActiveComps();
+  const title=document.getElementById('docTitle').value||'CHALLENGE-BEURTEILUNG';
+  const subtitle=document.getElementById('docSubtitle').value||'';
+  const school=document.getElementById('schoolName').value;
+  const assignment=document.getElementById('assignmentText').value;
   let total=0;Object.values(selections).forEach(a=>total+=a.length);
 
-  // Build all content blocks as individual elements
-  const blocks = [];
+  // ── Shared constants mirroring PDF values exactly ──
+  const COL='52% 12% 12% 12% 12%';
+  const CB='&#9744;'; // checkbox
+  const GRADES=['--','-','+','++'];
 
-  // Title block
-  let titleH = `<div style="margin-bottom:3mm;padding-bottom:2mm;border-bottom:0.5mm solid #222">`;
-  titleH += `<div style="font-size:4.5mm;font-weight:800;letter-spacing:-0.05mm;color:#222">${esc(title)}</div>`;
-  if(subtitle || school) titleH += `<div style="font-size:2.4mm;color:#888;margin-top:0.5mm">${esc(subtitle)}${school?' · '+esc(school):''}</div>`;
-  titleH += `</div>`;
-  blocks.push({ html: titleH, type: 'fixed' });
+  const blocks=[];
 
-  // Fields block
-  const af = getActiveFields();
-  if (af.length > 0) {
-    let fH = '';
-    for (let r = 0; r < af.length; r += 2) {
-      const isLast = r + 2 >= af.length;
-      const hasPair = !!af[r + 1];
-      fH += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:${isLast ? '3mm' : '0'};font-size:2.4mm;color:#444">`;
-      fH += `<div style="display:flex;align-items:flex-end;gap:1mm;padding-right:2mm;padding-top:7mm"><span style="font-weight:600;white-space:nowrap">${esc(af[r].label)}:</span><span style="flex:1;border-bottom:0.3px solid #888;min-width:5mm"></span></div>`;
-      if (hasPair) fH += `<div style="display:flex;align-items:flex-end;gap:1mm;padding-left:2mm;padding-top:7mm"><span style="font-weight:600;white-space:nowrap">${esc(af[r + 1].label)}:</span><span style="flex:1;border-bottom:0.3px solid #888;min-width:5mm"></span></div>`;
-      fH += `</div>`;
+  // ── Title block ──
+  let th='<div style="margin-bottom:2mm;padding-bottom:2mm;border-bottom:0.5mm solid #222">';
+  th+='<div style="font-size:4.94mm;font-weight:800;color:#222;line-height:1.2">'+esc(title)+'</div>';
+  if(subtitle||school)th+='<div style="font-size:2.82mm;color:#888;margin-top:0.5mm">'+esc(subtitle)+(school?' · '+esc(school):'')+'</div>';
+  th+='</div>';
+  blocks.push({html:th});
+
+  // ── Fields block ──
+  const af=getActiveFields();
+  if(af.length){
+    let fH='<div style="margin-bottom:2mm">';
+    for(let r=0;r<af.length;r+=2){
+      const last=r+2>=af.length, hasR=!!af[r+1];
+      fH+='<div style="display:grid;grid-template-columns:1fr 1fr;margin-bottom:'+(last?'0':'0')+'mm">';
+      fH+='<div style="display:flex;align-items:flex-end;gap:1mm;padding-right:2mm;padding-top:3mm">'
+        +'<span style="font-size:2.65mm;font-weight:700;color:#444;white-space:nowrap">'+esc(af[r].label)+':</span>'
+        +'<span style="flex:1;border-bottom:0.25mm solid #888;min-width:5mm"></span></div>';
+      if(hasR)fH+='<div style="display:flex;align-items:flex-end;gap:1mm;padding-left:2mm;padding-top:3mm">'
+        +'<span style="font-size:2.65mm;font-weight:700;color:#444;white-space:nowrap">'+esc(af[r+1].label)+':</span>'
+        +'<span style="flex:1;border-bottom:0.25mm solid #888;min-width:5mm"></span></div>';
+      else fH+='<div></div>';
+      fH+='</div>';
     }
-    blocks.push({ html: fH, type: 'fixed' });
+    fH+='</div>';
+    blocks.push({html:fH});
   }
 
-  // Assignment block
-  if (assignment) {
-    blocks.push({ html: `<div style="background:#F7F7F5;border:0.15mm solid #D0D0CE;border-radius:1mm;padding:1.5mm 2.5mm;margin-bottom:2mm;font-size:2.1mm;color:#555"><strong style="font-size:2.4mm;color:#222">Auftrag:</strong><br>${esc(assignment)}</div>`, type: 'fixed' });
+  // ── Assignment block ──
+  if(assignment){
+    blocks.push({html:'<div style="background:#F7F7F5;border:0.15mm solid #D0D0CE;border-radius:1mm;padding:1.5mm 2.5mm;margin-bottom:2mm;font-size:2.1mm;color:#555"><strong style="font-size:2.4mm;color:#222">Auftrag:</strong><br>'+esc(assignment)+'</div>'});
   }
 
-  if (total === 0) {
-    blocks.push({ html: `<div style="text-align:center;color:#BBB;font-size:3mm;padding:15mm 5mm;border:0.5mm dashed #DDD;border-radius:1mm">Wähle Kompetenzen und Indikatoren aus</div>`, type: 'fixed' });
+  // ── Indicator tables ──
+  if(total===0){
+    blocks.push({html:'<div style="text-align:center;color:#BBB;font-size:3mm;padding:15mm 5mm;border:0.5mm dashed #DDD;border-radius:1mm">Wähle Kompetenzen und Indikatoren aus</div>'});
   } else {
-    // Rubric: one complete table per sub-competency
-    active.forEach(comp => {
-      const subs = comp.subs.filter(s => (selections[s.id] || []).length > 0);
-      if (!subs.length) return;
-      subs.forEach(sub => {
-        const si = selections[sub.id] || [];
-        const cc = dc(comp.color);
-        const cl = dcLight(comp.colorLight);
-        let tH = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:2.1mm;margin-bottom:1.5mm">`;
-        tH += `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-        // Header
-        tH += `<tr><td style="background:${cc};color:white;font-weight:700;font-size:2.2mm;padding:1mm 2mm;vertical-align:middle">${sub.label}</td>`;
-        ['−−','−','+','++'].forEach(l => tH += `<td style="text-align:center;font-size:2.8mm;font-weight:700;color:${cc};background:${cl};padding:0.8mm;vertical-align:middle">${l}</td>`);
-        tH += `</tr>`;
-        // Indicator rows
-        si.forEach(idx => {
-          tH += `<tr><td style="font-size:2mm;padding:1mm 2mm;color:#444;border-top:0.15mm solid #DDD;vertical-align:middle">${getIndText(sub.id, idx, sub)}</td>`;
-          for (let c = 0; c < 4; c++) tH += `<td style="text-align:center;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;padding:0.5mm;vertical-align:middle;font-size:3.5mm;color:#CCC">&#9744;</td>`;
-          tH += `</tr>`;
-        });
-        tH += `</table>`;
-        blocks.push({ html: tH, type: 'fixed' });
+    // Sub-table row style helpers
+    const COL='<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>';
+    function tOpen(extraStyle){return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;'+(extraStyle||'')+'">'+COL;}
+    function tClose(){return '</table>';}
+    function hdrRow(cc,cl,label){
+      let r='<tr><td style="background:'+cc+';color:white;font-weight:700;font-size:2.47mm;height:7mm;padding:0 2mm;line-height:7mm">'+esc(label)+'</td>';
+      GRADES.forEach(l=>r+='<td style="text-align:center;font-size:3mm;font-weight:700;color:'+cc+';background:'+cl+';height:7mm;line-height:7mm">'+l+'</td>');
+      return r+'</tr>';
+    }
+    function indRow(text){
+      let r='<tr><td style="font-size:1.94mm;padding:3mm 2mm;color:#444;border-top:0.15mm solid #DDD;line-height:1.65">'+esc(text)+'</td>';
+      for(let c=0;c<4;c++)r+='<td style="text-align:center;vertical-align:middle;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;background:white;font-size:3mm;color:#BBB">'+CB+'</td>';
+      return r+'</tr>';
+    }
+    active.forEach(comp=>{
+      comp.subs.forEach(sub=>{
+        const si=selections[sub.id]||[];if(!si.length)return;
+        const cc=dc(comp.color),cl=dcLight(comp.colorLight);
+        // First block: header + first indicator row (must stay together, like PDF)
+        const hdrHtml=tOpen('margin-bottom:0')+hdrRow(cc,cl,sub.label)+tClose();
+        // Push a hidden hdr-only block so the ruler can measure it (cap at 7mm = PDF HDR)
+        const hdrBlock={html:hdrHtml, hdrOnly:true, hdrHmm:0, capMm:0};
+        blocks.push(hdrBlock);
+        blocks.push({html: tOpen('margin-bottom:0')+hdrRow(cc,cl,sub.label)+indRow(getIndText(sub.id,si[0],sub))+tClose(), subStart:true, hdrBlock});
+        // Remaining rows: each as its own block (continuation of same table visually)
+        for(let ri=1;ri<si.length;ri++){
+          blocks.push({html: tOpen('margin-bottom:'+(ri===si.length-1?'1':'0')+'mm')+indRow(getIndText(sub.id,si[ri],sub))+tClose(), subCont:true, hdrBlock});
+        }
       });
     });
 
-    // Legend block
-    blocks.push({ html: `<div style="font-size:1.8mm;color:#AAA;font-style:italic;margin:1mm 0 2mm 0">−− nicht genügend · − genügend · + gut · ++ sehr gut</div>`, type: 'fixed' });
+    // Legend
+    blocks.push({html:'<div style="font-size:1.94mm;color:#AAA;font-style:italic;margin:1mm 0 2.5mm 0">-- nicht genügend · - genügend · + gut · ++ sehr gut</div>'});
 
-    // Gesamtbeurteilung block
-    let gH = `<div style="border:0.4mm solid #222;border-radius:1mm;padding:2mm 2.5mm;margin-top:1.5mm">`;
-    gH += `<div style="font-weight:800;font-size:2.4mm;color:#222;margin-bottom:1.5mm">GESAMTBEURTEILUNG</div>`;
-    gH += `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:2.1mm">`;
-    gH += `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-    gH += `<tr><td style="padding:1mm 1.5mm;background:#F7F7F5"></td>`;
-    ['−−','−','+','++'].forEach(l => gH += `<td style="text-align:center;border-left:0.15mm solid #DDD;padding:0.8mm;background:#F7F7F5;font-weight:700;font-size:2.4mm">${l}</td>`);
-    gH += `</tr>`;
-    active.forEach(comp => {
-      gH += `<tr><td style="border-top:0.15mm solid #DDD;padding:1mm 1.5mm;font-weight:600;color:${dc(comp.color)};font-size:2.1mm">${comp.label} <span style="font-weight:400;color:#AAA;font-size:1.8mm">(${comp.shortLabel})</span></td>`;
-      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;padding:0.5mm;font-size:3.5mm;color:${dc(comp.color)}">&#9744;</td>`;
-      gH += `</tr>`;
+    // ── Gesamtbeurteilung ──
+    let gH='<div style="border:0.4mm solid #222;border-radius:0.5mm;overflow:hidden;margin-top:1mm">';
+    gH+='<div style="font-weight:800;font-size:3mm;color:#222;padding:1.5mm 2mm;border-bottom:0.15mm solid #DDD">GESAMTBEURTEILUNG</div>';
+    gH+='<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
+      +'<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>';
+    // grades header
+    gH+='<tr><td style="background:#F7F7F5;padding:1mm"></td>';
+    GRADES.forEach(l=>gH+='<td style="text-align:center;border-left:0.15mm solid #DDD;background:#F7F7F5;font-weight:700;font-size:3mm;padding:1mm 0">'+l+'</td>');
+    gH+='</tr>';
+    // comp rows
+    active.forEach(comp=>{
+      const bg=colorMode?dcLight(comp.colorLight):'#F8F8F6';
+      gH+='<tr><td style="border-top:0.15mm solid #DDD;padding:1.2mm 2mm;font-weight:700;font-size:2.3mm;color:'+dc(comp.color)+'">'+comp.label
+        +' <span style="font-weight:400;color:#AAA;font-size:1.94mm">('+comp.shortLabel+')</span></td>';
+      for(let c=0;c<4;c++)gH+='<td style="text-align:center;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;background:'+bg+';font-size:3mm;color:#BBB">'+CB+'</td>';
+      gH+='</tr>';
     });
-    gH += `<tr><td style="border-top:0.3mm solid #999;padding:1mm 1.5mm;font-weight:800;background:#F7F7F5;font-size:2.4mm">GESAMT</td>`;
-    for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border-top:0.3mm solid #999;border-left:0.15mm solid #DDD;padding:0.5mm;background:#F7F7F5;font-size:4mm;color:#222">&#9744;</td>`;
-    gH += `</tr></table></div>`;
-    blocks.push({ html: gH, type: 'fixed' });
+    // Gesamt row
+    gH+='<tr><td style="border-top:0.3mm solid #999;background:#F7F7F5;padding:1.5mm 2mm;font-weight:800;font-size:3mm;color:#222">GESAMT</td>';
+    for(let c=0;c<4;c++)gH+='<td style="text-align:center;border-top:0.3mm solid #999;border-left:0.15mm solid #DDD;background:#F7F7F5;font-size:3.5mm;color:#888">'+CB+'</td>';
+    gH+='</tr></table></div>';
+    blocks.push({html:gH});
   }
 
-  // Reflexion blocks
-  const reflBlocks = [];
-  if (total > 0) {
-    // Refl title
-    let rTitle = `<div style="margin-bottom:3mm;padding-bottom:2mm;border-bottom:0.5mm solid #222">`;
-    rTitle += `<div style="font-size:4.5mm;font-weight:800;letter-spacing:-0.05mm;color:#222">REFLEXION & BEGRÜNDUNG</div>`;
-    rTitle += `<div style="font-size:2.4mm;color:#888;margin-top:0.5mm">${esc(title)}</div>`;
-    rTitle += `</div>`;
-    reflBlocks.push({ html: rTitle, type: 'fixed' });
-    reflBlocks.push({ html: `<div style="display:flex;align-items:baseline;gap:1mm;margin-bottom:3mm;font-size:2.4mm;color:#444"><span style="font-weight:600">Name:</span><span style="flex:1;border-bottom:0.2mm solid #888;max-width:50mm;min-height:5mm"></span></div>`, type: 'fixed' });
-    reflBlocks.push({ html: `<div style="font-size:2mm;color:#AAA;font-style:italic;margin-bottom:3mm">Begründe pro Kompetenz in 1–2 Sätzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!</div>`, type: 'fixed' });
-    active.forEach(comp => {
-      if (!comp.subs.some(s => (selections[s.id] || []).length > 0)) return;
-      let rB = `<div style="border:0.15mm solid #D0D0CE;border-left:0.8mm solid ${dc(comp.color)};border-radius:1mm;padding:2mm 2.5mm;margin-bottom:2mm">`;
-      rB += `<div style="font-weight:700;font-size:2.4mm;color:${dc(comp.color)};margin-bottom:1mm">${comp.label} <span style="font-weight:400;color:#AAA;font-size:2mm;font-style:italic">(${comp.shortLabel})</span></div>`;
-      for (let i = 0; i < 3; i++) rB += `<div style="border-bottom:0.15mm solid #DDD;height:5mm;margin:0.5mm 0"></div>`;
-      rB += `</div>`;
-      reflBlocks.push({ html: rB, type: 'fixed' });
+  // ── Reflexion page ──
+  const reflBlocks=[];
+  if(total>0&&showRefl){
+    // Title
+    reflBlocks.push({html:'<div style="margin-bottom:2mm;padding-bottom:2mm;border-bottom:0.5mm solid #222">'
+      +'<div style="font-size:4.94mm;font-weight:800;color:#222">REFLEXION &amp; BEGRÜNDUNG</div>'
+      +'<div style="font-size:2.82mm;color:#888;margin-top:0.5mm">'+esc(title)+'</div></div>'});
+    // Name
+    reflBlocks.push({html:'<div style="display:flex;align-items:flex-end;gap:1mm;margin-bottom:2mm;padding-top:1mm">'
+      +'<span style="font-size:2.65mm;font-weight:700;color:#444;white-space:nowrap">Name:</span>'
+      +'<span style="flex:1;border-bottom:0.25mm solid #888;max-width:50mm"></span></div>'});
+    // Hint
+    reflBlocks.push({html:'<div style="font-size:1.94mm;color:#AAA;font-style:italic;margin-bottom:2mm">'
+      +'Begründe pro Kompetenz in 1–2 Sätzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!</div>'});
+    // Comp boxes — mirror drawReflComp: TOP_PAD=1.5, TITLE_H=5, GAP=5, LINE_SPACING=8, N_LINES=3, BOT_PAD=3
+    active.forEach(comp=>{
+      if(!comp.subs.some(s=>(selections[s.id]||[]).length>0))return;
+      const bc=colorMode?dc(comp.color):'#999999';
+      let b='<div style="border:0.15mm solid #D0D0CE;border-left:0.8mm solid '+bc
+        +';border-radius:1mm;padding:1.5mm 2.5mm 3mm 2.5mm;margin-bottom:2mm">'
+        +'<div style="font-weight:700;font-size:2.65mm;color:'+bc+';margin-bottom:5mm;padding-bottom:0">'
+        +comp.label+' <span style="font-weight:400;color:#AAA;font-size:2.1mm;font-style:italic">('+comp.shortLabel+')</span></div>';
+      for(let i=0;i<3;i++)b+='<div style="border-bottom:0.15mm solid #DDD;height:8mm'+(i<2?';margin-bottom:0':'')+'"></div>';
+      b+='</div>';
+      reflBlocks.push({html:b});
     });
-    const gespBg = colorMode ? '#FFFBEB' : '#F5F5F3';
-    const gespBorder = colorMode ? '#F59E0B' : '#999';
-    const gespLine = colorMode ? '#FDE68A' : '#DDD';
-    let gespH = `<div style="background:${gespBg};border:0.3mm solid ${gespBorder};border-radius:1mm;padding:2mm 2.5mm;margin-top:3mm">`;
-    gespH += `<div style="font-weight:700;font-size:2.4mm;color:#222;margin-bottom:1mm">2-MINUTEN-GESPRÄCH (Lehrperson)</div>`;
-    gespH += `<div style="font-size:2mm;color:#AAA;font-style:italic;margin-bottom:1.5mm">Kurze Notizen / Abweichungen zur Selbsteinschätzung:</div>`;
-    for (let i = 0; i < 4; i++) gespH += `<div style="border-bottom:0.15mm solid ${gespLine};height:5mm;margin:0.5mm 0"></div>`;
-    gespH += `</div>`;
-    reflBlocks.push({ html: gespH, type: 'fixed' });
+
+    // Gesprächsblock — mirror drawGespBlock: same as refl but N_LINES=4, yellow/grey bg
+    if(showGesp){
+      const gBg=colorMode?'#FFFBEB':'#F5F5F3',gBo=colorMode?'#F59E0B':'#999',gLn=colorMode?'#FDE68A':'#DDD';
+      let g='<div style="background:'+gBg+';border:0.3mm solid '+gBo+';border-radius:1mm;padding:1.5mm 2.5mm 3mm 2.5mm;margin-top:2mm">'
+        +'<div style="font-weight:700;font-size:2.65mm;color:#222;margin-bottom:5mm">2-MINUTEN-GESPRÄCH (Lehrperson)'
+        +'<span style="display:block;font-weight:400;font-size:1.94mm;color:#AAA;font-style:italic;margin-top:0.5mm">Kurze Notizen / Abweichungen zur Selbsteinschätzung:</span></div>';
+      for(let i=0;i<4;i++)g+='<div style="border-bottom:0.15mm solid '+gLn+';height:8mm'+(i<3?';margin-bottom:0':'')+'"></div>';
+      g+='</div>';
+      reflBlocks.push({html:g});
+    }
   }
+  // ── Measure block heights via hidden DOM, then paginate ──
+  // Wait for DM Sans to load so measurements are accurate
+  if(typeof document.fonts!=='undefined' && document.fonts.status!=='loaded'){
+    document.fonts.ready.then(()=>renderPreview());
+    return;
+  }
+  // A4 usable height in mm (297 - 22 top - 18 bottom = 257mm)
+  const PAGE_H_MM=257;
 
-  // Step 1: Render all blocks into a hidden measuring container
-  const allBlocks = [...blocks, ...reflBlocks];
-  let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:210mm;padding:25mm 25mm 20mm 25mm;font-size:2.8mm;line-height:1.2">`;
-  allBlocks.forEach((b, i) => measH += `<div data-block="${i}">${b.html}</div>`);
-  measH += `</div>`;
-  document.getElementById('preview').innerHTML = measH;
+  // 1. Measure how many px = 1mm in current browser
+  const mmRef=document.createElement('div');
+  mmRef.style.cssText='position:absolute;visibility:hidden;height:10mm;width:1px;left:-9999px';
+  document.body.appendChild(mmRef);
+  const PX_PER_MM=mmRef.offsetHeight/10;
+  mmRef.remove();
 
-  // Step 2: Measure each block height
-  // Measure actual usable height by creating a ruler in the same context
-  const ruler = document.createElement('div');
-  ruler.style.cssText = 'position:absolute;visibility:hidden;width:1px;height:252mm'; // 297-25-20=252mm
+  // 2. Render all blocks in a ruler div at exactly 166mm wide (= CW, A4 minus margins)
+  const ruler=document.createElement('div');
+  ruler.style.cssText='position:absolute;visibility:hidden;width:166mm;left:-9999px;top:0;font-family:DM Sans,sans-serif';
+  const allBlocks=[...blocks.map(b=>({...b,page:'main'})),...reflBlocks.map(b=>({...b,page:'refl'}))];
+  allBlocks.forEach((b,i)=>{
+    const d=document.createElement('div');
+    d.setAttribute('data-bi',i);
+    d.innerHTML=b.html;
+    ruler.appendChild(d);
+  });
   document.body.appendChild(ruler);
-  const usableH = ruler.offsetHeight - 5; // small safety margin
+
+  // 3. Convert px heights to mm
+  allBlocks.forEach((b,i)=>{
+    const el=ruler.querySelector('[data-bi="'+i+'"]');
+    b.hmm=el?el.offsetHeight/PX_PER_MM:10;
+    if(b.capMm) b.hmm=Math.min(b.hmm, b.capMm); // cap hdr to PDF value
+  });
   ruler.remove();
 
-  const measureEl = document.getElementById('a4-measure');
-  allBlocks.forEach((b, i) => {
-    const el = measureEl.querySelector(`[data-block="${i}"]`);
-    b.h = el ? el.offsetHeight : 0;
-  });
-
-  // Step 3: Distribute blocks into pages
-  function distributeBlocks(blockList) {
-    const pages = [];
-    let currentPage = [];
-    let currentH = 0;
-
-    blockList.forEach(block => {
-      if (currentH + block.h > usableH && currentPage.length > 0) {
-        pages.push(currentPage);
-        currentPage = [];
-        currentH = 0;
+  // 4. Paginate — same logic as PDF: header+firstRow must fit together,
+  //    header repeats on new page when continuation rows overflow
+  function paginate(list){
+    const pages=[];let cur=[],curH=0,pageNum=0;
+    // Page 2+ gets a small extra budget to match PDF spacing
+    // (separate <table> elements in HTML have slightly less gap than jsPDF's continuous draw)
+    const EXTRA=pageNum===0?0:4.5;
+    list.forEach(b=>{
+      if(b.hdrOnly) return; // skip — only used for height measurement
+      const budget=PAGE_H_MM+(pages.length>0?4.5:0);
+      if(curH+b.hmm>budget&&cur.length>0){
+        pages.push(cur);cur=[];curH=0;
+        // If this is a continuation row, repeat the measured header on new page
+        if(b.subCont && b.hdrBlock){
+          cur.push(b.hdrBlock.html);
+          curH+=Math.min(b.hdrBlock.hmm||0, b.hdrBlock.capMm||999);
+        }
       }
-      currentPage.push(block.html);
-      currentH += block.h;
+      cur.push(b.html);curH+=b.hmm;
     });
-    if (currentPage.length > 0) pages.push(currentPage);
+    if(cur.length)pages.push(cur);
     return pages;
   }
-
-  const mainPages = distributeBlocks(blocks);
-  const reflPages = distributeBlocks(reflBlocks);
-  
-  // Store for PDF reuse
-  window._lastPages = [...mainPages, ...reflPages];
-
-  // Step 4: Render pages
-  let out = `<div class="a4-wrapper">`;
-  const allPages = [...mainPages, ...reflPages];
-  allPages.forEach((pg, i) => {
-    out += `<div class="a4-frame"><div class="a4-page-label">Seite ${i + 1}</div><div class="a4-inner">`;
-    out += pg.join('');
-    out += `</div></div>`;
-  });
-  out += `</div>`;
-  document.getElementById('preview').innerHTML = out;
-
-  setTimeout(scaleA4Pages, 30);
+  const mainBlocks=allBlocks.filter(b=>b.page==='main');
+  const reflBlocksF=allBlocks.filter(b=>b.page==='refl');
+  const mP=paginate(mainBlocks);
+  const rP=paginate(reflBlocksF);
+  const allPages=[...mP,...rP];
+  window._lastPages=allPages;
+  let out='<div class="a4-wrapper">';
+  allPages.forEach((pg,i)=>{out+='<div class="a4-frame"><div class="a4-page-label">Seite '+(i+1)+'</div><div class="a4-inner">'+pg.join('')+'</div></div>';});
+  out+='</div>';
+  document.getElementById('preview').innerHTML=out;
+  setTimeout(scaleA4Pages,30);
 }
 
-function scaleA4Pages() {
-  const frames = document.querySelectorAll('.a4-frame');
-  if (!frames.length) return;
-  
-  // Measure what 210mm equals in pixels in this context
-  const mmRuler = document.createElement('div');
-  mmRuler.style.cssText = 'position:absolute;visibility:hidden;width:210mm;height:1px';
-  document.body.appendChild(mmRuler);
-  const innerNativeW = mmRuler.offsetWidth;
-  mmRuler.remove();
-  
-  // First pass: find the minimum scale needed
-  let minScale = Infinity;
-  const measurements = [];
-  
-  frames.forEach(frame => {
-    const inner = frame.querySelector('.a4-inner');
-    if (!inner) { measurements.push(null); return; }
-    inner.style.transform = 'none';
-    void inner.offsetHeight;
-    
-    const frameW = frame.clientWidth;
-    const scale = frameW / innerNativeW;
-    
-    if (scale < minScale) minScale = scale;
-    measurements.push({ inner, frameW });
-  });
-  
-  // Second pass: apply uniform scale
-  measurements.forEach(m => {
-    if (!m) return;
-    const scaledW = innerNativeW * minScale;
-    const offsetX = (m.frameW - scaledW) / 2;
-    m.inner.style.transform = `translateX(${offsetX}px) scale(${minScale})`;
-    m.inner.style.transformOrigin = 'top left';
-  });
+function scaleA4Pages(){
+  const frames=document.querySelectorAll('.a4-frame');if(!frames.length)return;
+  const mmR=document.createElement('div');mmR.style.cssText='position:absolute;visibility:hidden;width:210mm;height:1px';document.body.appendChild(mmR);const nW=mmR.offsetWidth;mmR.remove();
+  let minS=Infinity;const meas=[];
+  frames.forEach(frame=>{const inner=frame.querySelector('.a4-inner');if(!inner){meas.push(null);return;}inner.style.transform='none';void inner.offsetHeight;const fW=frame.clientWidth,s=fW/nW;if(s<minS)minS=s;meas.push({inner,fW});});
+  meas.forEach(m=>{if(!m)return;const sW=nW*minS,ox=(m.fW-sW)/2;m.inner.style.transform='translateX('+ox+'px) scale('+minS+')';m.inner.style.transformOrigin='top left';});
 }
 
-function generatePDF(){
-  renderPreview(); // ensure fresh
-  const pages = window._lastPages;
-  if (!pages || !pages.length) return;
+// jsPDF DIRECT RENDERING
+async function generatePDF(){
+  const btn=document.getElementById('btn-pdf'),ov=document.getElementById('pdf-overlay');
+  btn.disabled=true;ov.classList.add('active');
+  await new Promise(r=>setTimeout(r,60));
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const PW=210,ML=22,MR=22,MT=22,MB=18,CW=PW-ML-MR,PH=297;
+    const usableH=PH-MT-MB;
 
-  const docTitle = document.getElementById('docTitle').value || 'Challenge-Beurteilung';
-  const docSub = document.getElementById('docSubtitle').value || '';
-  const pdfName = docSub ? docTitle + ' - ' + docSub : docTitle;
+    const title=document.getElementById('docTitle').value||'CHALLENGE-BEURTEILUNG';
+    const subtitle=document.getElementById('docSubtitle').value||'';
+    const school=document.getElementById('schoolName').value;
+    const assignment=document.getElementById('assignmentText').value;
+    const active=getActiveComps();
+    let total=0;Object.values(selections).forEach(a=>total+=a.length);
 
-  let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>${esc(pdfName)}</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-@page{size:A4;margin:0}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
-body{font-family:'DM Sans',sans-serif;margin:0;padding:0;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
-table{border-spacing:0;border-collapse:collapse}
-.pg{width:210mm;height:297mm;padding:25mm 25mm 20mm 25mm;font-size:2.8mm;color:#1A1A1A;line-height:1.2;overflow:hidden;page-break-after:always}
-.pg:last-child{page-break-after:auto}
-@media print{.ph{display:none!important}}
-@media screen{body{background:#eee;padding:20px}.pg{margin:0 auto 20px;background:white;box-shadow:0 2px 10px rgba(0,0,0,0.15)}}
-</style></head><body>
-<div class="ph" style="position:fixed;top:0;left:0;right:0;background:#FEF3C7;color:#92400E;padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;text-align:center;z-index:9999;border-bottom:1px solid #F59E0B"><strong>Tipp:</strong> Im Druckdialog «Hintergrundgrafiken» aktivieren.</div>`;
+    function sf(hex){const[r,g,b]=hexToRgb(hex);doc.setFillColor(r,g,b);}
+    function ss(hex){const[r,g,b]=hexToRgb(hex);doc.setDrawColor(r,g,b);}
+    function stc(hex){
+      const map={'white':[255,255,255],'#FFF':[255,255,255],'#FFFFFF':[255,255,255],
+        '#222':[34,34,34],'#222222':[34,34,34],'#444':[68,68,68],'#444444':[68,68,68],
+        '#555':[85,85,85],'#555555':[85,85,85],'#888':[136,136,136],'#888888':[136,136,136],
+        '#AAA':[170,170,170],'#AAAAAA':[170,170,170],'#999':[153,153,153],'#999999':[153,153,153],
+        '#333333':[51,51,51],'#8A8780':[138,135,128]};
+      if(map[hex])doc.setTextColor(...map[hex]);
+      else{const[r,g,b]=hexToRgb(hex);doc.setTextColor(r,g,b);}
+    }
+    function wrap(text,maxW,fs){doc.setFontSize(fs);return doc.splitTextToSize(text||' ',maxW);}
+    function drawCB(x,y,sz=3.2){doc.setLineWidth(0.2);ss('#CCCCCC');doc.setFillColor(255,255,255);doc.rect(x,y,sz,sz,'S');}
 
-  pages.forEach(pg => {
-    html += `<div class="pg">${pg.join('')}</div>`;
-  });
+    let pageY=MT;
+    function newPage(){doc.addPage();pageY=MT;}
+    function checkSpace(need){if(pageY+need>MT+usableH)newPage();}
 
-  html += `</body></html>`;
+    function drawTitleBlock(){
+      checkSpace(18);const x=ML,y=pageY;
+      doc.setFont('helvetica','bold');doc.setFontSize(14);stc('#222');
+      const tL=wrap(title,CW,14);let ty=y+5.5;tL.forEach(l=>{doc.text(l,x,ty);ty+=5.5;});
+      if(subtitle||school){doc.setFont('helvetica','normal');doc.setFontSize(8);stc('#888');doc.text(subtitle+(school?' \u00b7 '+school:''),x,ty+1);ty+=5;}
+      ty+=1;doc.setLineWidth(0.5);ss('#222222');doc.line(x,ty,x+CW,ty);pageY=ty+4;
+    }
+    function drawFieldsBlock(){
+      const af=getActiveFields();if(!af.length)return;
+      const hW=CW/2-2;
+      for(let r=0;r<af.length;r+=2){
+        checkSpace(6);const y=pageY+3;
+        doc.setFont('helvetica','bold');doc.setFontSize(7.5);stc('#444');
+        const lL=af[r].label+':';doc.text(lL,ML,y);const lW=doc.getTextWidth(lL)+1.5;
+        doc.setLineWidth(0.25);ss('#888888');doc.line(ML+lW,y+0.3,ML+hW,y+0.3);
+        if(af[r+1]){const rX=ML+CW/2+2,rL=af[r+1].label+':';doc.setFont('helvetica','bold');doc.setFontSize(7.5);stc('#444');doc.text(rL,rX,y);const rW=doc.getTextWidth(rL)+1.5;doc.setLineWidth(0.25);ss('#888888');doc.line(rX+rW,y+0.3,ML+CW,y+0.3);}
+        pageY+=7;
+      }
+      pageY+=2;
+    }
+    function drawAssignmentBlock(){
+      if(!assignment)return;
+      const x=ML,y=pageY;const lines=wrap(assignment,CW-8,6.5);const boxH=lines.length*3.2+10;
+      checkSpace(boxH+3);
+      doc.setFillColor(247,247,245);doc.setLineWidth(0.15);ss('#D0D0CE');doc.roundedRect(x,y,CW,boxH,1,1,'FD');
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);stc('#222');doc.text('Auftrag:',x+3,y+5.5);
+      doc.setFont('helvetica','normal');doc.setFontSize(6.5);stc('#555');
+      let ty=y+9.5;lines.forEach(l=>{doc.text(l,x+3,ty);ty+=3.2;});
+      pageY=y+boxH+3;
+    }
+    function drawSubTable(comp,sub){
+      const si=selections[sub.id]||[];if(!si.length)return;
+      const colW=[CW*0.52,CW*0.12,CW*0.12,CW*0.12,CW*0.12];
+      const grades=['--','-','+','++'];
+      const FS_IND=5.5, LINE_H=3.2, PAD_V=2.5;
+      const HDR=7,COLOR=dc(comp.color),CL=dcLight(comp.colorLight);
+      const pageBottom=MT+usableH;
 
-  const w = window.open('','_blank','width=800,height=1000');
-  w.document.write(html);
-  w.document.close();
-  setTimeout(() => w.print(), 800);
+      // Pre-calculate all row heights
+      const rowData=si.map(idx=>{
+        const txt=getIndText(sub.id,idx,sub);
+        const lines=wrap(txt,colW[0]-5,FS_IND);
+        return {lines,rh:lines.length*LINE_H+PAD_V*2};
+      });
+
+      // Helper: draw the coloured table header at current pageY
+      function drawHeader(){
+        const x=ML,y=pageY;
+        sf(COLOR);doc.rect(x,y,colW[0],HDR,'F');
+        sf(CL);let cx=x+colW[0];for(let c=0;c<4;c++){doc.rect(cx,y,colW[c+1],HDR,'F');cx+=colW[c+1];}
+        const mid=y+HDR/2;
+        doc.setFont('helvetica','bold');doc.setFontSize(7);stc('white');
+        doc.text(sub.label,x+2,mid,{baseline:'middle'});
+        doc.setFont('helvetica','bold');doc.setFontSize(8.5);
+        cx=x+colW[0];grades.forEach((l,c)=>{stc(COLOR);const lw=doc.getTextWidth(l);doc.text(l,cx+(colW[c+1]-lw)/2,mid,{baseline:'middle'});cx+=colW[c+1];});
+        pageY+=HDR;
+      }
+
+      // Helper: draw one indicator row at current pageY, return drawn height
+      function drawRow({lines,rh}){
+        const x=ML,ry=pageY;
+        doc.setLineWidth(0.15);ss('#DDDDDD');doc.line(x,ry,x+CW,ry);
+        doc.setFont('helvetica','normal');doc.setFontSize(FS_IND);stc('#444');
+        const textBlockH=(lines.length-1)*LINE_H;
+        const textStartY=ry+rh/2-textBlockH/2;
+        lines.forEach((l,li)=>doc.text(l,x+2,textStartY+li*LINE_H,{baseline:'middle'}));
+        let cx=x+colW[0];
+        for(let c=0;c<4;c++){
+          doc.setLineWidth(0.15);ss('#DDDDDD');doc.line(cx,ry,cx,ry+rh);
+          const sz=3.2;drawCB(cx+(colW[c+1]-sz)/2,ry+(rh-sz)/2,sz);
+          cx+=colW[c+1];
+        }
+        pageY+=rh;
+      }
+
+      // Decide: does header + at least 1 row fit on current page?
+      const firstRowH=rowData.length>0?rowData[0].rh:0;
+      if(pageY+HDR+firstRowH>pageBottom) newPage();
+
+      // Track where each "segment" (header..rows) starts so we can draw the outer border
+      let segStartY=pageY;
+      drawHeader();
+
+      rowData.forEach((row,ri)=>{
+        // Does this row still fit?
+        if(pageY+row.rh>pageBottom){
+          // Close current segment with a border
+          doc.setLineWidth(0.15);ss('#DDDDDD');doc.rect(ML,segStartY,CW,pageY-segStartY,'S');
+          // New page — redraw header (continuation)
+          newPage();
+          segStartY=pageY;
+          drawHeader();
+        }
+        drawRow(row);
+      });
+
+      // Close final segment
+      doc.setLineWidth(0.15);ss('#DDDDDD');doc.rect(ML,segStartY,CW,pageY-segStartY,'S');
+      pageY+=2.5;
+    }
+    function drawLegend(){
+      checkSpace(6);doc.setFont('helvetica','italic');doc.setFontSize(5.5);stc('#AAAAAA');
+      doc.text('-- nicht gen\u00fcgend  \u00b7  - gen\u00fcgend  \u00b7  + gut  \u00b7  ++ sehr gut',ML,pageY+3.5);pageY+=7;
+    }
+    function drawSummaryBlock(){
+      const colW=[CW*0.52,CW*0.12,CW*0.12,CW*0.12,CW*0.12];
+      const grades=['--','-','+','++'];
+      const TH=8,HH=6,RH=7.5,TOTH=7;
+      const tH=HH+active.length*RH+TOTH;
+      const boxH=TH+tH;
+      checkSpace(boxH+4);const x=ML,y=pageY;
+
+      // Outer border: 0.4mm stroke drawn centered on the rect edge.
+      // jsPDF strokes are centered on the path, so a 0.4mm line means 0.2mm inside.
+      // All fills must stay >= 0.2mm inside x/y/x+CW/y+boxH.
+      const LW=0.4, INSET=LW/2; // 0.2mm inset
+      const ix=x+INSET, iy=y+INSET, iw=CW-LW, ih=boxH-LW;
+
+      const ty=y+TH;
+      const totY=ty+HH+active.length*RH;
+
+      // ── 1. Fills (all clipped to inner area) ──
+
+      // Header row grey fill
+      doc.setFillColor(247,247,245);
+      doc.rect(ix, ty, iw, HH, 'F');
+
+      // Comp row coloured fills (right 4 cols only)
+      active.forEach((comp,ri)=>{
+        const ry=ty+HH+ri*RH;
+        // right section x: colW[0] from left border — no inset needed on left since colW divider is internal
+        // right edge: inset by INSET from outer border
+        sf(colorMode?dcLight(comp.colorLight):'#F8F8F6');
+        doc.rect(x+colW[0], ry, CW-colW[0]-INSET, RH, 'F');
+      });
+
+      // Total row grey fill — full width, inset from outer border
+      doc.setFillColor(247,247,245);
+      doc.rect(ix, totY, iw, TOTH-INSET, 'F');
+
+      // ── 2. Text ──
+
+      // Title
+      doc.setFont('helvetica','bold');doc.setFontSize(8.5);stc('#222');
+      doc.text('GESAMTBEURTEILUNG',x+3,y+TH/2,{baseline:'middle'});
+
+      // Header grade labels
+      let cx=x+colW[0];
+      const HDR_MID=ty+HH/2;
+      grades.forEach((l,c)=>{
+        doc.setFont('helvetica','bold');doc.setFontSize(8.5);stc('#555');
+        const lw=doc.getTextWidth(l);
+        doc.text(l,cx+(colW[c+1]-lw)/2,HDR_MID,{baseline:'middle'});
+        cx+=colW[c+1];
+      });
+
+      // Comp rows
+      active.forEach((comp,ri)=>{
+        const ry=ty+HH+ri*RH;
+        const rowMid=ry+RH/2;
+        doc.setFont('helvetica','bold');doc.setFontSize(6.5);
+        stc(colorMode?dc(comp.color):'#333333');
+        doc.text(comp.label,x+2,rowMid,{baseline:'middle'});
+        const lw=doc.getTextWidth(comp.label);
+        doc.setFont('helvetica','normal');doc.setFontSize(5.5);stc('#AAAAAA');
+        doc.text('('+comp.shortLabel+')',x+2+lw+1.5,rowMid,{baseline:'middle'});
+        cx=x+colW[0];
+        for(let c=0;c<4;c++){const sz=3.5;drawCB(cx+(colW[c+1]-sz)/2,ry+(RH-sz)/2,sz);cx+=colW[c+1];}
+      });
+
+      // Total row
+      const totMid=totY+TOTH/2;
+      doc.setFont('helvetica','bold');doc.setFontSize(8.5);stc('#222');
+      doc.text('GESAMT',x+2,totMid,{baseline:'middle'});
+      cx=x+colW[0];
+      for(let c=0;c<4;c++){const sz=4.2;drawCB(cx+(colW[c+1]-sz)/2,totY+(TOTH-sz)/2,sz);cx+=colW[c+1];}
+
+      // ── 3. Internal lines ──
+      doc.setLineWidth(0.15);ss('#DDDDDD');
+      // Separator under title
+      doc.line(x,y+TH,x+CW,y+TH);
+      // Vertical dividers in header row
+      cx=x+colW[0];grades.forEach((l,c)=>{doc.line(cx,ty,cx,ty+HH);cx+=colW[c+1];});
+      // Horizontal row separators + vertical dividers per comp row
+      active.forEach((comp,ri)=>{
+        const ry=ty+HH+ri*RH;
+        doc.line(x,ry,x+CW,ry);
+        cx=x+colW[0];for(let c=0;c<4;c++){doc.line(cx,ry,cx,ry+RH);cx+=colW[c+1];}
+      });
+      // Vertical dividers in total row
+      cx=x+colW[0];for(let c=0;c<4;c++){doc.line(cx,totY,cx,totY+TOTH);cx+=colW[c+1];}
+
+      // ── 4. Thick separator above GESAMT ──
+      doc.setLineWidth(0.3);ss('#999999');
+      doc.line(x,totY,x+CW,totY);
+
+      // ── 5. Outer border LAST (always on top) ──
+      doc.setLineWidth(LW);ss('#222222');
+      doc.rect(x,y,CW,boxH,'S');
+
+      pageY=y+boxH+4;
+    }
+    function drawReflTitle(){
+      checkSpace(18);const x=ML,y=pageY;
+      doc.setFont('helvetica','bold');doc.setFontSize(14);stc('#222');doc.text('REFLEXION & BEGR\u00dcNDUNG',x,y+5.5);
+      doc.setFont('helvetica','normal');doc.setFontSize(8);stc('#888');doc.text(title,x,y+10);
+      doc.setLineWidth(0.5);ss('#222222');doc.line(x,y+13,x+CW,y+13);pageY=y+17;
+    }
+    function drawReflName(){
+      checkSpace(12);doc.setFont('helvetica','bold');doc.setFontSize(7.5);stc('#444');doc.text('Name:',ML,pageY+5.5);
+      const lw=doc.getTextWidth('Name:')+1.5;doc.setLineWidth(0.25);ss('#888888');doc.line(ML+lw,pageY+5.8,ML+58,pageY+5.8);pageY+=12;
+    }
+    function drawReflHint(){
+      checkSpace(8);doc.setFont('helvetica','italic');doc.setFontSize(5.5);stc('#AAAAAA');
+      doc.text('Begr\u00fcnde pro Kompetenz in 1\u20132 S\u00e4tzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!',ML,pageY+3.5);pageY+=8;
+    }
+    function drawReflComp(comp){
+      // Layout: title row, then 3 writing lines evenly spaced, tight bottom
+      // TOP_PAD: space above title
+      // TITLE_H: height of title row
+      // GAP: space between title bottom and first line — generous for writing room
+      // LINE_SPACING: distance between lines (= writing row height)
+      // BOT_PAD: space below last line to box edge — just enough to not feel cramped
+      const LINE_SPACING=8, N_LINES=3, TOP_PAD=1.5, TITLE_H=5, GAP=5, BOT_PAD=3;
+      const BH=TOP_PAD+TITLE_H+GAP+(N_LINES-1)*LINE_SPACING+BOT_PAD;
+      checkSpace(BH+3);const x=ML,y=pageY;
+      doc.setFillColor(255,255,255);doc.setLineWidth(0.15);ss('#D0D0CE');doc.roundedRect(x,y,CW,BH,1,1,'FD');
+      sf(colorMode?dc(comp.color):'#999999');doc.rect(x,y,1.5,BH,'F');
+      const titleY=y+TOP_PAD+TITLE_H/2;
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);stc(colorMode?dc(comp.color):'#222222');doc.text(comp.label,x+4,titleY,{baseline:'middle'});
+      const lw=doc.getTextWidth(comp.label);doc.setFont('helvetica','italic');doc.setFontSize(5.5);stc('#AAAAAA');doc.text('('+comp.shortLabel+')',x+4+lw+1.5,titleY,{baseline:'middle'});
+      const firstLineY=y+TOP_PAD+TITLE_H+GAP;
+      for(let i=0;i<N_LINES;i++){doc.setLineWidth(0.15);ss('#DDDDDD');doc.line(x+4,firstLineY+i*LINE_SPACING,x+CW-2,firstLineY+i*LINE_SPACING);}
+      pageY=y+BH+2;
+    }
+    function drawGespBlock(){
+      // Same layout as drawReflComp
+      const LINE_SPACING=8, N_LINES=4, TOP_PAD=1.5, TITLE_H=5, GAP=5, BOT_PAD=3;
+      const BH=TOP_PAD+TITLE_H+GAP+(N_LINES-1)*LINE_SPACING+BOT_PAD;
+      checkSpace(BH+3);const x=ML,y=pageY;
+      const BG=colorMode?[255,251,235]:[245,245,243];
+      doc.setFillColor(...BG);doc.setLineWidth(0.3);ss(colorMode?'#F59E0B':'#999999');
+      doc.roundedRect(x,y,CW,BH,1,1,'FD');
+      const titleY=y+TOP_PAD+TITLE_H/2;
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);stc('#222');
+      doc.text('2-MINUTEN-GESPR\u00c4CH (Lehrperson)',x+4,titleY,{baseline:'middle'});
+      doc.setFont('helvetica','italic');doc.setFontSize(5.5);stc('#AAAAAA');
+      doc.text('Kurze Notizen / Abweichungen zur Selbsteinsch\u00e4tzung:',x+4,y+TOP_PAD+TITLE_H+2,{baseline:'top'});
+      const firstLineY=y+TOP_PAD+TITLE_H+GAP;
+      const LC=colorMode?[253,230,138]:[221,221,221];
+      for(let i=1;i<N_LINES;i++){
+        doc.setLineWidth(0.15);doc.setDrawColor(...LC);
+        doc.line(x+4,firstLineY+i*LINE_SPACING,x+CW-3,firstLineY+i*LINE_SPACING);
+      }
+      pageY=y+BH+3;
+    }
+
+    drawTitleBlock();drawFieldsBlock();drawAssignmentBlock();
+    if(total===0){doc.setFont('helvetica','italic');doc.setFontSize(9);stc('#BBBBBB');doc.text('Keine Indikatoren ausgew\u00e4hlt.',ML,pageY+8);}
+    else{
+      active.forEach(comp=>{comp.subs.forEach(sub=>{if((selections[sub.id]||[]).length>0)drawSubTable(comp,sub);});});
+      drawLegend();drawSummaryBlock();
+      if(showRefl){
+        newPage();
+        drawReflTitle();drawReflName();drawReflHint();
+        active.forEach(comp=>{if(comp.subs.some(s=>(selections[s.id]||[]).length>0))drawReflComp(comp);});
+        if(showGesp) drawGespBlock();
+      }
+    }
+
+    const t2=document.getElementById('docTitle').value||'Challenge-Beurteilung';
+    const st2=document.getElementById('docSubtitle').value||'';
+    const fn=(st2?t2+' - '+st2:t2).replace(/[\/\\?%*:|"<>]/g,'-');
+    doc.save(fn+'.pdf');
+
+  }catch(err){console.error(err);alert('Fehler: '+err.message);}
+  finally{document.getElementById('pdf-overlay').classList.remove('active');document.getElementById('btn-pdf').disabled=false;}
 }
 
 render();
 loadFromUrl();
-window.addEventListener('resize', () => setTimeout(scaleA4Pages, 100));
-
-// Warn before closing/refreshing if there are selections
-window.addEventListener('beforeunload', e => {
-  let total = 0;
-  Object.values(selections).forEach(a => total += a.length);
-  if (total > 0) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
+window.addEventListener('resize',()=>setTimeout(scaleA4Pages,100));
+window.addEventListener('beforeunload',e=>{let t=0;Object.values(selections).forEach(a=>t+=a.length);if(t>0){e.preventDefault();e.returnValue='';}});
 </script>
 </body>
 </html>
