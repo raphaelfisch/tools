@@ -57,8 +57,8 @@
   .btn-pdf:disabled{opacity:0.3;cursor:not-allowed;}
   .btn-pdf svg{width:13px;height:13px;}
   .a4-wrapper{display:flex;flex-direction:column;align-items:center;gap:20px;padding-bottom:20px;}
-  .a4-frame{width:100%;max-width:520px;aspect-ratio:210/297;background:white;border:1px solid var(--border);border-radius:2px;box-shadow:0 2px 12px rgba(0,0,0,0.1);position:relative;overflow:hidden;margin:0 auto;}
-  .a4-inner{width:210mm;padding:22mm 22mm 18mm 22mm;font-size:2.8mm;line-height:1.2;transform-origin:top left;}
+  .a4-frame{width:100%;max-width:520px;background:white;border:1px solid var(--border);border-radius:2px;box-shadow:0 2px 12px rgba(0,0,0,0.1);position:relative;overflow:hidden;margin:0 auto;}
+  .a4-inner{width:210mm;padding:22mm 22mm 20mm 22mm;font-size:2.8mm;line-height:1.2;transform-origin:top left;}
   .a4-inner table{border-spacing:0;}
   .a4-page-label{position:absolute;top:-18px;right:4px;font-size:9px;color:var(--dim);font-weight:500;}
   #pdf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-family:var(--font);}
@@ -306,6 +306,12 @@ function renderAccordions(){
 // HTML PREVIEW
 function renderPreview(){
   const active=getActiveComps();
+
+  // Create jsPDF instance early for text measurement
+  const {jsPDF:_jsPDF}=window.jspdf;
+  const _mdoc=new _jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  _mdoc.setFont('helvetica','normal');
+
   const title=document.getElementById('docTitle').value||'CHALLENGE-BEURTEILUNG';
   const subtitle=document.getElementById('docSubtitle').value||'';
   const school=document.getElementById('schoolName').value;
@@ -324,7 +330,8 @@ function renderPreview(){
   th+='<div style="font-size:4.94mm;font-weight:800;color:#222;line-height:1.2">'+esc(title)+'</div>';
   if(subtitle||school)th+='<div style="font-size:2.82mm;color:#888;margin-top:0.5mm">'+esc(subtitle)+(school?' · '+esc(school):'')+'</div>';
   th+='</div>';
-  blocks.push({html:th});
+  const _titleSub=(document.getElementById('docSubtitle').value||'')+(document.getElementById('schoolName').value||'');
+  blocks.push({html:th, _pdfH:_titleSub?21:17});
 
   // ── Fields block ──
   const af=getActiveFields();
@@ -343,12 +350,14 @@ function renderPreview(){
       fH+='</div>';
     }
     fH+='</div>';
-    blocks.push({html:fH});
+    blocks.push({html:fH, _pdfH:Math.ceil(af.length/2)*7+2});
   }
 
   // ── Assignment block ──
   if(assignment){
-    blocks.push({html:'<div style="background:#F7F7F5;border:0.15mm solid #D0D0CE;border-radius:1mm;padding:1.5mm 2.5mm;margin-bottom:2mm;font-size:2.1mm;color:#555"><strong style="font-size:2.4mm;color:#222">Auftrag:</strong><br>'+esc(assignment)+'</div>'});
+    const _assignLines=_mdoc.setFontSize(6.5)&&false||_mdoc.splitTextToSize(assignment,166-8).length;
+    const _assignH=_assignLines*3.2+10+3;
+    blocks.push({_pdfH:_assignH, html:'<div style="background:#F7F7F5;border:0.15mm solid #D0D0CE;border-radius:1mm;padding:1.5mm 2.5mm;margin-bottom:2mm;font-size:2.1mm;color:#555"><strong style="font-size:2.4mm;color:#222">Auftrag:</strong><br>'+esc(assignment)+'</div>'});
   }
 
   // ── Indicator tables ──
@@ -365,7 +374,7 @@ function renderPreview(){
       return r+'</tr>';
     }
     function indRow(text){
-      let r='<tr><td style="font-size:1.94mm;padding:3mm 2mm;color:#444;border-top:0.15mm solid #DDD;line-height:1.65">'+esc(text)+'</td>';
+      let r='<tr><td style="font-size:1.94mm;padding:2.5mm 2mm;color:#444;border-top:0.15mm solid #DDD;line-height:1.65;font-size:1.94mm">'+esc(text)+'</td>';
       for(let c=0;c<4;c++)r+='<td style="text-align:center;vertical-align:middle;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;background:white;font-size:3mm;color:#BBB">'+CB+'</td>';
       return r+'</tr>';
     }
@@ -376,12 +385,14 @@ function renderPreview(){
         // First block: header + first indicator row (must stay together, like PDF)
         const hdrHtml=tOpen('margin-bottom:0')+hdrRow(cc,cl,sub.label)+tClose();
         // Push a hidden hdr-only block so the ruler can measure it (cap at 7mm = PDF HDR)
-        const hdrBlock={html:hdrHtml, hdrOnly:true, hdrHmm:0, capMm:0};
+        const hdrBlock={html:hdrHtml, hdrOnly:true, hdrHmm:0, capMm:7, hmm:7};
         blocks.push(hdrBlock);
-        blocks.push({html: tOpen('margin-bottom:0')+hdrRow(cc,cl,sub.label)+indRow(getIndText(sub.id,si[0],sub))+tClose(), subStart:true, hdrBlock});
+        // Header as separate block (so page-break can happen after it)
+        blocks.push({html: tOpen('margin-bottom:0')+hdrRow(cc,cl,sub.label)+tClose(), subHdr:true, hdrBlock, hmm:7, _isHdr:true});
+        blocks.push({html: tOpen('margin-bottom:0')+indRow(getIndText(sub.id,si[0],sub))+tClose(), subStart:true, hdrBlock, _indText:getIndText(sub.id,si[0],sub)});
         // Remaining rows: each as its own block (continuation of same table visually)
         for(let ri=1;ri<si.length;ri++){
-          blocks.push({html: tOpen('margin-bottom:'+(ri===si.length-1?'1':'0')+'mm')+indRow(getIndText(sub.id,si[ri],sub))+tClose(), subCont:true, hdrBlock});
+          blocks.push({html: tOpen('margin-bottom:'+(ri===si.length-1?'1':'0')+'mm')+indRow(getIndText(sub.id,si[ri],sub))+tClose(), subCont:true, hdrBlock, _indText:getIndText(sub.id,si[ri],sub)});
         }
       });
     });
@@ -390,7 +401,7 @@ function renderPreview(){
     blocks.push({html:'<div style="font-size:1.94mm;color:#AAA;font-style:italic;margin:1mm 0 2.5mm 0">-- nicht genügend · - genügend · + gut · ++ sehr gut</div>'});
 
     // ── Gesamtbeurteilung ──
-    let gH='<div style="border:0.4mm solid #222;border-radius:0.5mm;overflow:hidden;margin-top:1mm">';
+    let gH='<div style="border:0.4mm solid #222;border-radius:0.5mm;overflow:hidden;margin-top:7mm">';
     gH+='<div style="font-weight:800;font-size:3mm;color:#222;padding:1.5mm 2mm;border-bottom:0.15mm solid #DDD">GESAMTBEURTEILUNG</div>';
     gH+='<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
       +'<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>';
@@ -410,7 +421,7 @@ function renderPreview(){
     gH+='<tr><td style="border-top:0.3mm solid #999;background:#F7F7F5;padding:1.5mm 2mm;font-weight:800;font-size:3mm;color:#222">GESAMT</td>';
     for(let c=0;c<4;c++)gH+='<td style="text-align:center;border-top:0.3mm solid #999;border-left:0.15mm solid #DDD;background:#F7F7F5;font-size:3.5mm;color:#888">'+CB+'</td>';
     gH+='</tr></table></div>';
-    blocks.push({html:gH});
+    blocks.push({_pdfH:50, html:gH});
   }
 
   // ── Reflexion page ──
@@ -451,65 +462,89 @@ function renderPreview(){
       reflBlocks.push({html:g});
     }
   }
-  // ── Measure block heights via hidden DOM, then paginate ──
-  // Wait for DM Sans to load so measurements are accurate
-  if(typeof document.fonts!=='undefined' && document.fonts.status!=='loaded'){
-    document.fonts.ready.then(()=>renderPreview());
-    return;
-  }
-  // A4 usable height in mm (297 - 22 top - 18 bottom = 257mm)
+  // ── Calculate block heights using jsPDF text metrics (exact match) ──
   const PAGE_H_MM=257;
+  const PDF_HDR=7, PDF_LINE_H=3.2, PDF_PAD_V=2.5;
+  const PDF_COL_W=166*0.52-5; // text column width in mm (~81.3mm)
+  const PDF_FS_IND=5.5;
 
-  // 1. Measure how many px = 1mm in current browser
-  const mmRef=document.createElement('div');
-  mmRef.style.cssText='position:absolute;visibility:hidden;height:10mm;width:1px;left:-9999px';
-  document.body.appendChild(mmRef);
-  const PX_PER_MM=mmRef.offsetHeight/10;
-  mmRef.remove();
+  // _mdoc already created above
+  _mdoc.setFont('helvetica','normal');
+  _mdoc.setFontSize(PDF_FS_IND);
+  function pdfWrapLines(text){
+    if(!text) return 1;
+    return _mdoc.splitTextToSize(text, PDF_COL_W).length;
+  }
 
-  // 2. Render all blocks in a ruler div at exactly 166mm wide (= CW, A4 minus margins)
-  const ruler=document.createElement('div');
-  ruler.style.cssText='position:absolute;visibility:hidden;width:166mm;left:-9999px;top:0;font-family:DM Sans,sans-serif';
   const allBlocks=[...blocks.map(b=>({...b,page:'main'})),...reflBlocks.map(b=>({...b,page:'refl'}))];
-  allBlocks.forEach((b,i)=>{
-    const d=document.createElement('div');
-    d.setAttribute('data-bi',i);
-    d.innerHTML=b.html;
-    ruler.appendChild(d);
+  allBlocks.forEach(b=>{
+    if(b.hdrOnly){b.hmm=Math.min(PDF_HDR, b.capMm||PDF_HDR);return;}
+    if(b.subHdr){b.hmm=PDF_HDR;return;}
+    if(b.subStart||b.subCont){
+      const text=b._indText||'';
+      const nLines=pdfWrapLines(text);
+      const rowH=nLines*PDF_LINE_H+PDF_PAD_V*2;
+      b.hmm=rowH; // header is now a separate block
+    } else {
+      b.hmm=b._pdfH||10;
+    }
   });
-  document.body.appendChild(ruler);
-
-  // 3. Convert px heights to mm
-  allBlocks.forEach((b,i)=>{
-    const el=ruler.querySelector('[data-bi="'+i+'"]');
-    b.hmm=el?el.offsetHeight/PX_PER_MM:10;
-    if(b.capMm) b.hmm=Math.min(b.hmm, b.capMm); // cap hdr to PDF value
-  });
-  ruler.remove();
 
   // 4. Paginate — same logic as PDF: header+firstRow must fit together,
   //    header repeats on new page when continuation rows overflow
   function paginate(list){
-    const pages=[];let cur=[],curH=0,pageNum=0;
-    // Page 2+ gets a small extra budget to match PDF spacing
-    // (separate <table> elements in HTML have slightly less gap than jsPDF's continuous draw)
-    const EXTRA=pageNum===0?0:4.5;
-    list.forEach(b=>{
-      if(b.hdrOnly) return; // skip — only used for height measurement
-      const budget=PAGE_H_MM+(pages.length>0?4.5:0);
-      if(curH+b.hmm>budget&&cur.length>0){
-        pages.push(cur);cur=[];curH=0;
-        // If this is a continuation row, repeat the measured header on new page
-        if(b.subCont && b.hdrBlock){
-          cur.push(b.hdrBlock.html);
-          curH+=Math.min(b.hdrBlock.hmm||0, b.hdrBlock.capMm||999);
-        }
+    const MT=22, PAGE_BOTTOM=279;
+    const pages=[];
+    let cur=[], pageY=MT;
+
+    function newPage(){ pages.push(cur); cur=[]; pageY=MT; }
+
+    list.forEach((b, bi)=>{
+      if(b.hdrOnly) return;
+
+      if(b.subHdr){
+        let ni=bi+1;
+        while(ni<list.length && list[ni].hdrOnly) ni++;
+        const nextB=list[ni];
+        const needed=b.hmm+(nextB?nextB.hmm:0);
+        if(pageY+needed>PAGE_BOTTOM && cur.length>0) newPage();
+        cur.push(b.html); pageY+=b.hmm;
+        return;
       }
-      cur.push(b.html);curH+=b.hmm;
+
+      if(b.subStart){
+        cur.push(b.html); pageY+=b.hmm;
+        let ni=bi+1; while(ni<list.length&&list[ni].hdrOnly)ni++;
+        const nR=list[ni];
+        if(!nR||nR.subHdr||nR.type) pageY+=2.5;
+        return;
+      }
+
+      if(b.subCont){
+        const willBreak=pageY+b.hmm>PAGE_BOTTOM && cur.length>0;
+        if(willBreak){
+          newPage();
+          if(b.hdrBlock){ cur.push(b.hdrBlock.html); pageY+=b.hdrBlock.hmm||7; }
+        }
+        cur.push(b.html); pageY+=b.hmm;
+        if(!willBreak){
+          let ni=bi+1; while(ni<list.length&&list[ni].hdrOnly)ni++;
+          const nR=list[ni];
+          if(!nR||nR.subHdr||nR.type) pageY+=2.5;
+        }
+        return;
+      }
+
+      // Static blocks (title, fields, assignment, legend, summary)
+      if(pageY+b.hmm>PAGE_BOTTOM && cur.length>0) newPage();
+      cur.push(b.html); pageY+=b.hmm;
     });
-    if(cur.length)pages.push(cur);
+
+    if(cur.length) pages.push(cur);
     return pages;
   }
+
+
   const mainBlocks=allBlocks.filter(b=>b.page==='main');
   const reflBlocksF=allBlocks.filter(b=>b.page==='refl');
   const mP=paginate(mainBlocks);
@@ -528,7 +563,8 @@ function scaleA4Pages(){
   const mmR=document.createElement('div');mmR.style.cssText='position:absolute;visibility:hidden;width:210mm;height:1px';document.body.appendChild(mmR);const nW=mmR.offsetWidth;mmR.remove();
   let minS=Infinity;const meas=[];
   frames.forEach(frame=>{const inner=frame.querySelector('.a4-inner');if(!inner){meas.push(null);return;}inner.style.transform='none';void inner.offsetHeight;const fW=frame.clientWidth,s=fW/nW;if(s<minS)minS=s;meas.push({inner,fW});});
-  meas.forEach(m=>{if(!m)return;const sW=nW*minS,ox=(m.fW-sW)/2;m.inner.style.transform='translateX('+ox+'px) scale('+minS+')';m.inner.style.transformOrigin='top left';});
+  const mmH=document.createElement('div');mmH.style.cssText='position:absolute;visibility:hidden;height:297mm;width:1px';document.body.appendChild(mmH);const nH=mmH.offsetHeight;mmH.remove();
+  meas.forEach(m=>{if(!m)return;const sW=nW*minS,ox=(m.fW-sW)/2;m.inner.style.transform='translateX('+ox+'px) scale('+minS+')';m.inner.style.transformOrigin='top left';m.inner.closest('.a4-frame').style.height=(nH*minS)+'px';});
 }
 
 // jsPDF DIRECT RENDERING
@@ -652,6 +688,7 @@ async function generatePDF(){
 
       rowData.forEach((row,ri)=>{
         // Does this row still fit?
+        console.log('PDF ROW pageY='+pageY.toFixed(1)+' +'+row.rh.toFixed(1)+' pb='+pageBottom.toFixed(1)+' break='+(pageY+row.rh>pageBottom));
         if(pageY+row.rh>pageBottom){
           // Close current segment with a border
           doc.setLineWidth(0.15);ss('#DDDDDD');doc.rect(ML,segStartY,CW,pageY-segStartY,'S');
