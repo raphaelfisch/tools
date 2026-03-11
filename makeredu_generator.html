@@ -421,9 +421,9 @@ function renderPreview(){
     for (let r = 0; r < af.length; r += 2) {
       const isLast = r + 2 >= af.length;
       const hasPair = !!af[r + 1];
-      fH += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:${isLast ? '3mm' : '2mm'};font-size:2.4mm;color:#444">`;
-      fH += `<div style="display:flex;align-items:baseline;gap:1mm;padding-right:2mm;min-height:10mm"><span style="font-weight:600;white-space:nowrap">${esc(af[r].label)}:</span><span style="flex:1;border-bottom:0.3px solid #888;min-width:5mm"></span></div>`;
-      if (hasPair) fH += `<div style="display:flex;align-items:baseline;gap:1mm;padding-left:2mm;min-height:10mm"><span style="font-weight:600;white-space:nowrap">${esc(af[r + 1].label)}:</span><span style="flex:1;border-bottom:0.3px solid #888;min-width:5mm"></span></div>`;
+      fH += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:${isLast ? '3mm' : '0'};font-size:2.4mm;color:#444">`;
+      fH += `<div style="display:flex;align-items:flex-end;gap:1mm;padding-right:2mm;padding-top:7mm"><span style="font-weight:600;white-space:nowrap">${esc(af[r].label)}:</span><span style="flex:1;border-bottom:0.3px solid #888;min-width:5mm"></span></div>`;
+      if (hasPair) fH += `<div style="display:flex;align-items:flex-end;gap:1mm;padding-left:2mm;padding-top:7mm"><span style="font-weight:600;white-space:nowrap">${esc(af[r + 1].label)}:</span><span style="flex:1;border-bottom:0.3px solid #888;min-width:5mm"></span></div>`;
       fH += `</div>`;
     }
     blocks.push({ html: fH, type: 'fixed' });
