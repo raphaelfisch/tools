@@ -84,7 +84,7 @@
   }
   .a4-inner {
     width: 520px;
-    padding: 28px 24px;
+    padding: 62px 62px 50px 62px; /* 25mm top, 25mm right, 20mm bottom, 25mm left at 520/210 scale */
     font-size: 10px;
     line-height: 1.2;
     transform-origin: top left;
@@ -443,8 +443,7 @@ function renderPreview(){
   if (total === 0) {
     blocks.push({ html: `<div style="text-align:center;color:#BBB;font-size:11px;padding:50px 20px;border:2px dashed #DDD;border-radius:4px">Wähle Kompetenzen und Indikatoren aus</div>`, type: 'fixed' });
   } else {
-    // Rubric: each sub-header and each indicator row is a separate block
-    // We tag them so the distributor can repeat headers after page breaks
+    // Rubric: one complete table per sub-competency
     active.forEach(comp => {
       const subs = comp.subs.filter(s => (selections[s.id] || []).length > 0);
       if (!subs.length) return;
@@ -452,22 +451,20 @@ function renderPreview(){
         const si = selections[sub.id] || [];
         const cc = dc(comp.color);
         const cl = dcLight(comp.colorLight);
-        const brd = '0.5px solid #CCC';
-        // Table header row (sub label + column headers)
-        const hdrCols = `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-        const hdrRow = `<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:4px 8px;line-height:1.2;vertical-align:middle;border:${brd}">${sub.label}</td>` +
-          ['−−','−','+','++'].map(l => `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};border:${brd};padding:3px;line-height:1.2;vertical-align:middle">${l}</td>`).join('') + `</tr>`;
-        const hdrHtml = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:0;border-spacing:0">${hdrCols}${hdrRow}</table>`;
-
-        blocks.push({ html: hdrHtml, type: 'rubric-header' });
-
-        si.forEach((idx, pos) => {
-          let rH = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-top:-0.5px;margin-bottom:${pos === si.length - 1 ? '6px' : '0'};border-spacing:0">${hdrCols}`;
-          rH += `<tr><td style="font-size:7.5px;padding:4px 8px;color:#444;border:${brd};line-height:1.3;vertical-align:middle">${getIndText(sub.id, idx, sub)}</td>`;
-          for (let c = 0; c < 4; c++) rH += `<td style="text-align:center;border:${brd};padding:3px;line-height:1;vertical-align:middle"><span style="display:inline-block;width:10px;height:10px;border:1.5px solid #BBB;border-radius:1px"></span></td>`;
-          rH += `</tr></table>`;
-          blocks.push({ html: rH, type: 'rubric-row' });
+        let tH = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:6px">`;
+        tH += `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
+        // Header
+        tH += `<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:4px 8px;vertical-align:middle">${sub.label}</td>`;
+        ['−−','−','+','++'].forEach(l => tH += `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};padding:3px;vertical-align:middle">${l}</td>`);
+        tH += `</tr>`;
+        // Indicator rows
+        si.forEach(idx => {
+          tH += `<tr><td style="font-size:7.5px;padding:4px 8px;color:#444;border-top:0.5px solid #DDD;vertical-align:middle">${getIndText(sub.id, idx, sub)}</td>`;
+          for (let c = 0; c < 4; c++) tH += `<td style="text-align:center;border-top:0.5px solid #DDD;border-left:0.5px solid #DDD;padding:2px;vertical-align:middle;font-size:14px;color:#CCC">&#9744;</td>`;
+          tH += `</tr>`;
         });
+        tH += `</table>`;
+        blocks.push({ html: tH, type: 'fixed' });
       });
     });
 
@@ -475,21 +472,20 @@ function renderPreview(){
     blocks.push({ html: `<div style="font-size:7px;color:#AAA;font-style:italic;margin:3px 0 8px 0">−− nicht genügend · − genügend · + gut · ++ sehr gut</div>`, type: 'fixed' });
 
     // Gesamtbeurteilung block
-    const gbrd = '0.5px solid #CCC';
     let gH = `<div style="border:1.5px solid #222;border-radius:3px;padding:8px 10px;margin-top:6px">`;
     gH += `<div style="font-weight:800;font-size:9px;color:#222;margin-bottom:5px">GESAMTBEURTEILUNG</div>`;
     gH += `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px">`;
     gH += `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-    gH += `<tr><td style="border:${gbrd};padding:4px 6px;background:#F7F7F5"></td>`;
-    ['−−','−','+','++'].forEach(l => gH += `<td style="text-align:center;border:${gbrd};padding:3px;background:#F7F7F5;font-weight:700;font-size:9px">${l}</td>`);
+    gH += `<tr><td style="padding:4px 6px;background:#F7F7F5"></td>`;
+    ['−−','−','+','++'].forEach(l => gH += `<td style="text-align:center;border-left:0.5px solid #DDD;padding:3px;background:#F7F7F5;font-weight:700;font-size:9px">${l}</td>`);
     gH += `</tr>`;
     active.forEach(comp => {
-      gH += `<tr><td style="border:${gbrd};padding:4px 6px;font-weight:600;color:${dc(comp.color)};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
-      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:${gbrd};padding:3px"><span style="display:inline-block;width:10px;height:10px;border:1.5px solid ${dc(comp.color)};border-radius:1px"></span></td>`;
+      gH += `<tr><td style="border-top:0.5px solid #DDD;padding:4px 6px;font-weight:600;color:${dc(comp.color)};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
+      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border-top:0.5px solid #DDD;border-left:0.5px solid #DDD;padding:2px;font-size:13px;color:${dc(comp.color)}">&#9744;</td>`;
       gH += `</tr>`;
     });
-    gH += `<tr><td style="border:${gbrd};padding:4px 6px;font-weight:800;background:#F7F7F5;font-size:9px">GESAMT</td>`;
-    for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border:${gbrd};padding:3px;background:#F7F7F5"><span style="display:inline-block;width:12px;height:12px;border:2px solid #222;border-radius:1px"></span></td>`;
+    gH += `<tr><td style="border-top:1px solid #999;padding:4px 6px;font-weight:800;background:#F7F7F5;font-size:9px">GESAMT</td>`;
+    for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border-top:1px solid #999;border-left:0.5px solid #DDD;padding:2px;background:#F7F7F5;font-size:15px;color:#222">&#9744;</td>`;
     gH += `</tr></table></div>`;
     blocks.push({ html: gH, type: 'fixed' });
   }
@@ -531,14 +527,14 @@ function renderPreview(){
   
   // Store for PDF reuse
   window._lastBlocks = allBlocks.map(b => ({...b}));
-  let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:520px;padding:28px 24px;font-size:10px;line-height:1.2">`;
+  let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:520px;padding:62px 62px 50px 62px;font-size:10px;line-height:1.2">`;
   allBlocks.forEach((b, i) => measH += `<div data-block="${i}">${b.html}</div>`);
   measH += `</div>`;
   document.getElementById('preview').innerHTML = measH;
 
   // Step 2: Measure each block height
   const pageH = 520 * 297 / 210;
-  const padding = 56;
+  const padding = 112; // 62px top + 50px bottom (25mm + 20mm)
   const usableH = pageH - padding - 10; // 10px safety margin
 
   const measureEl = document.getElementById('a4-measure');
@@ -553,23 +549,7 @@ function renderPreview(){
     let currentPage = [];
     let currentH = 0;
 
-    for (let bi = 0; bi < blockList.length; bi++) {
-      const block = blockList[bi];
-
-      if (block.type === 'rubric-header') {
-        // Check if header + at least one next row fits on current page
-        const nextBlock = blockList[bi + 1];
-        const neededH = block.h + (nextBlock ? nextBlock.h : 0);
-        if (currentH + neededH > usableH && currentPage.length > 0) {
-          pages.push(currentPage);
-          currentPage = [];
-          currentH = 0;
-        }
-        currentPage.push(block.html);
-        currentH += block.h;
-        continue;
-      }
-
+    blockList.forEach(block => {
       if (currentH + block.h > usableH && currentPage.length > 0) {
         pages.push(currentPage);
         currentPage = [];
@@ -577,7 +557,7 @@ function renderPreview(){
       }
       currentPage.push(block.html);
       currentH += block.h;
-    }
+    });
     if (currentPage.length > 0) pages.push(currentPage);
     return pages;
   }
@@ -653,14 +633,14 @@ function generatePDF(){
 
   const pageW = 520;
   const pageH = Math.round(520 * 297 / 210);
-  const pad = 56; // 28px top + 28px bottom
+  const pad = 112; // 62px top + 50px bottom (25mm + 20mm)
 
   // Open window and measure blocks there
   const w = window.open('','_blank','width=800,height=1000');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;font-size:10px;color:#1A1A1A;line-height:1.2}table{border-spacing:0;border-collapse:collapse;margin:0;padding:0}div,p{margin:0;padding:0}</style>
-</head><body><div id="m" style="width:${pageW}px;padding:28px 24px;position:absolute;visibility:hidden"></div></body></html>`);
+</head><body><div id="m" style="width:${pageW}px;padding:62px 62px 50px 62px;position:absolute;visibility:hidden"></div></body></html>`);
   w.document.close();
 
   // Wait for font to load in the new window
@@ -685,17 +665,10 @@ function generatePDF(){
     function distribute(blockList) {
       const pgs = [];
       let cur = [], curH = 0;
-      for (let bi = 0; bi < blockList.length; bi++) {
-        const block = blockList[bi];
-        if (block.type === 'rubric-header') {
-          const next = blockList[bi + 1];
-          const needed = block.h + (next ? next.h : 0);
-          if (curH + needed > usableH && cur.length > 0) { pgs.push(cur); cur = []; curH = 0; }
-          cur.push(block.html); curH += block.h; continue;
-        }
+      blockList.forEach(block => {
         if (curH + block.h > usableH && cur.length > 0) { pgs.push(cur); cur = []; curH = 0; }
         cur.push(block.html); curH += block.h;
-      }
+      });
       if (cur.length > 0) pgs.push(cur);
       return pgs;
     }
@@ -719,7 +692,7 @@ body{font-family:'DM Sans',sans-serif;margin:0;padding:0}
 table{border-spacing:0;border-collapse:collapse}div,p{margin:0;padding:0}
 .pw{width:210mm;height:297mm;overflow:hidden;page-break-after:always;position:relative}
 .pw:last-child{page-break-after:auto}
-.pi{width:${pageW}px;height:${pageH}px;padding:28px 24px;font-size:10px;color:#1A1A1A;line-height:1.2;transform-origin:top left}
+.pi{width:${pageW}px;height:${pageH}px;padding:62px 62px 50px 62px;font-size:10px;color:#1A1A1A;line-height:1.2;transform-origin:top left}
 @media print{.print-hint{display:none!important}}
 </style></head><body>
 <div class="print-hint" style="position:fixed;top:0;left:0;right:0;background:#FEF3C7;color:#92400E;padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;text-align:center;z-index:9999;border-bottom:1px solid #F59E0B"><strong>Tipp:</strong> Im Druckdialog «Hintergrundgrafiken» aktivieren, damit die Farben gedruckt werden.</div>`;
