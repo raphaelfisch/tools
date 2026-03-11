@@ -408,9 +408,9 @@ function renderPreview(){
   const blocks = [];
 
   // Title block
-  let titleH = `<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #222">`;
-  titleH += `<div style="font-size:16px;font-weight:800;letter-spacing:-0.2px;color:#222">${esc(title)}</div>`;
-  if(subtitle || school) titleH += `<div style="font-size:9px;color:#888;margin-top:2px">${esc(subtitle)}${school?' · '+esc(school):''}</div>`;
+  let titleH = `<div style="margin-bottom:3mm;padding-bottom:2mm;border-bottom:0.5mm solid #222">`;
+  titleH += `<div style="font-size:4.5mm;font-weight:800;letter-spacing:-0.05mm;color:#222">${esc(title)}</div>`;
+  if(subtitle || school) titleH += `<div style="font-size:2.4mm;color:#888;margin-top:0.5mm">${esc(subtitle)}${school?' · '+esc(school):''}</div>`;
   titleH += `</div>`;
   blocks.push({ html: titleH, type: 'fixed' });
 
@@ -421,9 +421,9 @@ function renderPreview(){
     for (let r = 0; r < af.length; r += 2) {
       const isLast = r + 2 >= af.length;
       const hasPair = !!af[r + 1];
-      fH += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:${isLast ? '10' : '5'}px;font-size:9px;color:#444">`;
-      fH += `<div style="display:flex;align-items:baseline;gap:4px;padding-right:5px"><span style="font-weight:600;white-space:nowrap">${esc(af[r].label)}:</span><span style="flex:1;border-bottom:0.75px solid #888;min-width:20px"></span></div>`;
-      if (hasPair) fH += `<div style="display:flex;align-items:baseline;gap:4px;padding-left:5px"><span style="font-weight:600;white-space:nowrap">${esc(af[r + 1].label)}:</span><span style="flex:1;border-bottom:0.75px solid #888;min-width:20px"></span></div>`;
+      fH += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:${isLast ? '3mm' : '2mm'};font-size:2.4mm;color:#444">`;
+      fH += `<div style="display:flex;align-items:baseline;gap:1mm;padding-right:2mm;min-height:10mm"><span style="font-weight:600;white-space:nowrap">${esc(af[r].label)}:</span><span style="flex:1;border-bottom:0.3px solid #888;min-width:5mm"></span></div>`;
+      if (hasPair) fH += `<div style="display:flex;align-items:baseline;gap:1mm;padding-left:2mm;min-height:10mm"><span style="font-weight:600;white-space:nowrap">${esc(af[r + 1].label)}:</span><span style="flex:1;border-bottom:0.3px solid #888;min-width:5mm"></span></div>`;
       fH += `</div>`;
     }
     blocks.push({ html: fH, type: 'fixed' });
@@ -431,11 +431,11 @@ function renderPreview(){
 
   // Assignment block
   if (assignment) {
-    blocks.push({ html: `<div style="background:#F7F7F5;border:0.5px solid #D0D0CE;border-radius:3px;padding:6px 10px;margin-bottom:8px;font-size:8px;color:#555"><strong style="font-size:9px;color:#222">Auftrag:</strong><br>${esc(assignment)}</div>`, type: 'fixed' });
+    blocks.push({ html: `<div style="background:#F7F7F5;border:0.15mm solid #D0D0CE;border-radius:1mm;padding:1.5mm 2.5mm;margin-bottom:2mm;font-size:2.1mm;color:#555"><strong style="font-size:2.4mm;color:#222">Auftrag:</strong><br>${esc(assignment)}</div>`, type: 'fixed' });
   }
 
   if (total === 0) {
-    blocks.push({ html: `<div style="text-align:center;color:#BBB;font-size:11px;padding:50px 20px;border:2px dashed #DDD;border-radius:4px">Wähle Kompetenzen und Indikatoren aus</div>`, type: 'fixed' });
+    blocks.push({ html: `<div style="text-align:center;color:#BBB;font-size:3mm;padding:15mm 5mm;border:0.5mm dashed #DDD;border-radius:1mm">Wähle Kompetenzen und Indikatoren aus</div>`, type: 'fixed' });
   } else {
     // Rubric: one complete table per sub-competency
     active.forEach(comp => {
@@ -445,16 +445,16 @@ function renderPreview(){
         const si = selections[sub.id] || [];
         const cc = dc(comp.color);
         const cl = dcLight(comp.colorLight);
-        let tH = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px;margin-bottom:6px">`;
+        let tH = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:2.1mm;margin-bottom:1.5mm">`;
         tH += `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
         // Header
-        tH += `<tr><td style="background:${cc};color:white;font-weight:700;font-size:8px;padding:4px 8px;vertical-align:middle">${sub.label}</td>`;
-        ['−−','−','+','++'].forEach(l => tH += `<td style="text-align:center;font-size:10px;font-weight:700;color:${cc};background:${cl};padding:3px;vertical-align:middle">${l}</td>`);
+        tH += `<tr><td style="background:${cc};color:white;font-weight:700;font-size:2.2mm;padding:1mm 2mm;vertical-align:middle">${sub.label}</td>`;
+        ['−−','−','+','++'].forEach(l => tH += `<td style="text-align:center;font-size:2.8mm;font-weight:700;color:${cc};background:${cl};padding:0.8mm;vertical-align:middle">${l}</td>`);
         tH += `</tr>`;
         // Indicator rows
         si.forEach(idx => {
-          tH += `<tr><td style="font-size:7.5px;padding:4px 8px;color:#444;border-top:0.5px solid #DDD;vertical-align:middle">${getIndText(sub.id, idx, sub)}</td>`;
-          for (let c = 0; c < 4; c++) tH += `<td style="text-align:center;border-top:0.5px solid #DDD;border-left:0.5px solid #DDD;padding:2px;vertical-align:middle;font-size:14px;color:#CCC">&#9744;</td>`;
+          tH += `<tr><td style="font-size:2mm;padding:1mm 2mm;color:#444;border-top:0.15mm solid #DDD;vertical-align:middle">${getIndText(sub.id, idx, sub)}</td>`;
+          for (let c = 0; c < 4; c++) tH += `<td style="text-align:center;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;padding:0.5mm;vertical-align:middle;font-size:3.5mm;color:#CCC">&#9744;</td>`;
           tH += `</tr>`;
         });
         tH += `</table>`;
@@ -463,23 +463,23 @@ function renderPreview(){
     });
 
     // Legend block
-    blocks.push({ html: `<div style="font-size:7px;color:#AAA;font-style:italic;margin:3px 0 8px 0">−− nicht genügend · − genügend · + gut · ++ sehr gut</div>`, type: 'fixed' });
+    blocks.push({ html: `<div style="font-size:1.8mm;color:#AAA;font-style:italic;margin:1mm 0 2mm 0">−− nicht genügend · − genügend · + gut · ++ sehr gut</div>`, type: 'fixed' });
 
     // Gesamtbeurteilung block
-    let gH = `<div style="border:1.5px solid #222;border-radius:3px;padding:8px 10px;margin-top:6px">`;
-    gH += `<div style="font-weight:800;font-size:9px;color:#222;margin-bottom:5px">GESAMTBEURTEILUNG</div>`;
-    gH += `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8px">`;
+    let gH = `<div style="border:0.4mm solid #222;border-radius:1mm;padding:2mm 2.5mm;margin-top:1.5mm">`;
+    gH += `<div style="font-weight:800;font-size:2.4mm;color:#222;margin-bottom:1.5mm">GESAMTBEURTEILUNG</div>`;
+    gH += `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:2.1mm">`;
     gH += `<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>`;
-    gH += `<tr><td style="padding:4px 6px;background:#F7F7F5"></td>`;
-    ['−−','−','+','++'].forEach(l => gH += `<td style="text-align:center;border-left:0.5px solid #DDD;padding:3px;background:#F7F7F5;font-weight:700;font-size:9px">${l}</td>`);
+    gH += `<tr><td style="padding:1mm 1.5mm;background:#F7F7F5"></td>`;
+    ['−−','−','+','++'].forEach(l => gH += `<td style="text-align:center;border-left:0.15mm solid #DDD;padding:0.8mm;background:#F7F7F5;font-weight:700;font-size:2.4mm">${l}</td>`);
     gH += `</tr>`;
     active.forEach(comp => {
-      gH += `<tr><td style="border-top:0.5px solid #DDD;padding:4px 6px;font-weight:600;color:${dc(comp.color)};font-size:8px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7px">(${comp.shortLabel})</span></td>`;
-      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border-top:0.5px solid #DDD;border-left:0.5px solid #DDD;padding:2px;font-size:13px;color:${dc(comp.color)}">&#9744;</td>`;
+      gH += `<tr><td style="border-top:0.15mm solid #DDD;padding:1mm 1.5mm;font-weight:600;color:${dc(comp.color)};font-size:2.1mm">${comp.label} <span style="font-weight:400;color:#AAA;font-size:1.8mm">(${comp.shortLabel})</span></td>`;
+      for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;padding:0.5mm;font-size:3.5mm;color:${dc(comp.color)}">&#9744;</td>`;
       gH += `</tr>`;
     });
-    gH += `<tr><td style="border-top:1px solid #999;padding:4px 6px;font-weight:800;background:#F7F7F5;font-size:9px">GESAMT</td>`;
-    for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border-top:1px solid #999;border-left:0.5px solid #DDD;padding:2px;background:#F7F7F5;font-size:15px;color:#222">&#9744;</td>`;
+    gH += `<tr><td style="border-top:0.3mm solid #999;padding:1mm 1.5mm;font-weight:800;background:#F7F7F5;font-size:2.4mm">GESAMT</td>`;
+    for (let c = 0; c < 4; c++) gH += `<td style="text-align:center;border-top:0.3mm solid #999;border-left:0.15mm solid #DDD;padding:0.5mm;background:#F7F7F5;font-size:4mm;color:#222">&#9744;</td>`;
     gH += `</tr></table></div>`;
     blocks.push({ html: gH, type: 'fixed' });
   }
@@ -488,28 +488,28 @@ function renderPreview(){
   const reflBlocks = [];
   if (total > 0) {
     // Refl title
-    let rTitle = `<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #222">`;
-    rTitle += `<div style="font-size:16px;font-weight:800;letter-spacing:-0.2px;color:#222">REFLEXION & BEGRÜNDUNG</div>`;
-    rTitle += `<div style="font-size:9px;color:#888;margin-top:2px">${esc(title)}</div>`;
+    let rTitle = `<div style="margin-bottom:3mm;padding-bottom:2mm;border-bottom:0.5mm solid #222">`;
+    rTitle += `<div style="font-size:4.5mm;font-weight:800;letter-spacing:-0.05mm;color:#222">REFLEXION & BEGRÜNDUNG</div>`;
+    rTitle += `<div style="font-size:2.4mm;color:#888;margin-top:0.5mm">${esc(title)}</div>`;
     rTitle += `</div>`;
     reflBlocks.push({ html: rTitle, type: 'fixed' });
-    reflBlocks.push({ html: `<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:10px;font-size:9px;color:#444"><span style="font-weight:600">Name:</span><span style="flex:1;border-bottom:0.75px solid #888;max-width:200px"></span></div>`, type: 'fixed' });
-    reflBlocks.push({ html: `<div style="font-size:7.5px;color:#AAA;font-style:italic;margin-bottom:10px">Begründe pro Kompetenz in 1–2 Sätzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!</div>`, type: 'fixed' });
+    reflBlocks.push({ html: `<div style="display:flex;align-items:baseline;gap:1mm;margin-bottom:3mm;font-size:2.4mm;color:#444"><span style="font-weight:600">Name:</span><span style="flex:1;border-bottom:0.2mm solid #888;max-width:50mm;min-height:5mm"></span></div>`, type: 'fixed' });
+    reflBlocks.push({ html: `<div style="font-size:2mm;color:#AAA;font-style:italic;margin-bottom:3mm">Begründe pro Kompetenz in 1–2 Sätzen, warum du dir diese Stufe gibst. Ehrlichkeit wird belohnt!</div>`, type: 'fixed' });
     active.forEach(comp => {
       if (!comp.subs.some(s => (selections[s.id] || []).length > 0)) return;
-      let rB = `<div style="border:0.5px solid #D0D0CE;border-left:3px solid ${dc(comp.color)};border-radius:3px;padding:8px 10px;margin-bottom:8px">`;
-      rB += `<div style="font-weight:700;font-size:9px;color:${dc(comp.color)};margin-bottom:4px">${comp.label} <span style="font-weight:400;color:#AAA;font-size:7.5px;font-style:italic">(${comp.shortLabel})</span></div>`;
-      for (let i = 0; i < 3; i++) rB += `<div style="border-bottom:0.75px solid #DDD;height:16px;margin:2px 0"></div>`;
+      let rB = `<div style="border:0.15mm solid #D0D0CE;border-left:0.8mm solid ${dc(comp.color)};border-radius:1mm;padding:2mm 2.5mm;margin-bottom:2mm">`;
+      rB += `<div style="font-weight:700;font-size:2.4mm;color:${dc(comp.color)};margin-bottom:1mm">${comp.label} <span style="font-weight:400;color:#AAA;font-size:2mm;font-style:italic">(${comp.shortLabel})</span></div>`;
+      for (let i = 0; i < 3; i++) rB += `<div style="border-bottom:0.15mm solid #DDD;height:5mm;margin:0.5mm 0"></div>`;
       rB += `</div>`;
       reflBlocks.push({ html: rB, type: 'fixed' });
     });
     const gespBg = colorMode ? '#FFFBEB' : '#F5F5F3';
     const gespBorder = colorMode ? '#F59E0B' : '#999';
     const gespLine = colorMode ? '#FDE68A' : '#DDD';
-    let gespH = `<div style="background:${gespBg};border:1px solid ${gespBorder};border-radius:3px;padding:8px 10px;margin-top:10px">`;
-    gespH += `<div style="font-weight:700;font-size:9px;color:#222;margin-bottom:3px">2-MINUTEN-GESPRÄCH (Lehrperson)</div>`;
-    gespH += `<div style="font-size:7.5px;color:#AAA;font-style:italic;margin-bottom:6px">Kurze Notizen / Abweichungen zur Selbsteinschätzung:</div>`;
-    for (let i = 0; i < 4; i++) gespH += `<div style="border-bottom:0.75px solid ${gespLine};height:16px;margin:2px 0"></div>`;
+    let gespH = `<div style="background:${gespBg};border:0.3mm solid ${gespBorder};border-radius:1mm;padding:2mm 2.5mm;margin-top:3mm">`;
+    gespH += `<div style="font-weight:700;font-size:2.4mm;color:#222;margin-bottom:1mm">2-MINUTEN-GESPRÄCH (Lehrperson)</div>`;
+    gespH += `<div style="font-size:2mm;color:#AAA;font-style:italic;margin-bottom:1.5mm">Kurze Notizen / Abweichungen zur Selbsteinschätzung:</div>`;
+    for (let i = 0; i < 4; i++) gespH += `<div style="border-bottom:0.15mm solid ${gespLine};height:5mm;margin:0.5mm 0"></div>`;
     gespH += `</div>`;
     reflBlocks.push({ html: gespH, type: 'fixed' });
   }
@@ -627,7 +627,7 @@ function generatePDF(){
 <style>
 @page{size:A4;margin:0}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
-body{font-family:'DM Sans',sans-serif;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;margin:0;padding:0;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
 table{border-spacing:0;border-collapse:collapse}
 .pg{width:210mm;height:297mm;padding:25mm 25mm 20mm 25mm;font-size:2.8mm;color:#1A1A1A;line-height:1.2;overflow:hidden;page-break-after:always}
 .pg:last-child{page-break-after:auto}
