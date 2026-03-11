@@ -81,9 +81,9 @@
     margin: 0 auto;
   }
   .a4-inner {
-    width: 520px;
-    padding: 62px 62px 50px 62px; /* 25mm top, 25mm right, 20mm bottom, 25mm left at 520/210 scale */
-    font-size: 10px;
+    width: 210mm;
+    padding: 25mm 25mm 20mm 25mm;
+    font-size: 2.8mm;
     line-height: 1.2;
     transform-origin: top left;
   }
@@ -516,15 +516,18 @@ function renderPreview(){
 
   // Step 1: Render all blocks into a hidden measuring container
   const allBlocks = [...blocks, ...reflBlocks];
-  let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:520px;padding:62px 62px 50px 62px;font-size:10px;line-height:1.2">`;
+  let measH = `<div id="a4-measure" style="position:absolute;visibility:hidden;width:210mm;padding:25mm 25mm 20mm 25mm;font-size:2.8mm;line-height:1.2">`;
   allBlocks.forEach((b, i) => measH += `<div data-block="${i}">${b.html}</div>`);
   measH += `</div>`;
   document.getElementById('preview').innerHTML = measH;
 
   // Step 2: Measure each block height
-  const pageH = 520 * 297 / 210;
-  const padding = 112; // 62px top + 50px bottom (25mm + 20mm)
-  const usableH = pageH - padding - 10; // 10px safety margin
+  // Measure actual usable height by creating a ruler in the same context
+  const ruler = document.createElement('div');
+  ruler.style.cssText = 'position:absolute;visibility:hidden;width:1px;height:252mm'; // 297-25-20=252mm
+  document.body.appendChild(ruler);
+  const usableH = ruler.offsetHeight - 5; // small safety margin
+  ruler.remove();
 
   const measureEl = document.getElementById('a4-measure');
   allBlocks.forEach((b, i) => {
@@ -575,7 +578,14 @@ function scaleA4Pages() {
   const frames = document.querySelectorAll('.a4-frame');
   if (!frames.length) return;
   
-  // First pass: find the minimum scale needed across all pages
+  // Measure what 210mm equals in pixels in this context
+  const mmRuler = document.createElement('div');
+  mmRuler.style.cssText = 'position:absolute;visibility:hidden;width:210mm;height:1px';
+  document.body.appendChild(mmRuler);
+  const innerNativeW = mmRuler.offsetWidth;
+  mmRuler.remove();
+  
+  // First pass: find the minimum scale needed
   let minScale = Infinity;
   const measurements = [];
   
@@ -583,28 +593,19 @@ function scaleA4Pages() {
     const inner = frame.querySelector('.a4-inner');
     if (!inner) { measurements.push(null); return; }
     inner.style.transform = 'none';
-    inner.style.width = '520px';
     void inner.offsetHeight;
     
     const frameW = frame.clientWidth;
-    const frameH = frame.clientHeight;
-    const contentH = inner.scrollHeight;
-    const widthScale = frameW / 520;
-    
-    let scale = widthScale;
-    if (contentH * scale > frameH) {
-      scale = frameH / contentH;
-    }
-    scale = Math.min(scale, widthScale);
+    const scale = frameW / innerNativeW;
     
     if (scale < minScale) minScale = scale;
-    measurements.push({ inner, frameW, scale: widthScale });
+    measurements.push({ inner, frameW });
   });
   
-  // Second pass: apply uniform scale to all pages
+  // Second pass: apply uniform scale
   measurements.forEach(m => {
     if (!m) return;
-    const scaledW = 520 * minScale;
+    const scaledW = innerNativeW * minScale;
     const offsetX = (m.frameW - scaledW) / 2;
     m.inner.style.transform = `translateX(${offsetX}px) scale(${minScale})`;
     m.inner.style.transformOrigin = 'top left';
@@ -616,8 +617,6 @@ function generatePDF(){
   const pages = window._lastPages;
   if (!pages || !pages.length) return;
 
-  const pageW = 520;
-  const pageH = Math.round(520 * 297 / 210);
   const docTitle = document.getElementById('docTitle').value || 'Challenge-Beurteilung';
   const docSub = document.getElementById('docSubtitle').value || '';
   const pdfName = docSub ? docTitle + ' - ' + docSub : docTitle;
@@ -630,31 +629,23 @@ function generatePDF(){
 *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
 body{font-family:'DM Sans',sans-serif;margin:0;padding:0}
 table{border-spacing:0;border-collapse:collapse}
-.pw{width:210mm;height:297mm;overflow:hidden;page-break-after:always}
-.pw:last-child{page-break-after:auto}
-.pi{width:${pageW}px;height:${pageH}px;padding:62px 62px 50px 62px;font-size:10px;color:#1A1A1A;line-height:1.2;transform-origin:top left}
+.pg{width:210mm;height:297mm;padding:25mm 25mm 20mm 25mm;font-size:2.8mm;color:#1A1A1A;line-height:1.2;overflow:hidden;page-break-after:always}
+.pg:last-child{page-break-after:auto}
 @media print{.ph{display:none!important}}
-@media screen{body{background:#eee;padding:20px}.pw{margin:0 auto 20px;background:white;box-shadow:0 2px 10px rgba(0,0,0,0.15)}}
+@media screen{body{background:#eee;padding:20px}.pg{margin:0 auto 20px;background:white;box-shadow:0 2px 10px rgba(0,0,0,0.15)}}
 </style></head><body>
 <div class="ph" style="position:fixed;top:0;left:0;right:0;background:#FEF3C7;color:#92400E;padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;text-align:center;z-index:9999;border-bottom:1px solid #F59E0B"><strong>Tipp:</strong> Im Druckdialog «Hintergrundgrafiken» aktivieren.</div>`;
 
   pages.forEach(pg => {
-    html += `<div class="pw"><div class="pi">${pg.join('')}</div></div>`;
+    html += `<div class="pg">${pg.join('')}</div>`;
   });
 
-  html += `<script>
-document.fonts.ready.then(function(){
-  var pw = document.querySelector('.pw');
-  if (!pw) return;
-  var scale = pw.offsetWidth / ${pageW};
-  document.querySelectorAll('.pi').forEach(function(p){ p.style.transform = 'scale(' + scale + ')'; });
-});
-<\/script></body></html>`;
+  html += `</body></html>`;
 
   const w = window.open('','_blank','width=800,height=1000');
   w.document.write(html);
   w.document.close();
-  setTimeout(() => w.print(), 1000);
+  setTimeout(() => w.print(), 800);
 }
 
 render();
