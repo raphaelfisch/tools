@@ -311,7 +311,8 @@ height: 4px;
       <option value="bike">🚴 Velo</option>
     </select>
     <span class="sep">|</span>
-    <span class="mode-badge" id="areaBadge">📍 Gebiet wählen</span>
+    <button class="secondary" id="drawAreaBtn">📐 Gebiet zeichnen</button>
+    <span class="mode-badge" id="areaBadge" style="display:none"></span>
     <button id="generateBtn" disabled>▶ Generieren</button>
     <span class="sep">|</span>
     <button class="danger" id="clearBtn">✕ Reset</button>
@@ -418,18 +419,49 @@ function setStatus(msg, type='') {
   statusText.innerHTML = msg;
 }
 
-// ─── AREA SELECTION (Shift+Drag) ───────────────────────────────────────────
+// ─── AREA SELECTION (Draw Mode Button + Touch) ─────────────────────────────
+let drawMode = false;
+const drawAreaBtn = document.getElementById('drawAreaBtn');
+
+drawAreaBtn.addEventListener('click', () => {
+  drawMode = !drawMode;
+  if (drawMode) {
+    drawAreaBtn.textContent = '✕ Abbrechen';
+    drawAreaBtn.style.background = '#f13565';
+    drawAreaBtn.style.color = '#fff';
+    map.dragging.disable();
+    map.getContainer().style.cursor = 'crosshair';
+    setStatus('Ziehe ein Rechteck auf der Karte...', 'loading');
+  } else {
+    exitDrawMode();
+  }
+});
+
+function exitDrawMode() {
+  drawMode = false;
+  drawAreaBtn.textContent = '📐 Gebiet zeichnen';
+  drawAreaBtn.style.background = '';
+  drawAreaBtn.style.color = '';
+  map.dragging.enable();
+  map.getContainer().style.cursor = '';
+}
+
+function getLatLngFromEvent(e) {
+  if (e.latlng) return e.latlng;
+  return null;
+}
+
+// Mouse
 map.on('mousedown', (e) => {
-  if (!e.originalEvent.shiftKey) return;
+  if (!drawMode) return;
   e.originalEvent.preventDefault();
   isDrawing = true;
   drawStart = e.latlng;
-  map.dragging.disable();
   if (selectionRect) { map.removeLayer(selectionRect); selectionRect = null; }
 });
 
 map.on('mousemove', (e) => {
-  if (!isDrawing) return;
+  if (!isDrawing || !drawMode) return;
   const bounds = L.latLngBounds(drawStart, e.latlng);
   if (selectionRect) map.removeLayer(selectionRect);
   selectionRect = L.rectangle(bounds, {
@@ -438,16 +470,53 @@ map.on('mousemove', (e) => {
 });
 
 map.on('mouseup', (e) => {
-  if (!isDrawing) return;
+  if (!isDrawing || !drawMode) return;
+  finishSelection(e.latlng);
+});
+
+// Touch
+map.getContainer().addEventListener('touchstart', (e) => {
+  if (!drawMode) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  drawStart = map.containerPointToLatLng(L.point(touch.clientX - map.getContainer().getBoundingClientRect().left, touch.clientY - map.getContainer().getBoundingClientRect().top));
+  isDrawing = true;
+  if (selectionRect) { map.removeLayer(selectionRect); selectionRect = null; }
+}, { passive: false });
+
+map.getContainer().addEventListener('touchmove', (e) => {
+  if (!isDrawing || !drawMode) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = map.getContainer().getBoundingClientRect();
+  const latlng = map.containerPointToLatLng(L.point(touch.clientX - rect.left, touch.clientY - rect.top));
+  const bounds = L.latLngBounds(drawStart, latlng);
+  if (selectionRect) map.removeLayer(selectionRect);
+  selectionRect = L.rectangle(bounds, {
+    color: '#c8f135', weight: 2, fillOpacity: 0.08, dashArray: '6,4'
+  }).addTo(map);
+}, { passive: false });
+
+map.getContainer().addEventListener('touchend', (e) => {
+  if (!isDrawing || !drawMode) return;
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  const rect = map.getContainer().getBoundingClientRect();
+  const latlng = map.containerPointToLatLng(L.point(touch.clientX - rect.left, touch.clientY - rect.top));
+  finishSelection(latlng);
+}, { passive: false });
+
+function finishSelection(latlng) {
   isDrawing = false;
-  map.dragging.enable();
-  selectionBounds = L.latLngBounds(drawStart, e.latlng);
+  selectionBounds = L.latLngBounds(drawStart, latlng);
   const km2 = areaKm2(selectionBounds);
   areaBadge.textContent = `📐 ${km2.toFixed(2)} km²`;
+  areaBadge.style.display = 'inline';
   areaBadge.classList.add('active-mode');
+  exitDrawMode();
   updateGenerateBtn();
   setStatus(`Gebiet gewählt: ${km2.toFixed(2)} km². Gib ein Wort ein und klicke Generieren.`, 'ok');
-});
+}
 
 function areaKm2(bounds) {
   const latDiff = Math.abs(bounds.getNorth() - bounds.getSouth());
@@ -685,8 +754,10 @@ clearBtn.addEventListener('click', () => {
   activeVariant = -1;
   if (selectionRect) { map.removeLayer(selectionRect); selectionRect = null; }
   selectionBounds = null;
-  areaBadge.textContent = '📍 Gebiet wählen';
+  areaBadge.textContent = '';
+  areaBadge.style.display = 'none';
   areaBadge.classList.remove('active-mode');
+  exitDrawMode();
   variantsList.innerHTML = `<div class="hint-box"><span class="big">✏️</span>Zeichne ein Rechteck auf der Karte, gib ein Wort ein und klicke Generieren.</div>`;
   generateBtn.disabled = true;
   exportBtn.disabled = true;
@@ -719,7 +790,7 @@ exportBtn.addEventListener('click', () => {
 });
 
 // ─── INIT ──────────────────────────────────────────────────────────────────
-setStatus('Shift + Ziehen auf der Karte, um ein Gebiet zu wählen. Dann Wort eingeben und Generieren.');
+setStatus('Tippe auf «📐 Gebiet zeichnen», dann Rechteck auf der Karte ziehen.');
 </script>
 
 </body>
