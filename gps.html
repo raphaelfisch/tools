@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS Art – Wörter laufen</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --accent: #c8f135;
+    --accent2: #f13565;
+    --text: #e8e8e8;
+    --muted: #666;
+    --radius: 4px;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Space Mono’, monospace;
+height: 100vh;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+
+header {
+padding: 12px 20px;
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: center;
+gap: 20px;
+background: var(–surface);
+flex-shrink: 0;
+}
+
+.logo {
+font-family: ‘Instrument Serif’, serif;
+font-style: italic;
+font-size: 1.3rem;
+color: var(–accent);
+white-space: nowrap;
+}
+
+.logo span { color: var(–text); font-style: normal; }
+
+.controls {
+display: flex;
+align-items: center;
+gap: 10px;
+flex: 1;
+flex-wrap: wrap;
+}
+
+input[type=“text”] {
+background: var(–surface2);
+border: 1px solid var(–border);
+color: var(–text);
+font-family: ‘Space Mono’, monospace;
+font-size: 0.85rem;
+padding: 8px 12px;
+border-radius: var(–radius);
+width: 180px;
+outline: none;
+transition: border-color 0.2s;
+}
+input[type=“text”]:focus { border-color: var(–accent); }
+input[type=“text”]::placeholder { color: var(–muted); }
+
+select {
+background: var(–surface2);
+border: 1px solid var(–border);
+color: var(–text);
+font-family: ‘Space Mono’, monospace;
+font-size: 0.75rem;
+padding: 8px 10px;
+border-radius: var(–radius);
+outline: none;
+cursor: pointer;
+}
+
+button {
+background: var(–accent);
+color: #000;
+border: none;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.75rem;
+font-weight: 700;
+padding: 8px 16px;
+border-radius: var(–radius);
+cursor: pointer;
+transition: all 0.15s;
+white-space: nowrap;
+}
+button:hover { background: #d4ff3a; transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+button:disabled { background: var(–border); color: var(–muted); cursor: not-allowed; transform: none; }
+
+button.secondary {
+background: transparent;
+border: 1px solid var(–border);
+color: var(–text);
+}
+button.secondary:hover { border-color: var(–accent); color: var(–accent); background: transparent; }
+button.secondary:disabled { color: var(–muted); border-color: var(–border); }
+
+button.danger {
+background: transparent;
+border: 1px solid var(–border);
+color: var(–muted);
+font-size: 0.7rem;
+padding: 6px 10px;
+}
+button.danger:hover { border-color: var(–accent2); color: var(–accent2); background: transparent; }
+
+.sep { color: var(–border); font-size: 1.2rem; }
+
+.status-bar {
+font-size: 0.7rem;
+color: var(–muted);
+padding: 5px 20px;
+background: var(–bg);
+border-bottom: 1px solid var(–border);
+flex-shrink: 0;
+min-height: 26px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.status-bar .dot {
+width: 6px; height: 6px;
+border-radius: 50%;
+background: var(–muted);
+flex-shrink: 0;
+}
+.status-bar.loading .dot { background: var(–accent); animation: blink 0.8s infinite; }
+.status-bar.error .dot { background: var(–accent2); }
+.status-bar.ok .dot { background: var(–accent); }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.main {
+display: flex;
+flex: 1;
+overflow: hidden;
+}
+
+#map {
+flex: 1;
+cursor: crosshair;
+}
+
+.sidebar {
+width: 260px;
+background: var(–surface);
+border-left: 1px solid var(–border);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+flex-shrink: 0;
+}
+
+.sidebar-header {
+padding: 12px 14px;
+border-bottom: 1px solid var(–border);
+font-size: 0.65rem;
+text-transform: uppercase;
+letter-spacing: 0.12em;
+color: var(–muted);
+}
+
+.variants-list {
+flex: 1;
+overflow-y: auto;
+padding: 10px;
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+
+.variant-card {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 10px;
+cursor: pointer;
+transition: all 0.15s;
+}
+.variant-card:hover { border-color: var(–accent); }
+.variant-card.active { border-color: var(–accent); background: #1a1f0a; }
+
+.variant-card .v-title {
+font-size: 0.75rem;
+font-weight: 700;
+color: var(–accent);
+margin-bottom: 4px;
+}
+.variant-card .v-stats {
+font-size: 0.65rem;
+color: var(–muted);
+line-height: 1.6;
+}
+.variant-card .v-preview {
+font-family: ‘Instrument Serif’, serif;
+font-style: italic;
+font-size: 1.1rem;
+color: var(–text);
+margin-top: 4px;
+opacity: 0.7;
+}
+
+.sidebar-footer {
+padding: 12px;
+border-top: 1px solid var(–border);
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+
+.hint-box {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 20px;
+text-align: center;
+color: var(–muted);
+font-size: 0.7rem;
+line-height: 1.8;
+margin: 10px;
+}
+.hint-box .big { font-size: 2rem; display: block; margin-bottom: 8px; opacity: 0.4; }
+
+.mode-badge {
+font-size: 0.65rem;
+padding: 3px 8px;
+border-radius: 20px;
+background: var(–surface2);
+border: 1px solid var(–border);
+color: var(–muted);
+cursor: pointer;
+transition: all 0.15s;
+}
+.mode-badge.active-mode { background: #1a1f0a; border-color: var(–accent); color: var(–accent); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
+
+/* Leaflet overrides */
+.leaflet-container { background: #1a1a1a; }
+.leaflet-control-zoom a {
+background: var(–surface) !important;
+color: var(–text) !important;
+border-color: var(–border) !important;
+}
+
+.area-label {
+background: none !important;
+border: none !important;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.65rem;
+color: var(–accent);
+white-space: nowrap;
+}
+
+.spinner {
+display: inline-block;
+width: 10px; height: 10px;
+border: 2px solid var(–border);
+border-top-color: var(–accent);
+border-radius: 50%;
+animation: spin 0.6s linear infinite;
+vertical-align: middle;
+margin-right: 4px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.scale-row {
+display: flex;
+align-items: center;
+gap: 8px;
+font-size: 0.7rem;
+color: var(–muted);
+}
+.scale-row input[type=range] {
+flex: 1;
+accent-color: var(–accent);
+height: 4px;
+}
+.scale-val { color: var(–text); min-width: 40px; text-align: right; font-size: 0.7rem; }
+</style>
+
+</head>
+<body>
+
+<header>
+  <div class="logo">GPS <span>Art</span></div>
+  <div class="controls">
+    <input type="text" id="wordInput" placeholder="Wort eingeben..." maxlength="12"/>
+    <select id="modeSelect">
+      <option value="foot">🚶 Laufen</option>
+      <option value="bike">🚴 Velo</option>
+    </select>
+    <span class="sep">|</span>
+    <span class="mode-badge" id="areaBadge">📍 Gebiet wählen</span>
+    <button id="generateBtn" disabled>▶ Generieren</button>
+    <span class="sep">|</span>
+    <button class="danger" id="clearBtn">✕ Reset</button>
+  </div>
+</header>
+
+<div class="status-bar" id="statusBar">
+  <div class="dot"></div>
+  <span id="statusText">Zeichne ein Rechteck auf der Karte, um das Gebiet zu definieren (Shift + Ziehen)</span>
+</div>
+
+<div class="main">
+  <div id="map"></div>
+  <div class="sidebar">
+    <div class="sidebar-header">Varianten</div>
+    <div class="variants-list" id="variantsList">
+      <div class="hint-box">
+        <span class="big">✏️</span>
+        Wähle ein Gebiet,<br>gib ein Wort ein<br>und klicke Generieren.
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="scale-row">
+        <span>Grösse</span>
+        <input type="range" id="scaleSlider" min="0.3" max="3.0" step="0.1" value="1.0"/>
+        <span class="scale-val" id="scaleVal">1.0×</span>
+      </div>
+      <button class="secondary" id="exportBtn" disabled>⬇ GPX exportieren</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script>
+// ─── LETTER SKELETONS ──────────────────────────────────────────────────────
+// Each letter is defined as a list of polylines (strokes).
+// Coordinates are normalized: x in [0,1], y in [0,1] (0=top, 1=bottom)
+// Each stroke is an array of [x,y] points.
+const LETTERS = {
+  'A': [[[0.1,1],[0.5,0],[0.9,1]], [[0.25,0.55],[0.75,0.55]]],
+  'B': [[[0.15,0],[0.15,1]], [[0.15,0],[0.7,0],[0.85,0.1],[0.85,0.45],[0.7,0.5],[0.15,0.5]], [[0.15,0.5],[0.75,0.5],[0.9,0.6],[0.9,0.9],[0.75,1],[0.15,1]]],
+  'C': [[[0.85,0.15],[0.65,0.02],[0.4,0],[0.2,0.1],[0.08,0.3],[0.05,0.5],[0.08,0.7],[0.2,0.9],[0.4,1],[0.65,0.98],[0.85,0.85]]],
+  'D': [[[0.15,0],[0.15,1]], [[0.15,0],[0.55,0],[0.8,0.15],[0.9,0.35],[0.9,0.65],[0.8,0.85],[0.55,1],[0.15,1]]],
+  'E': [[[0.15,0],[0.15,1]], [[0.15,0],[0.85,0]], [[0.15,0.5],[0.7,0.5]], [[0.15,1],[0.85,1]]],
+  'F': [[[0.15,0],[0.15,1]], [[0.15,0],[0.85,0]], [[0.15,0.5],[0.7,0.5]]],
+  'G': [[[0.85,0.15],[0.65,0.02],[0.4,0],[0.2,0.1],[0.08,0.3],[0.05,0.5],[0.08,0.7],[0.2,0.9],[0.4,1],[0.65,0.98],[0.85,0.85],[0.85,0.5],[0.55,0.5]]],
+  'H': [[[0.15,0],[0.15,1]], [[0.85,0],[0.85,1]], [[0.15,0.5],[0.85,0.5]]],
+  'I': [[[0.3,0],[0.7,0]], [[0.5,0],[0.5,1]], [[0.3,1],[0.7,1]]],
+  'J': [[[0.2,0],[0.8,0]], [[0.65,0],[0.65,0.8],[0.5,0.95],[0.3,0.95],[0.15,0.8],[0.15,0.65]]],
+  'K': [[[0.15,0],[0.15,1]], [[0.85,0],[0.15,0.5]], [[0.15,0.5],[0.85,1]]],
+  'L': [[[0.15,0],[0.15,1],[0.85,1]]],
+  'M': [[[0.1,1],[0.1,0],[0.5,0.6],[0.9,0],[0.9,1]]],
+  'N': [[[0.15,1],[0.15,0],[0.85,1],[0.85,0]]],
+  'O': [[[0.5,0],[0.75,0.05],[0.9,0.2],[0.95,0.5],[0.9,0.8],[0.75,0.95],[0.5,1],[0.25,0.95],[0.1,0.8],[0.05,0.5],[0.1,0.2],[0.25,0.05],[0.5,0]]],
+  'P': [[[0.15,0],[0.15,1]], [[0.15,0],[0.7,0],[0.85,0.1],[0.85,0.4],[0.7,0.5],[0.15,0.5]]],
+  'Q': [[[0.5,0],[0.75,0.05],[0.9,0.2],[0.95,0.5],[0.9,0.8],[0.75,0.95],[0.5,1],[0.25,0.95],[0.1,0.8],[0.05,0.5],[0.1,0.2],[0.25,0.05],[0.5,0]], [[0.6,0.7],[0.9,1]]],
+  'R': [[[0.15,0],[0.15,1]], [[0.15,0],[0.7,0],[0.85,0.1],[0.85,0.4],[0.7,0.5],[0.15,0.5]], [[0.5,0.5],[0.85,1]]],
+  'S': [[[0.85,0.15],[0.65,0.02],[0.4,0],[0.2,0.1],[0.15,0.3],[0.2,0.45],[0.4,0.5],[0.6,0.55],[0.8,0.6],[0.85,0.75],[0.8,0.9],[0.6,1],[0.35,1],[0.15,0.88]],],
+  'T': [[[0.1,0],[0.9,0]], [[0.5,0],[0.5,1]]],
+  'U': [[[0.15,0],[0.15,0.8],[0.25,0.95],[0.5,1],[0.75,0.95],[0.85,0.8],[0.85,0]]],
+  'V': [[[0.1,0],[0.5,1],[0.9,0]]],
+  'W': [[[0.05,0],[0.25,1],[0.5,0.5],[0.75,1],[0.95,0]]],
+  'X': [[[0.1,0],[0.9,1]], [[0.9,0],[0.1,1]]],
+  'Y': [[[0.1,0],[0.5,0.5],[0.9,0]], [[0.5,0.5],[0.5,1]]],
+  'Z': [[[0.1,0],[0.9,0],[0.1,1],[0.9,1]]],
+  ' ': [],
+};
+
+// ─── MAP SETUP ─────────────────────────────────────────────────────────────
+const map = L.map('map', { zoomControl: true }).setView([47.27, 9.0], 13);
+
+L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg', {
+  attribution: '© swisstopo',
+  maxZoom: 18
+}).addTo(map);
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+let selectionRect = null;
+let selectionBounds = null;
+let isDrawing = false;
+let drawStart = null;
+let routeLayers = [];
+let variants = [];
+let activeVariant = -1;
+let currentScale = 1.0;
+
+// ─── UI REFS ───────────────────────────────────────────────────────────────
+const wordInput = document.getElementById('wordInput');
+const modeSelect = document.getElementById('modeSelect');
+const generateBtn = document.getElementById('generateBtn');
+const clearBtn = document.getElementById('clearBtn');
+const exportBtn = document.getElementById('exportBtn');
+const variantsList = document.getElementById('variantsList');
+const statusBar = document.getElementById('statusBar');
+const statusText = document.getElementById('statusText');
+const areaBadge = document.getElementById('areaBadge');
+const scaleSlider = document.getElementById('scaleSlider');
+const scaleVal = document.getElementById('scaleVal');
+
+// ─── STATUS ────────────────────────────────────────────────────────────────
+function setStatus(msg, type='') {
+  statusBar.className = 'status-bar ' + type;
+  statusText.innerHTML = msg;
+}
+
+// ─── AREA SELECTION (Shift+Drag) ───────────────────────────────────────────
+map.on('mousedown', (e) => {
+  if (!e.originalEvent.shiftKey) return;
+  e.originalEvent.preventDefault();
+  isDrawing = true;
+  drawStart = e.latlng;
+  map.dragging.disable();
+  if (selectionRect) { map.removeLayer(selectionRect); selectionRect = null; }
+});
+
+map.on('mousemove', (e) => {
+  if (!isDrawing) return;
+  const bounds = L.latLngBounds(drawStart, e.latlng);
+  if (selectionRect) map.removeLayer(selectionRect);
+  selectionRect = L.rectangle(bounds, {
+    color: '#c8f135', weight: 2, fillOpacity: 0.08, dashArray: '6,4'
+  }).addTo(map);
+});
+
+map.on('mouseup', (e) => {
+  if (!isDrawing) return;
+  isDrawing = false;
+  map.dragging.enable();
+  selectionBounds = L.latLngBounds(drawStart, e.latlng);
+  const km2 = areaKm2(selectionBounds);
+  areaBadge.textContent = `📐 ${km2.toFixed(2)} km²`;
+  areaBadge.classList.add('active-mode');
+  updateGenerateBtn();
+  setStatus(`Gebiet gewählt: ${km2.toFixed(2)} km². Gib ein Wort ein und klicke Generieren.`, 'ok');
+});
+
+function areaKm2(bounds) {
+  const latDiff = Math.abs(bounds.getNorth() - bounds.getSouth());
+  const lngDiff = Math.abs(bounds.getEast() - bounds.getWest());
+  const latKm = latDiff * 111;
+  const lngKm = lngDiff * 111 * Math.cos(bounds.getCenter().lat * Math.PI/180);
+  return latKm * lngKm;
+}
+
+function updateGenerateBtn() {
+  generateBtn.disabled = !(selectionBounds && wordInput.value.trim().length > 0);
+}
+
+wordInput.addEventListener('input', updateGenerateBtn);
+
+// ─── SCALE SLIDER ──────────────────────────────────────────────────────────
+scaleSlider.addEventListener('input', () => {
+  currentScale = parseFloat(scaleSlider.value);
+  scaleVal.textContent = currentScale.toFixed(1) + '×';
+});
+
+// ─── LETTER GEOMETRY ───────────────────────────────────────────────────────
+// Convert letter skeleton to lat/lng points given:
+// origin: {lat, lng} = bottom-left corner
+// width, height: in degrees
+function letterToLatLng(letter, originLat, originLng, width, height) {
+  const strokes = LETTERS[letter.toUpperCase()] || [];
+  return strokes.map(stroke =>
+    stroke.map(([x, y]) => [
+      originLat + (1 - y) * height,
+      originLng + x * width
+    ])
+  );
+}
+
+// Layout all letters of a word in a bounding box
+function wordToLatLng(word, bounds, scale) {
+  const chars = word.toUpperCase().split('');
+  const validChars = chars.filter(c => LETTERS[c] !== undefined);
+  if (validChars.length === 0) return [];
+
+  const south = bounds.getSouth();
+  const west = bounds.getWest();
+  const north = bounds.getNorth();
+  const east = bounds.getEast();
+
+  const totalWidth = east - west;
+  const totalHeight = north - south;
+
+  // Letter spacing
+  const charCount = validChars.length;
+  const spacing = 0.05; // gap between letters as fraction of charWidth
+  const charWidth = (totalWidth / (charCount + (charCount - 1) * spacing)) * scale;
+  const charHeight = totalHeight * scale;
+
+  // Center in bounds
+  const usedWidth = charCount * charWidth + (charCount - 1) * charWidth * spacing;
+  const startLng = west + (totalWidth - usedWidth) / 2;
+  const startLat = south + (totalHeight - charHeight) / 2;
+
+  const allStrokes = [];
+  validChars.forEach((char, i) => {
+    const originLng = startLng + i * (charWidth + charWidth * spacing);
+    const strokes = letterToLatLng(char, startLat, originLng, charWidth, charHeight);
+    allStrokes.push(...strokes.map(s => ({ stroke: s, char, charIndex: i })));
+  });
+
+  return allStrokes;
+}
+
+// ─── OSRM ROUTING ──────────────────────────────────────────────────────────
+async function routeSegment(points, mode) {
+  if (points.length < 2) return points;
+  const profile = mode === 'bike' ? 'bike' : 'foot';
+  // Sample points to reduce API calls (max every 3rd point for long strokes)
+  const sampled = points.length > 6
+    ? points.filter((_, i) => i === 0 || i === points.length - 1 || i % 2 === 0)
+    : points;
+
+  const coords = sampled.map(([lat, lng]) => `${lng},${lat}`).join(';');
+  const url = `https://router.project-osrm.org/route/v1/${profile}/${coords}?overview=full&geometries=geojson`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.routes && data.routes[0]) {
+      return data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+    }
+  } catch (e) {}
+  return points; // fallback: straight line
+}
+
+// ─── GENERATE VARIANTS ─────────────────────────────────────────────────────
+generateBtn.addEventListener('click', generateRoutes);
+
+async function generateRoutes() {
+  const word = wordInput.value.trim();
+  if (!word || !selectionBounds) return;
+
+  generateBtn.disabled = true;
+  exportBtn.disabled = true;
+  clearRoutes();
+  variants = [];
+  activeVariant = -1;
+  variantsList.innerHTML = '';
+
+  // 3 variants: different scales and positions
+  const variantConfigs = [
+    { scale: currentScale, label: 'Optimal', offsetLat: 0, offsetLng: 0 },
+    { scale: currentScale * 0.75, label: 'Kompakt', offsetLat: 0.1, offsetLng: 0.05 },
+    { scale: currentScale * 1.15, label: 'Gross', offsetLat: -0.05, offsetLng: 0 },
+  ];
+
+  for (let vi = 0; vi < variantConfigs.length; vi++) {
+    const cfg = variantConfigs[vi];
+    setStatus(`<span class="spinner"></span> Variante ${vi+1}/3 wird berechnet (OSRM Routing)...`, 'loading');
+
+    // Slightly offset bounds for each variant
+    const bHeight = selectionBounds.getNorth() - selectionBounds.getSouth();
+    const bWidth = selectionBounds.getEast() - selectionBounds.getWest();
+    const adjustedBounds = L.latLngBounds(
+      [selectionBounds.getSouth() + bHeight * cfg.offsetLat, selectionBounds.getWest() + bWidth * cfg.offsetLng],
+      [selectionBounds.getNorth() + bHeight * cfg.offsetLat, selectionBounds.getEast() + bWidth * cfg.offsetLng]
+    );
+
+    const strokes = wordToLatLng(word, adjustedBounds, cfg.scale);
+    const mode = modeSelect.value;
+
+    const routedStrokes = [];
+    let totalDist = 0;
+
+    for (const strokeObj of strokes) {
+      if (strokeObj.stroke.length < 2) continue;
+      const routed = await routeSegment(strokeObj.stroke, mode);
+      routedStrokes.push({ points: routed, char: strokeObj.char });
+      totalDist += calcDist(routed);
+      await sleep(60); // rate limit
+    }
+
+    const variant = {
+      label: cfg.label,
+      word,
+      mode,
+      strokes: routedStrokes,
+      totalDist,
+      scale: cfg.scale
+    };
+    variants.push(variant);
+    addVariantCard(variant, vi);
+  }
+
+  setStatus(`${variants.length} Varianten generiert. Wähle eine aus.`, 'ok');
+  generateBtn.disabled = false;
+
+  // Auto-select first
+  selectVariant(0);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function calcDist(points) {
+  let d = 0;
+  for (let i = 1; i < points.length; i++) {
+    d += map.distance(points[i-1], points[i]);
+  }
+  return d;
+}
+
+// ─── VARIANT CARDS ─────────────────────────────────────────────────────────
+function addVariantCard(variant, index) {
+  const card = document.createElement('div');
+  card.className = 'variant-card';
+  card.id = `variant-${index}`;
+  const distKm = (variant.totalDist / 1000).toFixed(2);
+  const modeLabel = variant.mode === 'bike' ? '🚴 Velo' : '🚶 Laufen';
+  card.innerHTML = `
+    <div class="v-title">Variante ${index+1}: ${variant.label}</div>
+    <div class="v-stats">
+      Distanz: ${distKm} km<br>
+      Modus: ${modeLabel}<br>
+      Skalierung: ${variant.scale.toFixed(2)}×
+    </div>
+    <div class="v-preview">${variant.word}</div>
+  `;
+  card.addEventListener('click', () => selectVariant(index));
+  variantsList.appendChild(card);
+}
+
+function selectVariant(index) {
+  activeVariant = index;
+  clearRoutes();
+
+  // Highlight card
+  document.querySelectorAll('.variant-card').forEach((c, i) => {
+    c.classList.toggle('active', i === index);
+  });
+
+  const variant = variants[index];
+  if (!variant) return;
+
+  // Draw strokes
+  const colors = ['#c8f135', '#f1c835', '#35c8f1'];
+  variant.strokes.forEach(strokeObj => {
+    if (strokeObj.points.length < 2) return;
+    const line = L.polyline(strokeObj.points, {
+      color: colors[index % colors.length],
+      weight: 4,
+      opacity: 0.92,
+      lineJoin: 'round',
+      lineCap: 'round'
+    }).addTo(map);
+    routeLayers.push(line);
+
+    // Start dot
+    const start = L.circleMarker(strokeObj.points[0], {
+      radius: 5, fillColor: '#fff', color: colors[index % colors.length],
+      weight: 2, fillOpacity: 1
+    }).addTo(map);
+    routeLayers.push(start);
+  });
+
+  exportBtn.disabled = false;
+  setStatus(`Variante ${index+1} angezeigt — ${(variant.totalDist/1000).toFixed(2)} km`, 'ok');
+}
+
+function clearRoutes() {
+  routeLayers.forEach(l => map.removeLayer(l));
+  routeLayers = [];
+}
+
+// ─── CLEAR ─────────────────────────────────────────────────────────────────
+clearBtn.addEventListener('click', () => {
+  clearRoutes();
+  variants = [];
+  activeVariant = -1;
+  if (selectionRect) { map.removeLayer(selectionRect); selectionRect = null; }
+  selectionBounds = null;
+  areaBadge.textContent = '📍 Gebiet wählen';
+  areaBadge.classList.remove('active-mode');
+  variantsList.innerHTML = `<div class="hint-box"><span class="big">✏️</span>Zeichne ein Rechteck auf der Karte, gib ein Wort ein und klicke Generieren.</div>`;
+  generateBtn.disabled = true;
+  exportBtn.disabled = true;
+  setStatus('Zeichne ein Rechteck auf der Karte, um das Gebiet zu definieren (Shift + Ziehen)');
+});
+
+// ─── GPX EXPORT ────────────────────────────────────────────────────────────
+exportBtn.addEventListener('click', () => {
+  if (activeVariant < 0 || !variants[activeVariant]) return;
+  const variant = variants[activeVariant];
+  const allPoints = variant.strokes.flatMap(s => s.points);
+
+  let gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="GPS Art Generator" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>${variant.word} – GPS Art</name></metadata>
+  <trk><name>${variant.word}</name><trkseg>
+`;
+  allPoints.forEach(([lat, lng]) => {
+    gpx += `    <trkpt lat="${lat.toFixed(7)}" lon="${lng.toFixed(7)}"></trkpt>\n`;
+  });
+  gpx += `  </trkseg></trk>\n</gpx>`;
+
+  const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `gps-art-${variant.word.toLowerCase()}.gpx`;
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus(`GPX exportiert: gps-art-${variant.word.toLowerCase()}.gpx`, 'ok');
+});
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+setStatus('Shift + Ziehen auf der Karte, um ein Gebiet zu wählen. Dann Wort eingeben und Generieren.');
+</script>
+
+</body>
+</html>
