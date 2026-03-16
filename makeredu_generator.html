@@ -67,6 +67,28 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   .pdf-overlay-text{color:white;font-size:14px;font-weight:700;}
   .pdf-overlay-sub{color:rgba(255,255,255,0.55);font-size:11px;}
+
+  /* ── Mobile Tab Bar ── */
+  .mobile-tabs{display:none;flex-shrink:0;background:#2D2D2D;border-top:1px solid #444;}
+  .mobile-tab{flex:1;padding:10px 0;font-size:12px;font-weight:600;color:#AAA;text-align:center;cursor:pointer;border:none;background:none;font-family:var(--font);transition:color 0.15s;}
+  .mobile-tab.active{color:#FFF;border-top:2px solid #FFF;}
+  .mobile-pdf-bar{display:none;flex-shrink:0;padding:10px 16px;background:var(--bg);border-top:1px solid var(--border);}
+  .mobile-pdf-bar .btn-pdf{width:100%;justify-content:center;padding:10px;}
+
+  @media(max-width:768px){
+    body{overflow:hidden;}
+    .main{flex-direction:column;overflow:hidden;}
+    .panel-l{width:100%;padding:12px;display:none;}
+    .panel-l.tab-active{display:block;overflow-y:auto;flex:1;}
+    .panel-r{width:100%;border-left:none;padding:12px;display:none;border-top:1px solid var(--border);}
+    .panel-r.tab-active{display:block;overflow-y:auto;flex:1;}
+    .right-header{display:none;}
+    .mobile-tabs{display:flex;}
+    .mobile-pdf-bar{display:flex;}
+    .topbar h1{font-size:11px;}
+    .topbar-inner{padding:0 12px;gap:8px;}
+    .pill{padding:3px 8px;font-size:10px;}
+  }
 </style>
 </head>
 <body>
@@ -87,7 +109,7 @@
   </div>
 </div>
 <div class="main">
-  <div class="panel-l">
+  <div class="panel-l tab-active" id="panel-l">
     <div class="settings">
       <div class="settings-toggle" onclick="toggleSettings()">
         <span>Dokument-Einstellungen</span>
@@ -138,7 +160,7 @@
     </div>
     <div id="accordions"></div>
   </div>
-  <div class="panel-r">
+  <div class="panel-r" id="panel-r">
     <div class="right-header">
       <span>Vorschau</span>
       <button class="btn-pdf" id="btn-pdf" disabled onclick="generatePDF()">
@@ -148,6 +170,16 @@
     </div>
     <div id="preview"></div>
   </div>
+</div>
+<div class="mobile-tabs">
+  <button class="mobile-tab active" id="tab-edit" onclick="switchTab('edit')">✏️ Indikatoren</button>
+  <button class="mobile-tab" id="tab-preview" onclick="switchTab('preview')">👁 Vorschau</button>
+</div>
+<div class="mobile-pdf-bar">
+  <button class="btn-pdf" id="btn-pdf-mobile" disabled onclick="generatePDF()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    PDF herunterladen
+  </button>
 </div>
 
 <script>
@@ -183,6 +215,18 @@ let selections={},openComps={},openSubs={},customTexts={},customAdded={},editing
 let colorMode=true;
 let showRefl=true, showGesp=true, showGesamt=true;
 
+function switchTab(tab){
+  const pl=document.getElementById('panel-l'),pr=document.getElementById('panel-r');
+  const te=document.getElementById('tab-edit'),tp=document.getElementById('tab-preview');
+  if(tab==='edit'){
+    pl.classList.add('tab-active');pr.classList.remove('tab-active');
+    te.classList.add('active');tp.classList.remove('active');
+  } else {
+    pr.classList.add('tab-active');pl.classList.remove('tab-active');
+    tp.classList.add('active');te.classList.remove('active');
+    setTimeout(scaleA4Pages,50);
+  }
+}
 function toggleColorMode(){colorMode=!colorMode;const cb=document.getElementById('colorToggle');if(cb)cb.checked=colorMode;render();}
 function dc(c){return colorMode?c:'#555555';}
 function dcLight(cl){return colorMode?cl:'#F5F5F3';}
@@ -221,7 +265,7 @@ function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g
 function getActiveComps(){return Object.values(DATA).filter(c=>c.subs.some(s=>(selections[s.id]||[]).length>0));}
 function render(){renderFieldsList();renderAccordions();renderPreview();updateStatus();}
 function toggleSettings(){const b=document.getElementById('settings-body'),c=document.getElementById('settings-chevron'),v=b.style.display!=='none';b.style.display=v?'none':'flex';c.classList.toggle('open',!v);}
-function updateStatus(){let t=0;Object.values(selections).forEach(a=>t+=a.length);const ac=getActiveComps().length,b=document.getElementById('status-badge');b.textContent=t+' Indikatoren';b.style.background=t>0?'#EDFCF2':'';b.style.color=t>0?'#0F9D58':'';document.getElementById('status-comps').textContent=ac+' Bereiche';document.getElementById('btn-pdf').disabled=t===0;}
+function updateStatus(){let t=0;Object.values(selections).forEach(a=>t+=a.length);const ac=getActiveComps().length,b=document.getElementById('status-badge');b.textContent=t+' Indikatoren';b.style.background=t>0?'#EDFCF2':'';b.style.color=t>0?'#0F9D58':'';document.getElementById('status-comps').textContent=ac+' Bereiche';const dis=t===0;document.getElementById('btn-pdf').disabled=dis;const bm=document.getElementById('btn-pdf-mobile');if(bm)bm.disabled=dis;}
 function toggleComp(id){openComps[id]=!openComps[id];render();}
 function toggleSub(id){openSubs[id]=!openSubs[id];render();}
 function toggleInd(sId,idx){const a=selections[sId]||[];if(a.includes(idx))selections[sId]=a.filter(x=>x!==idx);else selections[sId]=[...a,idx];render();}
