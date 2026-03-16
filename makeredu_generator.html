@@ -115,6 +115,12 @@
             </label>
           </div>
         </div>
+        <div style="margin-top:4px;padding-left:0">
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#444;cursor:pointer">
+            <input type="checkbox" id="chkGesamt" checked onchange="showGesamt=this.checked;render()" style="width:13px;height:13px">
+            GESAMT-Zeile in Gesamtbeurteilung
+          </label>
+        </div>
         <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border-lt);display:flex;align-items:center;gap:8px">
           <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Druckmodus</div>
           <button id="colorToggle" onclick="toggleColorMode()" style="font-size:11px;padding:4px 10px;border-radius:100px;border:1px solid var(--border);background:none;cursor:pointer;font-family:var(--font);font-weight:600;color:#444">🎨 Farbig</button>
@@ -142,26 +148,26 @@
 
 <script>
 const DATA = {
-  personal: { id:"personal", label:"PERSONALKOMPETENZ", shortLabel:"Dranbleiben", color:"#7C3AED", colorLight:"#F5F0FF", subs: [
+  personal: { id:"personal", label:"PERSONALE KOMPETENZEN", shortLabel:"Dranbleiben", color:"#C00000", colorLight:"#FDECEA", subs: [
     { id:"p1", label:"Eigenst\u00e4ndigkeit", inds: ["Du hast dein Produkt selbst\u00e4ndig geplant und umgesetzt.","Du hast deine eigene(n) Idee(n) umgesetzt.","Du hattest viele gute Ideen.","Du konntest etwas bauen, das dir wichtig ist.","Du hast etwas gelernt, das dich interessiert."]},
     { id:"p2", label:"Offenheit / Risikobereitschaft", inds: ["Du hast Werkzeuge, Materialien oder Maschinen ausprobiert, die du vorher noch nicht kanntest.","Du hast Ideen umgesetzt, von denen du nicht wusstest, ob sie funktionieren.","Du hast ein Projekt gew\u00e4hlt, das du vorher noch nie umgesetzt hast."]},
     { id:"p3", label:"Selbstregulation / Selbstreflexion", inds: ["Du hast so lange get\u00fcftelt, bis das Problem gel\u00f6st war.","Wenn etwas nicht funktioniert hat, wolltest du herausfinden, was der Grund daf\u00fcr ist.","Du hast Fehler als Chance gesehen und etwas daraus gelernt.","Wenn es mal m\u00fchsam war, konntest du dich selbst zum Weitermachen motivieren.","Du hast die Zeit sinnvoll eingeteilt.","Du hast dein Ziel im Auge behalten und bis zum Schluss verfolgt.","Du konntest dich auf dein Projekt konzentrieren."]},
     { id:"p4", label:"Flexibilit\u00e4t / Improvisation", inds: ["Wenn etwas gefehlt hat (z.B. Material), hast du etwas anderes verwendet.","Du hast Dinge verwendet, die eigentlich f\u00fcr etwas anderes gedacht sind."]},
     { id:"p5", label:"Verantwortung / Haltung", inds: ["Du bist Schwierigkeiten nicht aus dem Weg gegangen.","Du hast Hilfe gesucht und angenommen, wenn du nicht mehr weiterwusstest.","Du hast deine wichtigsten Erkenntnisse dokumentiert.","Du hast deinen Arbeitsplatz aufger\u00e4umt und sauber hinterlassen.","Du hast die Schutz- und Sicherheitsregeln beachtet."]},
   ]},
-  methodical: { id:"methodical", label:"METHODISCHE KOMPETENZ", shortLabel:"Denken & Zeigen", color:"#E8590C", colorLight:"#FFF4ED", subs: [
+  methodical: { id:"methodical", label:"METHODENKOMPETENZEN", shortLabel:"Denken & Zeigen", color:"#70AD47", colorLight:"#F0F7EA", subs: [
     { id:"m1", label:"Problemanalyse / Problemverstehen", inds: ["Du hast selbst versucht, das Problem zu verstehen.","Dir war klar, welches Problem zu l\u00f6sen ist.","Bei Fehlern hast du herausgefunden, was das Problem war.","Du hast Tipps zu deinem Problem im Netz oder anderswo gefunden."]},
     { id:"m2", label:"Kreative Probleml\u00f6sef\u00e4higkeiten", inds: ["Du hattest sehr viele Ideen.","Du hast Methoden zur Ideenentwicklung eingesetzt (z.B. Brainstorming, morphologischer Kasten).","Bei der Fehlersuche bist du systematisch vorgegangen.","Du konntest selbstst\u00e4ndig Fehler beheben.","Du konntest Fehler mit Unterst\u00fctzung anderer beheben."]},
     { id:"m3", label:"Produktentwicklung", inds: ["Du hast Skizzen, Modelle und Prototypen angefertigt, bevor du das Endprodukt gebaut hast.","Du kannst deine Konstruktionsschritte und Gestaltungsentscheidungen begr\u00fcnden.","Du kannst dir f\u00fcr dein Projekt Inspirationen suchen (z.B. im Netz oder von Mitsch\u00fcler:innen)."]},
     { id:"m4", label:"Recherche- und Informationskompetenzen", inds: ["Du hast im Internet brauchbare Anregungen f\u00fcr dein Produkt gefunden.","Du hast KI-Tools gezielt und mit guten Prompts f\u00fcr die Probleml\u00f6sung eingesetzt."]},
   ]},
-  social: { id:"social", label:"SOZIALE KOMPETENZ", shortLabel:"Zusammenarbeiten", color:"#0F9D58", colorLight:"#EDFCF2", subs: [
+  social: { id:"social", label:"SOZIALE KOMPETENZEN", shortLabel:"Zusammenarbeiten", color:"#FFC000", colorLight:"#FFF8E1", subs: [
     { id:"s1", label:"Zusammenarbeit", inds: ["Du bist respektvoll mit anderen umgegangen.","Du hast dazu beigetragen, dass Meinungsverschiedenheiten gel\u00f6st wurden.","Du konntest deine St\u00e4rken einbringen.","Du hast dich aktiv an der Zusammenarbeit beteiligt."]},
     { id:"s2", label:"Hilfs- und Unterst\u00fctzungsbereitschaft", inds: ["Du hast anderen bei ihren Projekten weitergeholfen.","Du konntest anderen etwas beibringen (z.B. wie ein Werkzeug funktioniert).","Du hast dazu beigetragen, dass Ideen anderer umgesetzt werden konnten."]},
     { id:"s3", label:"Feedback einfordern und geben", inds: ["Wenn du nicht weiterwusstest, hast du andere um Unterst\u00fctzung gebeten.","Du konntest das Feedback anderer f\u00fcr dein Projekt nutzen.","Du konntest dich in die Produkte anderer hineindenken und Verbesserungsvorschl\u00e4ge machen."]},
     { id:"s4", label:"Wertsch\u00e4tzung", inds: ["Du hast andere f\u00fcr eine gute Idee gelobt.","Du hast die St\u00e4rken anderer erkannt und gew\u00fcrdigt."]},
   ]},
-  technical: { id:"technical", label:"FACHKOMPETENZ", shortLabel:"Machen", color:"#1A73E8", colorLight:"#EEF4FF", subs: [
+  technical: { id:"technical", label:"FACHKOMPETENZEN", shortLabel:"Machen", color:"#5B9BD5", colorLight:"#EEF4FF", subs: [
     { id:"f1", label:"Werkzeuge & Handwerk", inds: ["Du hast digitale Fabrikationsverfahren f\u00fcr die Herstellung deines Produkts verwendet.","Du weisst, wof\u00fcr du einen 3D-Drucker / Laser Cutter / Plotter sinnvoll einsetzen kannst.","Du hast neue technische Verfahren kennengelernt."]},
     { id:"f2", label:"Technik", inds: ["Du konntest deine Kenntnisse \u00fcber Naturwissenschaft und Technik anwenden.","Dein Produkt funktioniert zuverl\u00e4ssig wie geplant.","Dein Produkt zeigt eine eigene kreative Erweiterung \u00fcber die Vorlage hinaus."]},
     { id:"f3", label:"Informatische Kompetenzen", inds: ["Du konntest Microcontroller, Sensoren und Aktoren zielf\u00fchrend in dein Produkt einbauen.","Du hast Programme geschrieben, in welchen Daten von Sensoren zur Steuerung von Aktoren richtig verwendet werden.","Du konntest Schleifen, Wenn-Dann-Bedingungen, Variablen und andere Programmierbausteine zu lauff\u00e4higen Programmen zusammensetzen."]},
@@ -171,7 +177,7 @@ const DATA = {
 
 let selections={},openComps={},openSubs={},customTexts={},customAdded={},editingInd=null;
 let colorMode=true;
-let showRefl=true, showGesp=true;
+let showRefl=true, showGesp=true, showGesamt=true;
 
 function toggleColorMode(){colorMode=!colorMode;const btn=document.getElementById('colorToggle');btn.textContent=colorMode?'🎨 Farbig':'🖨 Schwarzweiss';btn.style.background=colorMode?'none':'#F3F3F1';render();}
 function dc(c){return colorMode?c:'#555555';}
@@ -225,7 +231,7 @@ function selectAll(){selections={};Object.values(DATA).forEach(c=>c.subs.forEach
 function resetAll(){selections={};render();}
 
 function saveToUrl(){
-  const state={sel:selections,ct:customTexts,ca:customAdded,df:docFields,cm:colorMode,sr:showRefl,sg:showGesp,
+  const state={sel:selections,ct:customTexts,ca:customAdded,df:docFields,cm:colorMode,sr:showRefl,sg:showGesp,sge:showGesamt,
     t:document.getElementById('docTitle').value,st:document.getElementById('docSubtitle').value,
     sn:document.getElementById('schoolName').value,at:document.getElementById('assignmentText').value};
   const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
@@ -256,6 +262,7 @@ function loadFromUrl(){
     if(s.cm!==undefined){colorMode=s.cm;const btn=document.getElementById('colorToggle');btn.textContent=colorMode?'🎨 Farbig':'🖨 Schwarzweiss';btn.style.background=colorMode?'none':'#F3F3F1';}
     if(s.sr!==undefined){showRefl=s.sr;const el=document.getElementById('chkRefl');if(el){el.checked=showRefl;document.getElementById('chkGespRow').style.display=showRefl?'flex':'none';}}
     if(s.sg!==undefined){showGesp=s.sg;const el=document.getElementById('chkGesp');if(el)el.checked=showGesp;}
+    if(s.sge!==undefined){showGesamt=s.sge;const el=document.getElementById('chkGesamt');if(el)el.checked=showGesamt;}
     if(s.t)document.getElementById('docTitle').value=s.t;if(s.st)document.getElementById('docSubtitle').value=s.st;
     if(s.sn)document.getElementById('schoolName').value=s.sn;if(s.at)document.getElementById('assignmentText').value=s.at;
     Object.values(DATA).forEach(c=>{openComps[c.id]=c.subs.some(s=>(selections[s.id]||[]).length>0);});
@@ -369,26 +376,38 @@ function renderPreview(){
     function tOpen(extraStyle){return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;'+(extraStyle||'')+'">'+COL;}
     function tClose(){return '</table>';}
     function hdrRow(cc,cl,label){
-      let r='<tr><td style="background:'+cc+';color:white;font-weight:700;font-size:2.47mm;height:7mm;padding:0 2mm;line-height:7mm">'+esc(label)+'</td>';
-      GRADES.forEach(l=>r+='<td style="text-align:center;font-size:3mm;font-weight:700;color:'+cc+';background:'+cl+';height:7mm;line-height:7mm">'+l+'</td>');
+      let r='<tr><td style="background:'+cc+';color:white;font-weight:700;font-size:2.47mm;height:7.5mm;padding:0 2mm;line-height:7.5mm">'+esc(label)+'</td>';
+      GRADES.forEach(l=>r+='<td style="text-align:center;font-size:3mm;font-weight:700;color:'+cc+';background:'+cl+';height:7.5mm;line-height:7.5mm">'+l+'</td>');
       return r+'</tr>';
     }
     function indRow(text){
-      let r='<tr><td style="font-size:1.94mm;padding:2.5mm 2mm;color:#444;border-top:0.15mm solid #DDD;line-height:1.65;font-size:1.94mm">'+esc(text)+'</td>';
-      for(let c=0;c<4;c++)r+='<td style="text-align:center;vertical-align:middle;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;background:white;font-size:3mm;color:#BBB">'+CB+'</td>';
+      let r='<tr><td style="font-size:1.94mm;padding:2.5mm 2mm;color:#444;border-top:0.15mm solid #DDD;line-height:1.65;min-height:7.5mm;height:7.5mm">'+esc(text)+'</td>';
+      for(let c=0;c<4;c++)r+='<td style="text-align:center;vertical-align:middle;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;background:white;font-size:3mm;color:#BBB;min-height:7.5mm;height:7.5mm">'+CB+'</td>';
       return r+'</tr>';
     }
+    function compHdrRow(cc, label){
+      return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-top:2mm">'
+        +COL+'<tr><td colspan="5" style="background:'+cc+';color:white;font-weight:700;font-size:2.65mm;height:7.5mm;padding:0 2mm;line-height:7.5mm">'+esc(label)+'</td></tr></table>';
+    }
     active.forEach(comp=>{
+      let firstSubForComp=true;
       comp.subs.forEach(sub=>{
         const si=selections[sub.id]||[];if(!si.length)return;
         const cc=dc(comp.color),cl=dcLight(comp.colorLight);
+        // Competency title header before first sub of this comp
+        if(firstSubForComp){
+          firstSubForComp=false;
+          blocks.push({html: compHdrRow(cc, comp.label), compHdr:true, hmm:7});
+        }
         // First block: header + first indicator row (must stay together, like PDF)
-        const hdrHtml=tOpen('margin-bottom:0')+hdrRow(cc,cl,sub.label)+tClose();
+        const lastBlock=blocks[blocks.length-1];
+        const subMarginTop=lastBlock?.compHdr?'margin-top:1.5mm;':'';
+        const hdrHtml=tOpen(subMarginTop+'margin-bottom:0')+hdrRow(cc,cl,sub.label)+tClose();
         // Push a hidden hdr-only block so the ruler can measure it (cap at 7mm = PDF HDR)
-        const hdrBlock={html:hdrHtml, hdrOnly:true, hdrHmm:0, capMm:7, hmm:7};
+        const hdrBlock={html:hdrHtml, hdrOnly:true, hdrHmm:0, capMm:5.5, hmm:5.5};
         blocks.push(hdrBlock);
         // Header as separate block (so page-break can happen after it)
-        blocks.push({html: tOpen('margin-bottom:0')+hdrRow(cc,cl,sub.label)+tClose(), subHdr:true, hdrBlock, hmm:7, _isHdr:true});
+        blocks.push({html: tOpen(subMarginTop+'margin-bottom:0')+hdrRow(cc,cl,sub.label)+tClose(), subHdr:true, hdrBlock, hmm:5.5, _isHdr:true});
         blocks.push({html: tOpen('margin-bottom:0')+indRow(getIndText(sub.id,si[0],sub))+tClose(), subStart:true, hdrBlock, _indText:getIndText(sub.id,si[0],sub)});
         // Remaining rows: each as its own block (continuation of same table visually)
         for(let ri=1;ri<si.length;ri++){
@@ -406,7 +425,8 @@ function renderPreview(){
     gH+='<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
       +'<colgroup><col style="width:52%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>';
     // grades header
-    gH+='<tr><td style="background:#F7F7F5;padding:1mm"></td>';
+    // Gesamt row
+    gH+='<tr><td style="border-top:0.3mm solid #999;background:#F7F7F5;padding:1mm"></td>';
     GRADES.forEach(l=>gH+='<td style="text-align:center;border-left:0.15mm solid #DDD;background:#F7F7F5;font-weight:700;font-size:3mm;padding:1mm 0">'+l+'</td>');
     gH+='</tr>';
     // comp rows
@@ -417,11 +437,15 @@ function renderPreview(){
       for(let c=0;c<4;c++)gH+='<td style="text-align:center;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;background:'+bg+';font-size:3mm;color:#BBB">'+CB+'</td>';
       gH+='</tr>';
     });
-    // Gesamt row
-    gH+='<tr><td style="border-top:0.3mm solid #999;background:#F7F7F5;padding:1.5mm 2mm;font-weight:800;font-size:3mm;color:#222">GESAMT</td>';
-    for(let c=0;c<4;c++)gH+='<td style="text-align:center;border-top:0.3mm solid #999;border-left:0.15mm solid #DDD;background:#F7F7F5;font-size:3.5mm;color:#888">'+CB+'</td>';
-    gH+='</tr></table></div>';
-    blocks.push({_pdfH:50, html:gH});
+    // Gesamt row (conditional)
+    if(showGesamt){
+      gH+='<tr><td style="border-top:0.3mm solid #999;background:#F7F7F5;padding:1.5mm 2mm;font-weight:800;font-size:3mm;color:#222">GESAMT</td>';
+      for(let c=0;c<4;c++)gH+='<td style="text-align:center;border-top:0.3mm solid #999;border-left:0.15mm solid #DDD;background:#F7F7F5;font-size:3.5mm;color:#888">'+CB+'</td>';
+      gH+='</tr>';
+    }
+    gH+='</table></div>';
+    const summaryH=8+6+active.length*7.5+(showGesamt?7:0)+11; // TH+HH+rows+TOTH+margin
+    blocks.push({_pdfH:summaryH, html:gH});
   }
 
   // ── Reflexion page ──
@@ -464,8 +488,8 @@ function renderPreview(){
   }
   // ── Calculate block heights using jsPDF text metrics (exact match) ──
   const PAGE_H_MM=257;
-  const PDF_HDR=7, PDF_LINE_H=3.2, PDF_PAD_V=2.5;
-  const PDF_COL_W=166*0.52-5; // text column width in mm (~81.3mm)
+  const PDF_HDR=7.5, PDF_LINE_H=3.2, PDF_PAD_V=2;
+  const PDF_COL_W=166*0.52-5;
   const PDF_FS_IND=5.5;
 
   // _mdoc already created above
@@ -479,12 +503,13 @@ function renderPreview(){
   const allBlocks=[...blocks.map(b=>({...b,page:'main'})),...reflBlocks.map(b=>({...b,page:'refl'}))];
   allBlocks.forEach(b=>{
     if(b.hdrOnly){b.hmm=Math.min(PDF_HDR, b.capMm||PDF_HDR);return;}
+    if(b.compHdr){b.hmm=7;return;} // 5.5mm bar + 1.5mm gap
     if(b.subHdr){b.hmm=PDF_HDR;return;}
     if(b.subStart||b.subCont){
       const text=b._indText||'';
       const nLines=pdfWrapLines(text);
       const rowH=nLines*PDF_LINE_H+PDF_PAD_V*2;
-      b.hmm=rowH; // header is now a separate block
+      b.hmm=Math.max(PDF_HDR, rowH);
     } else {
       b.hmm=b._pdfH||10;
     }
@@ -501,6 +526,25 @@ function renderPreview(){
 
     list.forEach((b, bi)=>{
       if(b.hdrOnly) return;
+
+      if(b.compHdr){
+        // Must keep: compHdr + first subHdr + first indicator row together
+        let ni=bi+1;
+        while(ni<list.length && list[ni].hdrOnly) ni++;
+        const firstSubHdr=list[ni]; // subHdr
+        let ni2=ni+1;
+        while(ni2<list.length && list[ni2].hdrOnly) ni2++;
+        const firstSubHdr2=list[ni2]; // subStart (first row)
+        let ni3=ni2+1;
+        while(ni3<list.length && list[ni3].hdrOnly) ni3++;
+        const firstRow=list[ni3];
+        const needed=b.hmm
+          +(firstSubHdr?firstSubHdr.hmm:0)
+          +(firstSubHdr2?firstSubHdr2.hmm:0)
+          +(firstRow?firstRow.hmm:0);        if(pageY+needed>PAGE_BOTTOM && cur.length>0) newPage();
+        cur.push(b.html); pageY+=b.hmm+2; // +2mm gap after comp title
+        return;
+      }
 
       if(b.subHdr){
         let ni=bi+1;
@@ -600,6 +644,7 @@ async function generatePDF(){
     function drawCB(x,y,sz=3.2){doc.setLineWidth(0.2);ss('#CCCCCC');doc.setFillColor(255,255,255);doc.rect(x,y,sz,sz,'S');}
 
     let pageY=MT;
+    const HDR_H=5.5; // shared row/header height
     function newPage(){doc.addPage();pageY=MT;}
     function checkSpace(need){if(pageY+need>MT+usableH)newPage();}
 
@@ -637,15 +682,15 @@ async function generatePDF(){
       const si=selections[sub.id]||[];if(!si.length)return;
       const colW=[CW*0.52,CW*0.12,CW*0.12,CW*0.12,CW*0.12];
       const grades=['--','-','+','++'];
-      const FS_IND=5.5, LINE_H=3.2, PAD_V=2.5;
-      const HDR=7,COLOR=dc(comp.color),CL=dcLight(comp.colorLight);
+      const FS_IND=5.5, LINE_H=3.2, PAD_V=2;
+      const HDR=HDR_H,COLOR=dc(comp.color),CL=dcLight(comp.colorLight);
       const pageBottom=MT+usableH;
 
-      // Pre-calculate all row heights
+      // Pre-calculate all row heights — minimum = HDR (same as header)
       const rowData=si.map(idx=>{
         const txt=getIndText(sub.id,idx,sub);
         const lines=wrap(txt,colW[0]-5,FS_IND);
-        return {lines,rh:lines.length*LINE_H+PAD_V*2};
+        return {lines,rh:Math.max(HDR, lines.length*LINE_H+PAD_V*2)};
       });
 
       // Helper: draw the coloured table header at current pageY
@@ -712,45 +757,35 @@ async function generatePDF(){
       const colW=[CW*0.52,CW*0.12,CW*0.12,CW*0.12,CW*0.12];
       const grades=['--','-','+','++'];
       const TH=8,HH=6,RH=7.5,TOTH=7;
-      const tH=HH+active.length*RH+TOTH;
+      const tH=HH+active.length*RH+(showGesamt?TOTH:0);
       const boxH=TH+tH;
       checkSpace(boxH+4);const x=ML,y=pageY;
 
-      // Outer border: 0.4mm stroke drawn centered on the rect edge.
-      // jsPDF strokes are centered on the path, so a 0.4mm line means 0.2mm inside.
-      // All fills must stay >= 0.2mm inside x/y/x+CW/y+boxH.
-      const LW=0.4, INSET=LW/2; // 0.2mm inset
+      const LW=0.4, INSET=LW/2;
       const ix=x+INSET, iy=y+INSET, iw=CW-LW, ih=boxH-LW;
 
       const ty=y+TH;
       const totY=ty+HH+active.length*RH;
 
-      // ── 1. Fills (all clipped to inner area) ──
-
-      // Header row grey fill
+      // ── 1. Fills ──
       doc.setFillColor(247,247,245);
       doc.rect(ix, ty, iw, HH, 'F');
 
-      // Comp row coloured fills (right 4 cols only)
       active.forEach((comp,ri)=>{
         const ry=ty+HH+ri*RH;
-        // right section x: colW[0] from left border — no inset needed on left since colW divider is internal
-        // right edge: inset by INSET from outer border
         sf(colorMode?dcLight(comp.colorLight):'#F8F8F6');
         doc.rect(x+colW[0], ry, CW-colW[0]-INSET, RH, 'F');
       });
 
-      // Total row grey fill — full width, inset from outer border
-      doc.setFillColor(247,247,245);
-      doc.rect(ix, totY, iw, TOTH-INSET, 'F');
+      if(showGesamt){
+        doc.setFillColor(247,247,245);
+        doc.rect(ix, totY, iw, TOTH-INSET, 'F');
+      }
 
       // ── 2. Text ──
-
-      // Title
       doc.setFont('helvetica','bold');doc.setFontSize(8.5);stc('#222');
       doc.text('GESAMTBEURTEILUNG',x+3,y+TH/2,{baseline:'middle'});
 
-      // Header grade labels
       let cx=x+colW[0];
       const HDR_MID=ty+HH/2;
       grades.forEach((l,c)=>{
@@ -760,7 +795,6 @@ async function generatePDF(){
         cx+=colW[c+1];
       });
 
-      // Comp rows
       active.forEach((comp,ri)=>{
         const ry=ty+HH+ri*RH;
         const rowMid=ry+RH/2;
@@ -774,16 +808,16 @@ async function generatePDF(){
         for(let c=0;c<4;c++){const sz=3.5;drawCB(cx+(colW[c+1]-sz)/2,ry+(RH-sz)/2,sz);cx+=colW[c+1];}
       });
 
-      // Total row
-      const totMid=totY+TOTH/2;
-      doc.setFont('helvetica','bold');doc.setFontSize(8.5);stc('#222');
-      doc.text('GESAMT',x+2,totMid,{baseline:'middle'});
-      cx=x+colW[0];
-      for(let c=0;c<4;c++){const sz=4.2;drawCB(cx+(colW[c+1]-sz)/2,totY+(TOTH-sz)/2,sz);cx+=colW[c+1];}
+      if(showGesamt){
+        const totMid=totY+TOTH/2;
+        doc.setFont('helvetica','bold');doc.setFontSize(8.5);stc('#222');
+        doc.text('GESAMT',x+2,totMid,{baseline:'middle'});
+        cx=x+colW[0];
+        for(let c=0;c<4;c++){const sz=4.2;drawCB(cx+(colW[c+1]-sz)/2,totY+(TOTH-sz)/2,sz);cx+=colW[c+1];}
+      }
 
       // ── 3. Internal lines ──
       doc.setLineWidth(0.15);ss('#DDDDDD');
-      // Separator under title
       doc.line(x,y+TH,x+CW,y+TH);
       // Vertical dividers in header row
       cx=x+colW[0];grades.forEach((l,c)=>{doc.line(cx,ty,cx,ty+HH);cx+=colW[c+1];});
@@ -793,12 +827,13 @@ async function generatePDF(){
         doc.line(x,ry,x+CW,ry);
         cx=x+colW[0];for(let c=0;c<4;c++){doc.line(cx,ry,cx,ry+RH);cx+=colW[c+1];}
       });
-      // Vertical dividers in total row
-      cx=x+colW[0];for(let c=0;c<4;c++){doc.line(cx,totY,cx,totY+TOTH);cx+=colW[c+1];}
-
-      // ── 4. Thick separator above GESAMT ──
-      doc.setLineWidth(0.3);ss('#999999');
-      doc.line(x,totY,x+CW,totY);
+      if(showGesamt){
+        // Vertical dividers in total row
+        cx=x+colW[0];for(let c=0;c<4;c++){doc.line(cx,totY,cx,totY+TOTH);cx+=colW[c+1];}
+        // ── 4. Thick separator above GESAMT ──
+        doc.setLineWidth(0.3);ss('#999999');
+        doc.line(x,totY,x+CW,totY);
+      }
 
       // ── 5. Outer border LAST (always on top) ──
       doc.setLineWidth(LW);ss('#222222');
@@ -861,10 +896,39 @@ async function generatePDF(){
       pageY=y+BH+3;
     }
 
+    function drawCompHeader(comp, firstSub){
+      const CHH=5.5, GAP=1.5;
+      // Calculate min needed: compHdr + gap + subHdr + first row
+      let firstRowH=10;
+      if(firstSub){
+        const si=selections[firstSub.id]||[];
+        if(si.length>0){
+          const txt=getIndText(firstSub.id,si[0],firstSub);
+          const lines=wrap(txt,CW*0.52-5,5.5);
+          firstRowH=Math.max(HDR_H, lines.length*3.2+2.5*2);
+        }
+      }
+      checkSpace(CHH+GAP+HDR_H+firstRowH);
+      const x=ML,y=pageY;
+      const [r,g,b]=hexToRgb(dc(comp.color));
+      doc.setFillColor(r,g,b);
+      doc.rect(x,y,CW,CHH,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);
+      doc.setTextColor(255,255,255);
+      doc.text(comp.label,x+2,y+CHH/2,{baseline:'middle'});
+      pageY=y+CHH+GAP;
+    }
+
     drawTitleBlock();drawFieldsBlock();drawAssignmentBlock();
     if(total===0){doc.setFont('helvetica','italic');doc.setFontSize(9);stc('#BBBBBB');doc.text('Keine Indikatoren ausgew\u00e4hlt.',ML,pageY+8);}
     else{
-      active.forEach(comp=>{comp.subs.forEach(sub=>{if((selections[sub.id]||[]).length>0)drawSubTable(comp,sub);});});
+      active.forEach(comp=>{
+        const hasSubs=comp.subs.some(s=>(selections[s.id]||[]).length>0);
+        if(!hasSubs)return;
+        const firstSub=comp.subs.find(s=>(selections[s.id]||[]).length>0);
+        drawCompHeader(comp, firstSub);
+        comp.subs.forEach(sub=>{if((selections[sub.id]||[]).length>0)drawSubTable(comp,sub);});
+      });
       drawLegend();drawSummaryBlock();
       if(showRefl){
         newPage();
