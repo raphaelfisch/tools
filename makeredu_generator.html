@@ -376,18 +376,18 @@ function renderPreview(){
     function tOpen(extraStyle){return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;'+(extraStyle||'')+'">'+COL;}
     function tClose(){return '</table>';}
     function hdrRow(cc,cl,label){
-      let r='<tr><td style="background:'+cc+';color:white;font-weight:700;font-size:2.47mm;height:7.5mm;padding:0 2mm;line-height:7.5mm">'+esc(label)+'</td>';
-      GRADES.forEach(l=>r+='<td style="text-align:center;font-size:3mm;font-weight:700;color:'+cc+';background:'+cl+';height:7.5mm;line-height:7.5mm">'+l+'</td>');
+      let r='<tr><td style="background:'+cc+';color:white;font-weight:700;font-size:2.47mm;height:5mm;padding:0 2mm;line-height:5mm">'+esc(label)+'</td>';
+      GRADES.forEach(l=>r+='<td style="text-align:center;font-size:3mm;font-weight:700;color:'+cc+';background:'+cl+';height:5mm;line-height:5mm">'+l+'</td>');
       return r+'</tr>';
     }
     function indRow(text){
-      let r='<tr><td style="font-size:1.94mm;padding:2.5mm 2mm;color:#444;border-top:0.15mm solid #DDD;line-height:1.65;min-height:7.5mm;height:7.5mm">'+esc(text)+'</td>';
-      for(let c=0;c<4;c++)r+='<td style="text-align:center;vertical-align:middle;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;background:white;font-size:3mm;color:#BBB;min-height:7.5mm;height:7.5mm">'+CB+'</td>';
+      let r='<tr><td style="font-size:1.94mm;padding:2.5mm 2mm;color:#444;border-top:0.15mm solid #DDD;line-height:1.65;min-height:5mm;height:5mm">'+esc(text)+'</td>';
+      for(let c=0;c<4;c++)r+='<td style="text-align:center;vertical-align:middle;border-top:0.15mm solid #DDD;border-left:0.15mm solid #DDD;background:white;font-size:3mm;color:#BBB;min-height:5mm;height:5mm">'+CB+'</td>';
       return r+'</tr>';
     }
     function compHdrRow(cc, label){
       return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-top:2mm">'
-        +COL+'<tr><td colspan="5" style="background:'+cc+';color:white;font-weight:700;font-size:2.65mm;height:7.5mm;padding:0 2mm;line-height:7.5mm">'+esc(label)+'</td></tr></table>';
+        +COL+'<tr><td colspan="5" style="background:'+cc+';color:white;font-weight:700;font-size:2.65mm;height:5mm;padding:0 2mm;line-height:5mm">'+esc(label)+'</td></tr></table>';
     }
     active.forEach(comp=>{
       let firstSubForComp=true;
@@ -488,7 +488,7 @@ function renderPreview(){
   }
   // ── Calculate block heights using jsPDF text metrics (exact match) ──
   const PAGE_H_MM=257;
-  const PDF_HDR=7.5, PDF_LINE_H=3.2, PDF_PAD_V=2;
+  const PDF_HDR=5, PDF_LINE_H=3.2, PDF_PAD_V=2;
   const PDF_COL_W=166*0.52-5;
   const PDF_FS_IND=5.5;
 
@@ -503,7 +503,7 @@ function renderPreview(){
   const allBlocks=[...blocks.map(b=>({...b,page:'main'})),...reflBlocks.map(b=>({...b,page:'refl'}))];
   allBlocks.forEach(b=>{
     if(b.hdrOnly){b.hmm=Math.min(PDF_HDR, b.capMm||PDF_HDR);return;}
-    if(b.compHdr){b.hmm=7;return;} // 5.5mm bar + 1.5mm gap
+    if(b.compHdr){b.hmm=7;return;} // 5mm bar + 1.5mm gap
     if(b.subHdr){b.hmm=PDF_HDR;return;}
     if(b.subStart||b.subCont){
       const text=b._indText||'';
@@ -515,85 +515,72 @@ function renderPreview(){
     }
   });
 
-  // 4. Paginate — same logic as PDF: header+firstRow must fit together,
-  //    header repeats on new page when continuation rows overflow
-  function paginate(list){
-    const MT=22, PAGE_BOTTOM=279;
-    const pages=[];
-    let cur=[], pageY=MT;
+  const mainBlocks=allBlocks.filter(b=>b.page==='main');
+  const reflBlocksF=allBlocks.filter(b=>b.page==='refl');
 
-    function newPage(){ pages.push(cur); cur=[]; pageY=MT; }
-
-    list.forEach((b, bi)=>{
-      if(b.hdrOnly) return;
-
-      if(b.compHdr){
-        // Must keep: compHdr + first subHdr + first indicator row together
-        let ni=bi+1;
-        while(ni<list.length && list[ni].hdrOnly) ni++;
-        const firstSubHdr=list[ni]; // subHdr
-        let ni2=ni+1;
-        while(ni2<list.length && list[ni2].hdrOnly) ni2++;
-        const firstSubHdr2=list[ni2]; // subStart (first row)
-        let ni3=ni2+1;
-        while(ni3<list.length && list[ni3].hdrOnly) ni3++;
-        const firstRow=list[ni3];
-        const needed=b.hmm
-          +(firstSubHdr?firstSubHdr.hmm:0)
-          +(firstSubHdr2?firstSubHdr2.hmm:0)
-          +(firstRow?firstRow.hmm:0);        if(pageY+needed>PAGE_BOTTOM && cur.length>0) newPage();
-        cur.push(b.html); pageY+=b.hmm+2; // +2mm gap after comp title
-        return;
-      }
-
-      if(b.subHdr){
-        let ni=bi+1;
-        while(ni<list.length && list[ni].hdrOnly) ni++;
-        const nextB=list[ni];
-        const needed=b.hmm+(nextB?nextB.hmm:0);
-        if(pageY+needed>PAGE_BOTTOM && cur.length>0) newPage();
-        cur.push(b.html); pageY+=b.hmm;
-        return;
-      }
-
-      if(b.subStart){
-        cur.push(b.html); pageY+=b.hmm;
-        let ni=bi+1; while(ni<list.length&&list[ni].hdrOnly)ni++;
-        const nR=list[ni];
-        if(!nR||nR.subHdr||nR.type) pageY+=2.5;
-        return;
-      }
-
-      if(b.subCont){
-        const willBreak=pageY+b.hmm>PAGE_BOTTOM && cur.length>0;
-        if(willBreak){
-          newPage();
-          if(b.hdrBlock){ cur.push(b.hdrBlock.html); pageY+=b.hdrBlock.hmm||7; }
+  // First pass: render with standard PAGE_BOTTOM
+  let PAGE_BOTTOM_CORRECTED=276;
+  function doRender(pb){
+    function paginate(list){
+      const MT=22;
+      const pages=[];
+      let cur=[], pageY=MT;
+      function newPage(){ pages.push(cur); cur=[]; pageY=MT; }
+      list.forEach((b, bi)=>{
+        if(b.hdrOnly) return;
+        if(b.compHdr){
+          let ni=bi+1; while(ni<list.length && list[ni].hdrOnly) ni++;
+          const firstSubHdr=list[ni];
+          let ni2=ni+1; while(ni2<list.length && list[ni2].hdrOnly) ni2++;
+          const firstSubHdr2=list[ni2];
+          let ni3=ni2+1; while(ni3<list.length && list[ni3].hdrOnly) ni3++;
+          const firstRow=list[ni3];
+          const needed=b.hmm+(firstSubHdr?firstSubHdr.hmm:0)+(firstSubHdr2?firstSubHdr2.hmm:0)+(firstRow?firstRow.hmm:0);
+          if(pageY+needed>pb && cur.length>0) newPage();
+          cur.push(b.html); pageY+=b.hmm+2;
+          return;
         }
-        cur.push(b.html); pageY+=b.hmm;
-        if(!willBreak){
+        if(b.subHdr){
+          let ni=bi+1; while(ni<list.length && list[ni].hdrOnly) ni++;
+          const nextB=list[ni];
+          const needed=b.hmm+(nextB?nextB.hmm:0);
+          if(pageY+needed>pb && cur.length>0) newPage();
+          cur.push(b.html); pageY+=b.hmm;
+          return;
+        }
+        if(b.subStart){
+          cur.push(b.html); pageY+=b.hmm;
           let ni=bi+1; while(ni<list.length&&list[ni].hdrOnly)ni++;
           const nR=list[ni];
           if(!nR||nR.subHdr||nR.type) pageY+=2.5;
+          return;
         }
-        return;
-      }
-
-      // Static blocks (title, fields, assignment, legend, summary)
-      if(pageY+b.hmm>PAGE_BOTTOM && cur.length>0) newPage();
-      cur.push(b.html); pageY+=b.hmm;
-    });
-
-    if(cur.length) pages.push(cur);
-    return pages;
+        if(b.subCont){
+          const willBreak=pageY+b.hmm>pb && cur.length>0;
+          if(willBreak){
+            newPage();
+            if(b.hdrBlock){ cur.push(b.hdrBlock.html); pageY+=b.hdrBlock.hmm||PDF_HDR; }
+          }
+          cur.push(b.html); pageY+=b.hmm;
+          if(!willBreak){
+            let ni=bi+1; while(ni<list.length&&list[ni].hdrOnly)ni++;
+            const nR=list[ni];
+            if(!nR||nR.subHdr||nR.type) pageY+=2.5;
+          }
+          return;
+        }
+        if(pageY+b.hmm>pb && cur.length>0) newPage();
+        cur.push(b.html); pageY+=b.hmm;
+      });
+      if(cur.length) pages.push(cur);
+      return pages;
+    }
+    const mP=paginate(mainBlocks);
+    const rP=paginate(reflBlocksF);
+    return [...mP,...rP];
   }
 
-
-  const mainBlocks=allBlocks.filter(b=>b.page==='main');
-  const reflBlocksF=allBlocks.filter(b=>b.page==='refl');
-  const mP=paginate(mainBlocks);
-  const rP=paginate(reflBlocksF);
-  const allPages=[...mP,...rP];
+  const allPages=doRender(PAGE_BOTTOM_CORRECTED);
   window._lastPages=allPages;
   let out='<div class="a4-wrapper">';
   allPages.forEach((pg,i)=>{out+='<div class="a4-frame"><div class="a4-page-label">Seite '+(i+1)+'</div><div class="a4-inner">'+pg.join('')+'</div></div>';});
@@ -604,11 +591,36 @@ function renderPreview(){
 
 function scaleA4Pages(){
   const frames=document.querySelectorAll('.a4-frame');if(!frames.length)return;
-  const mmR=document.createElement('div');mmR.style.cssText='position:absolute;visibility:hidden;width:210mm;height:1px';document.body.appendChild(mmR);const nW=mmR.offsetWidth;mmR.remove();
-  let minS=Infinity;const meas=[];
-  frames.forEach(frame=>{const inner=frame.querySelector('.a4-inner');if(!inner){meas.push(null);return;}inner.style.transform='none';void inner.offsetHeight;const fW=frame.clientWidth,s=fW/nW;if(s<minS)minS=s;meas.push({inner,fW});});
+
+  // Measure reference sizes
+  const mmW=document.createElement('div');mmW.style.cssText='position:absolute;visibility:hidden;width:210mm;height:1px';document.body.appendChild(mmW);const nW=mmW.offsetWidth;mmW.remove();
   const mmH=document.createElement('div');mmH.style.cssText='position:absolute;visibility:hidden;height:297mm;width:1px';document.body.appendChild(mmH);const nH=mmH.offsetHeight;mmH.remove();
-  meas.forEach(m=>{if(!m)return;const sW=nW*minS,ox=(m.fW-sW)/2;m.inner.style.transform='translateX('+ox+'px) scale('+minS+')';m.inner.style.transformOrigin='top left';m.inner.closest('.a4-frame').style.height=(nH*minS)+'px';});
+
+  // Calculate horizontal scale (fit frame width)
+  let minS=Infinity;
+  frames.forEach(frame=>{
+    const inner=frame.querySelector('.a4-inner');if(!inner)return;
+    inner.style.transform='none';void inner.offsetHeight;
+    const s=frame.clientWidth/nW;if(s<minS)minS=s;
+  });
+
+  frames.forEach(frame=>{
+    const inner=frame.querySelector('.a4-inner');if(!inner)return;
+    inner.style.transform='none';void inner.offsetHeight;
+
+    // Measure actual rendered height of this page's content
+    const rawH=inner.scrollHeight;
+    // Target height in px = 297mm in px
+    const scaleY=rawH>0?nH/rawH:1;
+    // Clamp: only shrink, never grow (scaleY > 1 means content is shorter than page = fine)
+    const sy=Math.min(1, scaleY);
+
+    const fW=frame.clientWidth;
+    const ox=(fW-nW*minS)/2;
+    inner.style.transform=`translateX(${ox}px) scale(${minS}, ${minS*sy})`;
+    inner.style.transformOrigin='top left';
+    frame.style.height=(nH*minS)+'px';
+  });
 }
 
 // jsPDF DIRECT RENDERING
@@ -644,7 +656,7 @@ async function generatePDF(){
     function drawCB(x,y,sz=3.2){doc.setLineWidth(0.2);ss('#CCCCCC');doc.setFillColor(255,255,255);doc.rect(x,y,sz,sz,'S');}
 
     let pageY=MT;
-    const HDR_H=5.5; // shared row/header height
+    const HDR_H=5.5; // shared row/header height in PDF
     function newPage(){doc.addPage();pageY=MT;}
     function checkSpace(need){if(pageY+need>MT+usableH)newPage();}
 
