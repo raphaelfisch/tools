@@ -185,29 +185,97 @@
 <script>
 const DATA = {
   personal: { id:"personal", label:"PERSONALE KOMPETENZEN", shortLabel:"Dranbleiben", color:"#C00000", colorLight:"#FDECEA", subs: [
-    { id:"p1", label:"Eigenst\u00e4ndigkeit", inds: ["Du hast dein Produkt selbst\u00e4ndig geplant und umgesetzt.","Du hast deine eigene(n) Idee(n) umgesetzt.","Du hattest viele gute Ideen.","Du konntest etwas bauen, das dir wichtig ist.","Du hast etwas gelernt, das dich interessiert."]},
-    { id:"p2", label:"Offenheit / Risikobereitschaft", inds: ["Du hast Werkzeuge, Materialien oder Maschinen ausprobiert, die du vorher noch nicht kanntest.","Du hast Ideen umgesetzt, von denen du nicht wusstest, ob sie funktionieren.","Du hast ein Projekt gew\u00e4hlt, das du vorher noch nie umgesetzt hast."]},
-    { id:"p3", label:"Selbstregulation / Selbstreflexion", inds: ["Du hast so lange get\u00fcftelt, bis das Problem gel\u00f6st war.","Wenn etwas nicht funktioniert hat, wolltest du herausfinden, was der Grund daf\u00fcr ist.","Du hast Fehler als Chance gesehen und etwas daraus gelernt.","Wenn es mal m\u00fchsam war, konntest du dich selbst zum Weitermachen motivieren.","Du hast die Zeit sinnvoll eingeteilt.","Du hast dein Ziel im Auge behalten und bis zum Schluss verfolgt.","Du konntest dich auf dein Projekt konzentrieren."]},
-    { id:"p4", label:"Flexibilit\u00e4t / Improvisation", inds: ["Wenn etwas gefehlt hat (z.B. Material), hast du etwas anderes verwendet.","Du hast Dinge verwendet, die eigentlich f\u00fcr etwas anderes gedacht sind."]},
-    { id:"p5", label:"Verantwortung / Haltung", inds: ["Du bist Schwierigkeiten nicht aus dem Weg gegangen.","Du hast Hilfe gesucht und angenommen, wenn du nicht mehr weiterwusstest.","Du hast deine wichtigsten Erkenntnisse dokumentiert.","Du hast deinen Arbeitsplatz aufger\u00e4umt und sauber hinterlassen.","Du hast die Schutz- und Sicherheitsregeln beachtet."]},
+    { id:"p1", label:"Eigenst\u00e4ndigkeit", inds: [
+      "Du konntest etwas bauen, das dir wichtig ist.",
+      "Du hattest viele gute Ideen.",
+      "Du hast deine eigene(n) Idee(n) umgesetzt.",
+      "Du hast etwas gelernt, das dich interessiert.",
+      "Du bist stolz auf das, was du beim Making gelernt hast.",
+      "Du hast dein Produkt selbst\u00e4ndig geplant und umgesetzt."]},
+    { id:"p2", label:"Offenheit / Risikobereitschaft", inds: [
+      "Du hast Werkzeuge, Materialien oder Maschinen ausprobiert, die du vorher noch nicht kanntest.",
+      "Du hast Ideen umgesetzt, von denen du nicht wusstest, ob sie funktionieren.",
+      "Du hast ein Projekt gew\u00e4hlt, das du vorher noch nie umgesetzt hast."]},
+    { id:"p3", label:"Selbstregulation / Selbstreflexion", inds: [
+      "Wenn etwas nicht funktioniert hat, wolltest du herausfinden, was der Grund daf\u00fcr ist.",
+      "Du hast so lange get\u00fcftelt, bis das Problem gel\u00f6st war.",
+      "Du hast dich mit dem ersten Ergebnis nicht zufriedengegeben, sondern mehrere Prototypen gebaut und verbessert.",
+      "Du hast Fehler als Chance gesehen und etwas daraus gelernt.",
+      "Wenn es mal m\u00fchsam war, konntest du dich selbst zum Weitermachen motivieren.",
+      "Du hast die Zeit sinnvoll eingeteilt.",
+      "Du hast dein Ziel im Auge behalten und bis zum Schluss verfolgt.",
+      "Du konntest dich auf dein Projekt konzentrieren."]},
+    { id:"p4", label:"Flexibilit\u00e4t / Improvisation", inds: [
+      "Wenn etwas gefehlt hat (z.B. Material), hast du etwas anderes verwendet.",
+      "Du hast Dinge verwendet, die eigentlich f\u00fcr etwas anderes gedacht sind.",
+      "Obwohl du kaum Material hattest, konntest du trotzdem etwas daraus machen."]},
+    { id:"p5", label:"\u00dcberzeugungskraft", inds: [
+      "Du konntest andere Teammitglieder von deinen Ideen \u00fcberzeugen."]},
+    { id:"p6", label:"Verantwortung / Haltung", inds: [
+      "Du bist Schwierigkeiten nicht aus dem Weg gegangen.",
+      "Du hast Hilfe gesucht und angenommen, wenn du nicht mehr weiterwusstest.",
+      "Du hast deine wichtigsten Erkenntnisse dokumentiert.",
+      "Du hast beim Making etwas Neues gelernt.",
+      "Du hast deinen Arbeitsplatz, die Werkzeuge und Maschinen aufger\u00e4umt und sauber hinterlassen.",
+      "Du hast die Schutz- und Sicherheitsregeln beachtet (z.B. Schutzbrille beim L\u00f6ten).",
+      "Du hast beim Making niemanden in Gefahr gebracht."]},
   ]},
   methodical: { id:"methodical", label:"METHODENKOMPETENZEN", shortLabel:"Denken & Zeigen", color:"#70AD47", colorLight:"#F0F7EA", subs: [
-    { id:"m1", label:"Problemanalyse / Problemverstehen", inds: ["Du hast selbst versucht, das Problem zu verstehen.","Dir war klar, welches Problem zu l\u00f6sen ist.","Bei Fehlern hast du herausgefunden, was das Problem war.","Du hast Tipps zu deinem Problem im Netz oder anderswo gefunden."]},
-    { id:"m2", label:"Kreative Probleml\u00f6sef\u00e4higkeiten", inds: ["Du hattest sehr viele Ideen.","Du hast Methoden zur Ideenentwicklung eingesetzt (z.B. Brainstorming, morphologischer Kasten).","Bei der Fehlersuche bist du systematisch vorgegangen.","Du konntest selbstst\u00e4ndig Fehler beheben.","Du konntest Fehler mit Unterst\u00fctzung anderer beheben."]},
-    { id:"m3", label:"Produktentwicklung", inds: ["Du hast Skizzen, Modelle und Prototypen angefertigt, bevor du das Endprodukt gebaut hast.","Du kannst deine Konstruktionsschritte und Gestaltungsentscheidungen begr\u00fcnden.","Du kannst dir f\u00fcr dein Projekt Inspirationen suchen (z.B. im Netz oder von Mitsch\u00fcler:innen)."]},
-    { id:"m4", label:"Recherche- und Informationskompetenzen", inds: ["Du hast im Internet brauchbare Anregungen f\u00fcr dein Produkt gefunden.","Du hast KI-Tools gezielt und mit guten Prompts f\u00fcr die Probleml\u00f6sung eingesetzt."]},
+    { id:"m1", label:"Problemanalyse / Problemverstehen", inds: [
+      "Du hast selbst versucht, das Problem zu verstehen.",
+      "Dir war klar, welches Problem zu l\u00f6sen ist.",
+      "Bei Fehlern hast du herausgefunden, was das Problem war.",
+      "Du hast Tipps zu deinem Problem im Netz oder anderswo gefunden."]},
+    { id:"m2", label:"Kreative Denk- und Probleml\u00f6sef\u00e4higkeiten", inds: [
+      "Du hattest sehr viele Ideen.",
+      "Du hast Methoden zur Ideenentwicklung eingesetzt (z.B. Brainstorming, morphologischer Kasten, \u2026).",
+      "Bei der Fehlersuche bist du systematisch vorgegangen.",
+      "Du konntest selbstst\u00e4ndig Fehler beheben.",
+      "Du konntest Fehler mit Unterst\u00fctzung anderer beheben.",
+      "Du hast Methoden eingesetzt, um Probleme von dir oder anderen zu l\u00f6sen."]},
+    { id:"m3", label:"Produktentwicklung", inds: [
+      "Du hast Skizzen, Modelle und Prototypen angefertigt, bevor du das Endprodukt gebaut hast.",
+      "Du hast dich beim Entwickeln deines Produkts am Design Thinking Modell orientiert.",
+      "Du kannst deine Konstruktionsschritte und Gestaltungsentscheidungen begr\u00fcnden.",
+      "Du kannst dir f\u00fcr dein Projekt Inspirationen suchen (z.B. im Netz oder von Mitsch\u00fcler*innen)."]},
+    { id:"m4", label:"Recherche- und Informationskompetenzen", inds: [
+      "Du hast im Internet brauchbare Anregungen f\u00fcr dein Produkt gefunden."]},
   ]},
   social: { id:"social", label:"SOZIALE KOMPETENZEN", shortLabel:"Zusammenarbeiten", color:"#FFC000", colorLight:"#FFF8E1", subs: [
-    { id:"s1", label:"Zusammenarbeit", inds: ["Du bist respektvoll mit anderen umgegangen.","Du hast dazu beigetragen, dass Meinungsverschiedenheiten gel\u00f6st wurden.","Du konntest deine St\u00e4rken einbringen.","Du hast dich aktiv an der Zusammenarbeit beteiligt."]},
-    { id:"s2", label:"Hilfs- und Unterst\u00fctzungsbereitschaft", inds: ["Du hast anderen bei ihren Projekten weitergeholfen.","Du konntest anderen etwas beibringen (z.B. wie ein Werkzeug funktioniert).","Du hast dazu beigetragen, dass Ideen anderer umgesetzt werden konnten."]},
-    { id:"s3", label:"Feedback einfordern und geben", inds: ["Wenn du nicht weiterwusstest, hast du andere um Unterst\u00fctzung gebeten.","Du konntest das Feedback anderer f\u00fcr dein Projekt nutzen.","Du konntest dich in die Produkte anderer hineindenken und Verbesserungsvorschl\u00e4ge machen."]},
-    { id:"s4", label:"Wertsch\u00e4tzung", inds: ["Du hast andere f\u00fcr eine gute Idee gelobt.","Du hast die St\u00e4rken anderer erkannt und gew\u00fcrdigt."]},
+    { id:"s1", label:"Zusammenarbeit", inds: [
+      "Du bist respektvoll mit deinen Teamkolleginnen und Teamkollegen umgegangen.",
+      "Du hast dazu beigetragen, dass Meinungsverschiedenheiten und Konflikte gel\u00f6st wurden.",
+      "Du hast dazu beigetragen, die Arbeit im Team zu planen.",
+      "Du konntest deine St\u00e4rken ins Team einbringen.",
+      "Du hast dazu beigetragen, dass die Arbeit in deinem Team produktiv war.",
+      "Du hast dich aktiv an der Zusammenarbeit im Team beteiligt."]},
+    { id:"s2", label:"Hilfs- und Unterst\u00fctzungsbereitschaft", inds: [
+      "Du hast anderen bei ihren Projekten weitergeholfen.",
+      "Du konntest anderen etwas beibringen (z.B. wie ein Werkzeug funktioniert oder wie man am Computer etwas konstruiert).",
+      "Du hast dazu beigetragen, dass Ideen deiner Klassenkamerad*innen umgesetzt werden konnten."]},
+    { id:"s3", label:"Feedback / Unterst\u00fctzung (einfordern)", inds: [
+      "Wenn du nicht weiterwusstest, hast du andere um Unterst\u00fctzung gebeten.",
+      "Du konntest das Feedback deiner Klassenkameradinnen und Kameraden f\u00fcr dein Projekt nutzen.",
+      "Du konntest dich in die Produkte deiner Klassenkameradinnen und Kameraden hineindenken und Verbesserungsvorschl\u00e4ge machen."]},
+    { id:"s4", label:"Wertsch\u00e4tzung", inds: [
+      "Du hast Teammitglieder f\u00fcr eine gute Idee gelobt.",
+      "Du hast die St\u00e4rken deiner Teammitglieder erkannt und gew\u00fcrdigt."]},
   ]},
   technical: { id:"technical", label:"FACHKOMPETENZEN", shortLabel:"Machen", color:"#5B9BD5", colorLight:"#EEF4FF", subs: [
-    { id:"f1", label:"Werkzeuge & Handwerk", inds: ["Du hast digitale Fabrikationsverfahren f\u00fcr die Herstellung deines Produkts verwendet.","Du weisst, wof\u00fcr du einen 3D-Drucker / Laser Cutter / Plotter sinnvoll einsetzen kannst.","Du hast neue technische Verfahren kennengelernt."]},
-    { id:"f2", label:"Technik", inds: ["Du konntest deine Kenntnisse \u00fcber Naturwissenschaft und Technik anwenden.","Dein Produkt funktioniert zuverl\u00e4ssig wie geplant.","Dein Produkt zeigt eine eigene kreative Erweiterung \u00fcber die Vorlage hinaus."]},
-    { id:"f3", label:"Informatische Kompetenzen", inds: ["Du konntest Microcontroller, Sensoren und Aktoren zielf\u00fchrend in dein Produkt einbauen.","Du hast Programme geschrieben, in welchen Daten von Sensoren zur Steuerung von Aktoren richtig verwendet werden.","Du konntest Schleifen, Wenn-Dann-Bedingungen, Variablen und andere Programmierbausteine zu lauff\u00e4higen Programmen zusammensetzen."]},
-    { id:"f4", label:"Medienkompetenzen", inds: ["Du hast Medien zur Dokumentation deiner Arbeit sinnvoll eingesetzt.","Du kannst dein Projekt und das technische Konzept erkl\u00e4ren."]},
+    { id:"f1", label:"Anwendung von Werkzeugen und Maschinen / Handwerk", inds: [
+      "Du hast digitale Fabrikationsverfahren kennengelernt.",
+      "Du hast digitale Fabrikationsverfahren f\u00fcr die Herstellung deines Produkts verwendet.",
+      "Du weisst, wof\u00fcr du einen 3D-Drucker / einen Laser Cutter / einen Plotter / eine CNC-Fr\u00e4se sinnvoll einsetzen kannst."]},
+    { id:"f2", label:"Technik", inds: [
+      "Du hast neue technische Verfahren kennengelernt.",
+      "Du konntest deine Kenntnisse \u00fcber Naturwissenschaft und Technik anwenden."]},
+    { id:"f3", label:"Informatische Kompetenzen", inds: [
+      "Du konntest Microcontroller, Sensoren und Aktoren zielf\u00fchrend in dein Produkt einbauen.",
+      "Du hast Programme geschrieben, in welchen Daten von Sensoren zur Steuerung von Aktoren richtig verwendet werden.",
+      "Du konntest Schleifen, Wenn-Dann-Bedingungen, Variablen und andere Programmierbausteine zu lauff\u00e4higen Programmen zusammensetzen."]},
+    { id:"f4", label:"Gestaltung und Design", inds: []},
+    { id:"f5", label:"Medienkompetenzen", inds: [
+      "Du hast Medien zur Dokumentation deiner Arbeit sinnvoll eingesetzt."]},
   ]}
 };
 
