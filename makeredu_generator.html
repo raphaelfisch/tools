@@ -120,6 +120,13 @@
         <input type="text" id="docSubtitle" value="MakerEdu | Selbst- &amp; Fremdeinschätzung" placeholder="Untertitel">
         <input type="text" id="schoolName" value="" placeholder="Schulname (optional)">
         <textarea id="assignmentText" rows="2" placeholder="Auftrag / Aufgabenstellung (optional)"></textarea>
+        <div style="font-size:8px;color:var(--dim);line-height:1.5;margin-top:2px">
+          <strong style="font-weight:600;color:var(--muted)">**fett**</strong> &nbsp;
+          <em style="color:var(--muted)">*kursiv*</em> &nbsp;
+          <span style="text-decoration:underline;color:var(--muted)">__unterstrichen__</span> &nbsp;
+          <span style="color:var(--muted)">^hoch^</span> &nbsp;
+          <span style="color:var(--muted)">~tief~</span>
+        </div>
         <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border-lt)">
           <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Felder auf dem Blatt</div>
           <div id="fields-list"></div>
@@ -481,9 +488,17 @@ function renderPreview(){
 
   // ── Assignment block ──
   if(assignment){
-    const _assignLines=_mdoc.setFontSize(6.5)&&false||_mdoc.splitTextToSize(assignment,166-8).length;
+    const _assignLines=_mdoc.setFontSize(6.5)&&false||_mdoc.splitTextToSize(assignment.replace(/\*\*.*?\*\*|\*.*?\*|__.*?__|[\^~].*?[\^~]/g,m=>m.replace(/[^]/g,'x')),166-8).length;
     const _assignH=_assignLines*3.2+10+3;
-    blocks.push({_pdfH:_assignH, html:'<div style="background:#F7F7F5;border:0.15mm solid #D0D0CE;border-radius:1mm;padding:2mm 2.5mm;margin-bottom:2mm"><div style="font-size:2.4mm;font-weight:700;color:#222;line-height:1.4;margin-bottom:0.5mm">Auftrag:</div><div style="font-size:2.1mm;color:#555;line-height:1.6;margin:0;padding:0">'+esc(assignment)+'</div></div>'});
+    function mdToHtml(t){
+      return esc(t)
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g,'<em>$1</em>')
+        .replace(/__(.+?)__/g,'<span style="text-decoration:underline">$1</span>')
+        .replace(/\^(.+?)\^/g,'<sup>$1</sup>')
+        .replace(/~(.+?)~/g,'<sub>$1</sub>');
+    }
+    blocks.push({_pdfH:_assignH, html:'<div style="background:#F7F7F5;border:0.15mm solid #D0D0CE;border-radius:1mm;padding:2mm 2.5mm;margin-bottom:2mm"><div style="font-size:2.4mm;font-weight:700;color:#222;line-height:1.4;margin-bottom:0.5mm">Auftrag:</div><div style="font-size:2.1mm;color:#555;line-height:1.6;margin:0;padding:0">'+mdToHtml(assignment)+'</div></div>'});
   }
 
   // ── Indicator tables ──
@@ -830,17 +845,86 @@ async function generatePDF(){
     function drawAssignmentBlock(){
       if(!assignment)return;
       const x=ML,y=pageY;
-      const safeAssignment=pdfSafe(assignment);
-      const PAD=2.5, LABEL_H=4.5, GAP=1, LINE_H=3.6;
-      const lines=wrap(safeAssignment,CW-6,7);
-      const boxH=PAD+LABEL_H+GAP+lines.length*LINE_H+PAD;
+      const PAD=2.5, LABEL_H=4.5, GAP=1, LINE_H=3.6, FS=7, MAX_W=CW-6;
+
+      // Parse markdown into segments: {text, bold, italic, underline, sup, sub}
+      function parseSegments(raw){
+        const segs=[];
+        // Tokenize using regex that matches all markdown patterns
+        const re=/\*\*(.+?)\*\*|\*(.+?)\*|__(.+?)__|(\^)(.+?)\^|(~)(.+?)~/gs;
+        let last=0, m;
+        while((m=re.exec(raw))!==null){
+          if(m.index>last) segs.push({text:pdfSafe(raw.slice(last,m.index)),bold:false,italic:false,under:false,sup:false,sub:false});
+          if(m[1]!==undefined) segs.push({text:pdfSafe(m[1]),bold:true,italic:false,under:false,sup:false,sub:false});
+          else if(m[2]!==undefined) segs.push({text:pdfSafe(m[2]),bold:false,italic:true,under:false,sup:false,sub:false});
+          else if(m[3]!==undefined) segs.push({text:pdfSafe(m[3]),bold:false,italic:false,under:true,sup:false,sub:false});
+          else if(m[5]!==undefined) segs.push({text:pdfSafe(m[5]),bold:false,italic:false,under:false,sup:true,sub:false});
+          else if(m[7]!==undefined) segs.push({text:pdfSafe(m[7]),bold:false,italic:false,under:false,sup:false,sub:true});
+          last=re.lastIndex;
+        }
+        if(last<raw.length) segs.push({text:pdfSafe(raw.slice(last)),bold:false,italic:false,under:false,sup:false,sub:false});
+        return segs;
+      }
+
+      // Set font for a segment
+      function applyFont(seg){
+        const style=seg.bold&&seg.italic?'bolditalic':seg.bold?'bold':seg.italic?'italic':'normal';
+        const fs=seg.sup||seg.sub?FS*0.65:FS;
+        doc.setFont('helvetica',style);doc.setFontSize(fs);
+        return fs;
+      }
+
+      // Word-wrap segments into lines [{segments, totalH}]
+      function wrapSegments(segs){
+        const lines=[];
+        let curLine=[], curW=0;
+        segs.forEach(seg=>{
+          const fs=seg.sup||seg.sub?FS*0.65:FS;
+          doc.setFont('helvetica',seg.bold&&seg.italic?'bolditalic':seg.bold?'bold':seg.italic?'italic':'normal');
+          doc.setFontSize(fs);
+          // Split segment text into words
+          const words=seg.text.split(' ');
+          words.forEach((word,wi)=>{
+            const w=doc.getTextWidth(word+(wi<words.length-1?' ':''));
+            if(curW+w>MAX_W && curLine.length>0){
+              lines.push(curLine); curLine=[]; curW=0;
+            }
+            const part={...seg,text:word+(wi<words.length-1?' ':'')};
+            curLine.push(part); curW+=w;
+          });
+        });
+        if(curLine.length>0) lines.push(curLine);
+        return lines;
+      }
+
+      const segs=parseSegments(assignment);
+      const wrappedLines=wrapSegments(segs);
+      const boxH=PAD+LABEL_H+GAP+wrappedLines.length*LINE_H+PAD;
       checkSpace(boxH+3);
+
       doc.setFillColor(247,247,245);doc.setLineWidth(0.15);ss('#D0D0CE');doc.roundedRect(x,y,CW,boxH,1,1,'FD');
+      // Label
       doc.setFont('helvetica','bold');doc.setFontSize(8);stc('#222');
       doc.text('Auftrag:',x+3,y+PAD+LABEL_H/2,{baseline:'middle'});
-      doc.setFont('helvetica','normal');doc.setFontSize(7);stc('#444');
+      // Render lines
+      stc('#444');
       let ty=y+PAD+LABEL_H+GAP+LINE_H/2;
-      lines.forEach(l=>{doc.text(l,x+3,ty,{baseline:'middle'});ty+=LINE_H;});
+      wrappedLines.forEach(line=>{
+        let cx=x+3;
+        line.forEach(seg=>{
+          const fs=applyFont(seg);
+          const segY=seg.sup?ty-LINE_H*0.3:seg.sub?ty+LINE_H*0.25:ty;
+          doc.text(seg.text,cx,segY,{baseline:'middle'});
+          // Underline
+          if(seg.under){
+            const tw=doc.getTextWidth(seg.text);
+            doc.setLineWidth(0.2);ss('#444444');
+            doc.line(cx,segY+fs*0.08,cx+tw,segY+fs*0.08);
+          }
+          cx+=doc.getTextWidth(seg.text);
+        });
+        ty+=LINE_H;
+      });
       pageY=y+boxH+3;
     }
     function drawSubTable(comp,sub){
