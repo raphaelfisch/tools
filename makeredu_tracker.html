@@ -610,7 +610,7 @@ function loadFromGeneratorUrl(){
   const inds = extractInds(gs);
   if(!inds.length){ showToast('Keine Indikatoren gefunden','error'); return; }
   const totalRatings=Object.values(S.bewertungen).reduce((sum,lb)=>sum+Object.values(lb).reduce((s,sr)=>s+Object.keys(sr).length,0),0);
-  const hasRatings = totalRatings > 0;
+  const hasExisting = S.indikatoren.length > 0;
   const doLoad = ()=>{
     S.indikatoren = inds;
     if(gs.t && !S.projektName){ S.projektName=gs.t; document.getElementById('projekt-name').value=gs.t; updateProjektBadge(); }
@@ -620,10 +620,11 @@ function loadFromGeneratorUrl(){
     document.getElementById('url-status').innerHTML = `<span class="status-chip status-ok">✓ ${inds.length} Indikatoren geladen</span>`;
     showToast(inds.length+' Indikatoren geladen','success');
   };
-  if(hasRatings){
+  if(hasExisting){
+    const ratingsTxt = totalRatings > 0 ? ` Es sind bereits ${totalRatings} Beurteilung${totalRatings!==1?'en':''} erfasst, die nicht mehr korrekt zugeordnet werden können.` : '';
     showConfirm(
       'Indikatoren ersetzen',
-      `Es sind bereits ${totalRatings} Beurteilung${totalRatings!==1?'en':''} erfasst. Wenn du neue Indikatoren lädst, können diese Beurteilungen nicht mehr korrekt zugeordnet werden. Trotzdem fortfahren?`,
+      `Es sind bereits Indikatoren geladen.${ratingsTxt} Trotzdem fortfahren?`,
       'Ersetzen',
       doLoad
     );
@@ -1191,6 +1192,7 @@ function resetAll(){
     save();
     document.getElementById('projekt-name').value='';
     updateProjektBadge();
+    document.getElementById('url-status').textContent='Füge den Link aus dem MakerEdu-Generator ein.';
     renderSchuelerList(); renderLektionenList(); renderIndPreview();
     renderSetupProgress(); renderDatenInfo();
     showToast('Alle Daten gelöscht','success');
