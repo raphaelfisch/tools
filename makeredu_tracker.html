@@ -1191,6 +1191,7 @@ function resetAll(){
     S={projektName:'',indikatoren:[],schueler:[],lektionen:[],bewertungen:{}};
     save();
     document.getElementById('projekt-name').value='';
+    document.getElementById('generator-url').value='';
     updateProjektBadge();
     document.getElementById('url-status').textContent='Füge den Link aus dem MakerEdu-Generator ein.';
     renderSchuelerList(); renderLektionenList(); renderIndPreview();
