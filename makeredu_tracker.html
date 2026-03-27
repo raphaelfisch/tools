@@ -524,7 +524,10 @@ const MDATA = {
 let S = { projektName:'', indikatoren:[], schueler:[], lektionen:[], bewertungen:{} };
 let curLek = null, curSIdx = 0, curIndIdx = 0, erfassungMode = 'schueler';
 
-function save(){ try{ localStorage.setItem('mke-tracker', JSON.stringify(S)); }catch(e){} }
+let _dirty = false;
+function markDirty(){ _dirty=true; }
+function save(){ try{ localStorage.setItem('mke-tracker', JSON.stringify(S)); _dirty=false; }catch(e){} }
+window.addEventListener('beforeunload', e=>{ if(_dirty){ e.preventDefault(); e.returnValue=''; } });
 function load(){ try{ const d=localStorage.getItem('mke-tracker'); if(d){ S=JSON.parse(d); S.schueler.sort((a,b)=>a.vorname.localeCompare(b.vorname)||a.nachname.localeCompare(b.nachname)); } }catch(e){} }
 
 // ─── TABS ─────────────────────────────────────────────
@@ -575,6 +578,12 @@ function updateSetupCols(){
   grid.style.setProperty('--setup-cols', w>=3*280 ? 3 : 1);
 }
 
+function updateTabLabels(){
+  const tabs=document.querySelectorAll('.tab-btn');
+  const lekNum=S.lektionen.findIndex(l=>l.id===curLek);
+  const lekLabel=lekNum>=0 ? ` · L${lekNum+1}` : '';
+  if(tabs[1]) tabs[1].textContent='📝 Erfassung'+lekLabel;
+}
 function showTab(name){
   ['setup','erfassung','dashboard','daten'].forEach(t=>{
     document.getElementById('tab-'+t).style.display = t===name?'':'none';
@@ -586,6 +595,7 @@ function showTab(name){
   if(name==='erfassung') renderErfassung();
   if(name==='dashboard') renderDashboardFull();
   if(name==='daten') renderDatenInfo();
+  updateTabLabels();
 }
 
 // ─── GENERATOR URL ────────────────────────────────────
@@ -600,7 +610,7 @@ function loadFromGeneratorUrl(){
   const inds = extractInds(gs);
   if(!inds.length){ showToast('Keine Indikatoren gefunden','error'); return; }
   S.indikatoren = inds;
-  if(gs.t && !S.projektName){ S.projektName=gs.t; document.getElementById('projekt-name').value=gs.t; document.getElementById('projekt-badge').textContent=gs.t; }
+  if(gs.t && !S.projektName){ S.projektName=gs.t; document.getElementById('projekt-name').value=gs.t; updateProjektBadge(); }
   save();
   renderIndPreview();
   renderSetupProgress();
@@ -723,13 +733,13 @@ function renderSchuelerList(){
 function addLektion(){
   const num=S.lektionen.length+1;
   const l={id:'lek_'+Date.now(),name:'Lektion '+num,datum:new Date().toLocaleDateString('de-CH')};
-  S.lektionen.push(l); S.bewertungen[l.id]={}; save(); renderLektionenList(); renderSetupProgress();
+  S.lektionen.push(l); S.bewertungen[l.id]={}; markDirty(); save(); renderLektionenList(); renderSetupProgress();
   showToast('Lektion '+num+' erstellt','success');
 }
 function removeLektion(id){
   const l=S.lektionen.find(l=>l.id===id);
   showConfirm('Lektion löschen', `«${l?.name}» wirklich löschen? Alle Beurteilungen dieser Lektion gehen verloren.`, 'Löschen', ()=>{
-    S.lektionen=S.lektionen.filter(l=>l.id!==id); delete S.bewertungen[id]; save(); renderLektionenList(); renderSetupProgress();
+    S.lektionen=S.lektionen.filter(l=>l.id!==id); delete S.bewertungen[id]; markDirty(); save(); renderLektionenList(); renderSetupProgress();
   });
 }
 function updLekName(id,v){ const l=S.lektionen.find(l=>l.id===id); if(l){l.name=v;save();} }
@@ -745,7 +755,23 @@ function renderLektionenList(){
   }).join('') + `<div style="margin-top:16px;text-align:center"><button class="btn btn-primary" onclick="addLektion()">+ Neue Lektion</button></div>`;
 }
 function goErfassung(id){ curLek=id; showTab('erfassung'); onLektionChange(id); }
-function saveMeta(){ S.projektName=document.getElementById('projekt-name').value; document.getElementById('projekt-badge').textContent=S.projektName||'Kein Projekt'; save(); renderSetupProgress(); }
+function saveMeta(){ S.projektName=document.getElementById('projekt-name').value; markDirty(); save(); updateProjektBadge(); renderSetupProgress(); }
+function updateProjektBadge(){
+  const b=document.getElementById('projekt-badge');
+  if(!b) return;
+  const name=S.projektName||'';
+  if(name){
+    b.textContent=name;
+    b.style.background='rgba(255,255,255,0.15)';
+    b.style.color='white';
+    b.style.border='none';
+  } else {
+    b.textContent='Kein Projekt';
+    b.style.background='transparent';
+    b.style.color='rgba(255,255,255,0.5)';
+    b.style.border='1px dashed rgba(255,255,255,0.35)';
+  }
+}
 
 // ─── ERFASSUNG ────────────────────────────────────────
 function renderErfassung(){
@@ -780,7 +806,7 @@ function onLektionChange(id){
   if(!S.bewertungen[curLek]) S.bewertungen[curLek]={};
   curSIdx=0; curIndIdx=0;
   setErfassungMode(erfassungMode);
-  renderSNav(); renderCurS(); updProgress();
+  renderSNav(); renderCurS(); updProgress(); updateTabLabels();
 }
 function renderSNav(){
   const nav=document.getElementById('schueler-nav');
@@ -848,7 +874,7 @@ function setRatingInd(sId,indId,r){
   const cur=S.bewertungen[curLek][sId][indId];
   if(cur===r) delete S.bewertungen[curLek][sId][indId];
   else S.bewertungen[curLek][sId][indId]=r;
-  save(); updProgress(); renderIndModus();
+  markDirty(); save(); updProgress(); renderIndModus();
 }
 function nextS(){ if(curSIdx<S.schueler.length-1) selS(curSIdx+1); }
 function renderCurS(){
@@ -1092,17 +1118,19 @@ function renderDatenInfo(){
   const el=document.getElementById('daten-info');
   const totalRatings=Object.values(S.bewertungen).reduce((sum,lb)=>
     sum+Object.values(lb).reduce((s,sr)=>s+Object.keys(sr).length,0),0);
-  el.innerHTML=`<div class="card tab-header-card" style="gap:16px;flex-wrap:wrap">
+  el.innerHTML=`<div class="card" style="padding:16px 20px;margin-bottom:0">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px">
     ${[
       [S.projektName||'–','Projekt'],
       [S.schueler.length,'Schüler:innen'],
       [S.lektionen.length,'Lektionen'],
       [S.indikatoren.length,'Indikatoren'],
       [totalRatings,'Beurteilungen'],
-    ].map(([val,lbl])=>`<div style="display:flex;align-items:baseline;gap:6px">
-      <span style="font-size:18px;font-weight:700;color:var(--text)">${val}</span>
-      <span style="font-size:11px;color:var(--dim)">${lbl}</span>
-    </div>`).join('<div style="width:1px;height:20px;background:var(--border-lt)"></div>')}
+    ].map(([val,lbl])=>`<div style="display:flex;flex-direction:column;gap:2px">
+      <span style="font-size:20px;font-weight:700;color:var(--text);letter-spacing:-0.5px">${val}</span>
+      <span style="font-size:11px;color:var(--dim);font-weight:500">${lbl}</span>
+    </div>`).join('')}
+    </div>
   </div>`;
 }
 
@@ -1131,7 +1159,7 @@ function importJSON(event){
       S.schueler.sort((a,b)=>a.vorname.localeCompare(b.vorname)||a.nachname.localeCompare(b.nachname));
       save();
       document.getElementById('projekt-name').value=S.projektName||'';
-      document.getElementById('projekt-badge').textContent=S.projektName||'Kein Projekt';
+      updateProjektBadge();
       renderSchuelerList(); renderLektionenList(); renderIndPreview();
       renderSetupProgress(); renderDatenInfo();
       showToast('Importiert — '+S.schueler.length+' Schüler:innen, '+S.lektionen.length+' Lektionen','success');
@@ -1148,7 +1176,7 @@ function resetAll(){
     S={projektName:'',indikatoren:[],schueler:[],lektionen:[],bewertungen:{}};
     save();
     document.getElementById('projekt-name').value='';
-    document.getElementById('projekt-badge').textContent='Kein Projekt';
+    updateProjektBadge();
     renderSchuelerList(); renderLektionenList(); renderIndPreview();
     renderSetupProgress(); renderDatenInfo();
     showToast('Alle Daten gelöscht','success');
@@ -1167,7 +1195,7 @@ function showToast(msg,type=''){
 // ─── INIT ────────────────────────────────────────────
 load();
 document.getElementById('projekt-name').value=S.projektName||'';
-document.getElementById('projekt-badge').textContent=S.projektName||'Kein Projekt';
+updateProjektBadge();
 renderSchuelerList(); renderLektionenList(); renderIndPreview();
 updateSetupCols(); renderSetupProgress();
 if(S.indikatoren.length) document.getElementById('url-status').innerHTML=`<span class="status-chip status-ok">✓ ${S.indikatoren.length} Indikatoren geladen</span>`;
