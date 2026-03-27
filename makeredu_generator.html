@@ -17,10 +17,12 @@
   body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;height:100dvh;font-size:13px;}
   .topbar{background:#2D2D2D;flex-shrink:0;}
   .topbar-inner{max-width:1400px;width:100%;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:12px;height:52px;}
-  .topbar-link{display:flex;align-items:center;gap:10px;text-decoration:none;flex:1;opacity:1;transition:opacity 0.15s;}
+  .topbar-link{display:flex;align-items:center;gap:10px;text-decoration:none;opacity:1;transition:opacity 0.15s;flex-shrink:0;}
   .topbar-link:hover{opacity:0.75;}
   .topbar-mark{width:28px;height:28px;background:#FFF;border-radius:6px;display:grid;place-items:center;color:#1A1A1A;font-weight:800;font-size:13px;flex-shrink:0;}
-  .topbar h1{color:#FFF;font-size:15px;font-weight:600;letter-spacing:-0.2px;}
+  .topbar-brand{color:#FFF;font-size:15px;font-weight:600;letter-spacing:-0.2px;}
+  .topbar-sep{color:rgba(255,255,255,0.35);font-size:15px;margin:0 2px;}
+  .topbar h1{color:rgba(255,255,255,0.6);font-size:15px;font-weight:500;letter-spacing:-0.2px;flex:1;}
   .pill{padding:4px 10px;font-size:11px;font-weight:600;border-radius:100px;cursor:pointer;border:1px solid #666;background:#444;color:#EEE;transition:all 0.15s;font-family:var(--font);}
   .pill:hover{background:#555;color:#FFF;border-color:#888;}
   .main{display:flex;flex:1;overflow:hidden;max-width:1400px;width:100%;margin:0 auto;}
@@ -104,8 +106,10 @@
   <div class="topbar-inner">
     <a href="https://raphaelfisch.github.io/tools/makeredu.html" class="topbar-link">
       <div class="topbar-mark">M</div>
-      <h1>MakerEdu Beurteilungs-Generator</h1>
+      <span class="topbar-brand">MakerEdu</span>
     </a>
+    <span class="topbar-sep">›</span>
+    <h1>Beurteilungs-Generator</h1>
     <div style="display:flex;gap:6px">
       <button class="pill" onclick="selectAll()">Alle</button>
       <button class="pill" onclick="resetAll()">Zurücksetzen</button>
