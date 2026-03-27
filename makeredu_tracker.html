@@ -591,6 +591,7 @@ function showTab(name){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{
     b.classList.toggle('active', ['setup','erfassung','dashboard','daten'][i]===name);
   });
+  sessionStorage.setItem('mke-tab', name);
   if(name==='setup'){ updateSetupCols(); renderSetupProgress(); }
   if(name==='erfassung') renderErfassung();
   if(name==='dashboard') renderDashboardFull();
@@ -1199,6 +1200,8 @@ updateProjektBadge();
 renderSchuelerList(); renderLektionenList(); renderIndPreview();
 updateSetupCols(); renderSetupProgress();
 if(S.indikatoren.length) document.getElementById('url-status').innerHTML=`<span class="status-chip status-ok">✓ ${S.indikatoren.length} Indikatoren geladen</span>`;
+const _savedTab=sessionStorage.getItem('mke-tab');
+showTab(['setup','erfassung','dashboard','daten'].includes(_savedTab)?_savedTab:'setup');
 window.addEventListener('resize',()=>{
   const d=document.getElementById('tab-dashboard');
   if(d&&d.style.display!=='none'){ setTimeout(()=>renderVerlauf(),0); renderBoxplots(); }
