@@ -600,6 +600,7 @@ function loadFromGeneratorUrl(){
   const inds = extractInds(gs);
   if(!inds.length){ showToast('Keine Indikatoren gefunden','error'); return; }
   S.indikatoren = inds;
+  if(gs.t && !S.projektName){ S.projektName=gs.t; document.getElementById('projekt-name').value=gs.t; document.getElementById('projekt-badge').textContent=gs.t; }
   save();
   renderIndPreview();
   renderSetupProgress();
