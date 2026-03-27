@@ -23,8 +23,9 @@
   .topbar-brand{color:#FFF;font-size:15px;font-weight:600;letter-spacing:-0.2px;}
   .topbar-sep{color:rgba(255,255,255,0.35);font-size:15px;margin:0 2px;}
   .topbar h1{color:rgba(255,255,255,0.6);font-size:15px;font-weight:500;letter-spacing:-0.2px;flex:1;}
-  .pill{padding:4px 10px;font-size:11px;font-weight:600;border-radius:100px;cursor:pointer;border:1px solid #666;background:#444;color:#EEE;transition:all 0.15s;font-family:var(--font);}
-  .pill:hover{background:#555;color:#FFF;border-color:#888;}
+  .topbar-challenge{font-size:10px;font-weight:500;background:rgba(255,255,255,0.15);padding:3px 9px;border-radius:20px;letter-spacing:0.5px;text-transform:uppercase;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+  .pill{padding:4px 10px;font-size:11px;font-weight:600;border-radius:100px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);transition:all 0.15s;font-family:var(--font);}
+  .pill:hover{border-color:var(--text);color:var(--text);}
   .main{display:flex;flex:1;overflow:hidden;max-width:1400px;width:100%;margin:0 auto;}
   .panel-l{width:52%;overflow-y:auto;padding:16px;scrollbar-width:thin;}
   .panel-r{width:48%;overflow-y:auto;padding:16px;background:#F5F4F1;border-left:1px solid var(--border);scrollbar-width:thin;}
@@ -60,6 +61,7 @@
   .btn-pdf:hover{opacity:0.85;}
   .btn-pdf:disabled{opacity:0.3;cursor:not-allowed;}
   .btn-pdf svg{width:13px;height:13px;}
+  .btn-link{background:var(--surface);color:var(--text);border:1px solid var(--border);}
   .a4-wrapper{display:flex;flex-direction:column;align-items:center;gap:20px;padding-bottom:20px;}
   .a4-frame{width:100%;max-width:520px;background:white;border:1px solid var(--border);border-radius:2px;box-shadow:0 2px 12px rgba(0,0,0,0.1);position:relative;overflow:hidden;margin:0 auto;}
   .a4-inner{width:210mm;padding:22mm 22mm 20mm 22mm;font-size:2.8mm;line-height:1.2;transform-origin:top left;}
@@ -110,11 +112,7 @@
     </a>
     <span class="topbar-sep">›</span>
     <h1>Beurteilungs-Generator</h1>
-    <div style="display:flex;gap:6px">
-      <button class="pill" onclick="selectAll()">Alle</button>
-      <button class="pill" onclick="resetAll()">Zurücksetzen</button>
-      <button class="pill" onclick="saveToUrl()" style="border-color:#F59E0B;color:#FDE68A">💾 Link</button>
-    </div>
+    <span class="topbar-challenge" id="topbar-challenge">CHALLENGE-BEURTEILUNG</span>
   </div>
 </div>
 <div class="main">
@@ -173,16 +171,25 @@
       <span class="toolbar-badge" id="status-badge">0 Indikatoren</span>
       <span style="color:var(--border);font-size:11px">·</span>
       <span style="font-size:11px;color:var(--muted)" id="status-comps">0 Bereiche</span>
+      <span style="flex:1"></span>
+      <button class="pill" onclick="selectAll()">Alle</button>
+      <button class="pill" onclick="resetAll()">Zurücksetzen</button>
     </div>
     <div id="accordions"></div>
   </div>
   <div class="panel-r" id="panel-r">
     <div class="right-header">
       <span>Vorschau</span>
-      <button class="btn-pdf" id="btn-pdf" disabled onclick="generatePDF()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        PDF herunterladen
-      </button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn-pdf btn-link" id="btn-link" disabled onclick="saveToUrl()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Link speichern
+        </button>
+        <button class="btn-pdf" id="btn-pdf" disabled onclick="generatePDF()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          PDF herunterladen
+        </button>
+      </div>
     </div>
     <div id="preview"></div>
   </div>
@@ -349,7 +356,7 @@ function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g
 function getActiveComps(){return Object.values(DATA).filter(c=>c.subs.some(s=>(selections[s.id]||[]).length>0));}
 function render(){renderFieldsList();renderAccordions();renderPreview();updateStatus();}
 function toggleSettings(){const b=document.getElementById('settings-body'),c=document.getElementById('settings-chevron'),v=b.style.display!=='none';b.style.display=v?'none':'flex';c.classList.toggle('open',!v);}
-function updateStatus(){let t=0;Object.values(selections).forEach(a=>t+=a.length);const ac=getActiveComps().length,b=document.getElementById('status-badge');b.textContent=t+' Indikatoren';b.style.background=t>0?'#EDFCF2':'';b.style.color=t>0?'#0F9D58':'';document.getElementById('status-comps').textContent=ac+' Bereiche';const dis=t===0;document.getElementById('btn-pdf').disabled=dis;const bm=document.getElementById('btn-pdf-mobile');if(bm)bm.disabled=dis;}
+function updateStatus(){let t=0;Object.values(selections).forEach(a=>t+=a.length);const ac=getActiveComps().length,b=document.getElementById('status-badge');b.textContent=t+' Indikatoren';b.style.background=t>0?'#EDFCF2':'';b.style.color=t>0?'#0F9D58':'';document.getElementById('status-comps').textContent=ac+' Bereiche';const dis=t===0;document.getElementById('btn-pdf').disabled=dis;const bl=document.getElementById('btn-link');if(bl)bl.disabled=dis;const bm=document.getElementById('btn-pdf-mobile');if(bm)bm.disabled=dis;}
 function toggleComp(id){openComps[id]=!openComps[id];render();}
 function toggleSub(id){openSubs[id]=!openSubs[id];render();}
 function toggleInd(sId,idx){const a=selections[sId]||[];if(a.includes(idx))selections[sId]=a.filter(x=>x!==idx);else selections[sId]=[...a,idx];render();}
@@ -398,13 +405,13 @@ function loadFromUrl(){
     if(s.sr!==undefined){showRefl=s.sr;const el=document.getElementById('chkRefl');if(el){el.checked=showRefl;document.getElementById('chkGespRow').style.display=showRefl?'flex':'none';}}
     if(s.sg!==undefined){showGesp=s.sg;const el=document.getElementById('chkGesp');if(el)el.checked=showGesp;}
     if(s.sge!==undefined){showGesamt=s.sge;const el=document.getElementById('chkGesamt');if(el)el.checked=showGesamt;}
-    if(s.t)document.getElementById('docTitle').value=s.t;if(s.st)document.getElementById('docSubtitle').value=s.st;
+    if(s.t){document.getElementById('docTitle').value=s.t;const b=document.getElementById('topbar-challenge');if(b)b.textContent=s.t;}if(s.st)document.getElementById('docSubtitle').value=s.st;
     if(s.sn)document.getElementById('schoolName').value=s.sn;if(s.at)document.getElementById('assignmentText').value=s.at;
     Object.values(DATA).forEach(c=>{openComps[c.id]=c.subs.some(s=>(selections[s.id]||[]).length>0);});
     render();
   }catch(e){console.warn(e);}
 }
-document.addEventListener('input',e=>{if(['docTitle','docSubtitle','schoolName','assignmentText'].includes(e.target.id))renderPreview();});
+document.addEventListener('input',e=>{if(['docTitle','docSubtitle','schoolName','assignmentText'].includes(e.target.id))renderPreview();if(e.target.id==='docTitle'){const b=document.getElementById('topbar-challenge');if(b)b.textContent=e.target.value||'CHALLENGE-BEURTEILUNG';}});
 
 function renderAccordions(){
   let h='';
