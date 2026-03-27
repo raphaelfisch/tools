@@ -264,7 +264,6 @@ table.overview-table { width:100%; border-collapse:collapse; font-size:12px; }
       <div class="card">
         <div class="card-header"><div class="card-title">1. MakerEdu-Generator-Link</div></div>
         <div class="card-body">
-          <label class="form-label">Generator-URL einfügen</label>
           <div class="url-row">
             <input type="text" class="form-input" id="generator-url" placeholder="https://...?c=...">
             <button class="btn btn-primary" onclick="loadFromGeneratorUrl()">Laden</button>
@@ -610,13 +609,27 @@ function loadFromGeneratorUrl(){
   catch(e){ showToast('URL konnte nicht gelesen werden','error'); return; }
   const inds = extractInds(gs);
   if(!inds.length){ showToast('Keine Indikatoren gefunden','error'); return; }
-  S.indikatoren = inds;
-  if(gs.t && !S.projektName){ S.projektName=gs.t; document.getElementById('projekt-name').value=gs.t; updateProjektBadge(); }
-  save();
-  renderIndPreview();
-  renderSetupProgress();
-  document.getElementById('url-status').innerHTML = `<span class="status-chip status-ok">✓ ${inds.length} Indikatoren geladen</span>`;
-  showToast(inds.length+' Indikatoren geladen','success');
+  const totalRatings=Object.values(S.bewertungen).reduce((sum,lb)=>sum+Object.values(lb).reduce((s,sr)=>s+Object.keys(sr).length,0),0);
+  const hasRatings = totalRatings > 0;
+  const doLoad = ()=>{
+    S.indikatoren = inds;
+    if(gs.t && !S.projektName){ S.projektName=gs.t; document.getElementById('projekt-name').value=gs.t; updateProjektBadge(); }
+    markDirty(); save();
+    renderIndPreview();
+    renderSetupProgress();
+    document.getElementById('url-status').innerHTML = `<span class="status-chip status-ok">✓ ${inds.length} Indikatoren geladen</span>`;
+    showToast(inds.length+' Indikatoren geladen','success');
+  };
+  if(hasRatings){
+    showConfirm(
+      'Indikatoren ersetzen',
+      `Es sind bereits ${totalRatings} Beurteilung${totalRatings!==1?'en':''} erfasst. Wenn du neue Indikatoren lädst, können diese Beurteilungen nicht mehr korrekt zugeordnet werden. Trotzdem fortfahren?`,
+      'Ersetzen',
+      doLoad
+    );
+  } else {
+    doLoad();
+  }
 }
 
 function extractInds(gs){
