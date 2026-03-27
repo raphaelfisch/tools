@@ -15,8 +15,8 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;height:100dvh;font-size:13px;}
-  .topbar{background:#1A1A1A;flex-shrink:0;}
-  .topbar-inner{max-width:1400px;width:100%;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:12px;height:52px;}
+  .topbar{background:#2D2D2D;flex-shrink:0;}
+  .topbar-inner{max-width:1400px;width:100%;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:12px;height:52px;}
   .topbar-link{display:flex;align-items:center;gap:10px;text-decoration:none;opacity:1;transition:opacity 0.15s;flex-shrink:0;}
   .topbar-link:hover{opacity:0.75;}
   .topbar-mark{width:28px;height:28px;background:#FFF;border-radius:6px;display:grid;place-items:center;color:#1A1A1A;font-weight:800;font-size:13px;flex-shrink:0;}
@@ -78,8 +78,8 @@
   .mobile-tabs{display:none;flex-shrink:0;background:#2D2D2D;border-top:1px solid #444;}
   .mobile-tab{flex:1;padding:10px 0;font-size:12px;font-weight:600;color:#AAA;text-align:center;cursor:pointer;border:none;background:none;font-family:var(--font);transition:color 0.15s;}
   .mobile-tab.active{color:#FFF;border-top:2px solid #FFF;}
-  .mobile-pdf-bar{display:none;flex-shrink:0;padding:10px 16px;background:var(--bg);border-top:1px solid var(--border);}
-  .mobile-pdf-bar .btn-pdf{width:100%;justify-content:center;padding:10px;}
+  .mobile-pdf-bar{display:none;flex-shrink:0;padding:8px 16px;background:var(--bg);border-top:1px solid var(--border);gap:8px;}
+  .mobile-pdf-bar .btn-pdf{flex:1;justify-content:center;padding:10px;}
 
   @media(max-width:768px){
     body{overflow:hidden;}
@@ -92,7 +92,7 @@
     .mobile-tabs{display:flex;}
     .mobile-pdf-bar{display:flex;}
     .topbar h1{font-size:13px;}
-    .topbar-inner{padding:0 16px;gap:8px;}
+    .topbar-inner{padding:0 12px;gap:8px;}
     .topbar-link{gap:8px;}
     .pill{padding:3px 8px;font-size:10px;}
   }
@@ -199,9 +199,11 @@
   <button class="mobile-tab" id="tab-preview" onclick="switchTab('preview')">👁 Vorschau</button>
 </div>
 <div class="mobile-pdf-bar">
+  <button class="btn-pdf btn-link" id="btn-link-mobile" disabled onclick="saveToUrl()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+  </button>
   <button class="btn-pdf" id="btn-pdf-mobile" disabled onclick="generatePDF()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    PDF herunterladen
   </button>
 </div>
 
@@ -356,7 +358,7 @@ function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g
 function getActiveComps(){return Object.values(DATA).filter(c=>c.subs.some(s=>(selections[s.id]||[]).length>0));}
 function render(){renderFieldsList();renderAccordions();renderPreview();updateStatus();}
 function toggleSettings(){const b=document.getElementById('settings-body'),c=document.getElementById('settings-chevron'),v=b.style.display!=='none';b.style.display=v?'none':'flex';c.classList.toggle('open',!v);}
-function updateStatus(){let t=0;Object.values(selections).forEach(a=>t+=a.length);const ac=getActiveComps().length,b=document.getElementById('status-badge');b.textContent=t+' Indikatoren';b.style.background=t>0?'#EDFCF2':'';b.style.color=t>0?'#0F9D58':'';document.getElementById('status-comps').textContent=ac+' Bereiche';const dis=t===0;document.getElementById('btn-pdf').disabled=dis;const bl=document.getElementById('btn-link');if(bl)bl.disabled=dis;const bm=document.getElementById('btn-pdf-mobile');if(bm)bm.disabled=dis;}
+function updateStatus(){let t=0;Object.values(selections).forEach(a=>t+=a.length);const ac=getActiveComps().length,b=document.getElementById('status-badge');b.textContent=t+' Indikatoren';b.style.background=t>0?'#EDFCF2':'';b.style.color=t>0?'#0F9D58':'';document.getElementById('status-comps').textContent=ac+' Bereiche';const dis=t===0;document.getElementById('btn-pdf').disabled=dis;const bl=document.getElementById('btn-link');if(bl)bl.disabled=dis;const blm=document.getElementById('btn-link-mobile');if(blm)blm.disabled=dis;const bm=document.getElementById('btn-pdf-mobile');if(bm)bm.disabled=dis;}
 function toggleComp(id){openComps[id]=!openComps[id];render();}
 function toggleSub(id){openSubs[id]=!openSubs[id];render();}
 function toggleInd(sId,idx){const a=selections[sId]||[];if(a.includes(idx))selections[sId]=a.filter(x=>x!==idx);else selections[sId]=[...a,idx];render();}
