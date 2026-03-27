@@ -34,8 +34,9 @@
 html, body { max-width:100%; overflow-x:hidden; }
 body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; min-height:100dvh; }
 
-.app-header { background:var(--text); color:white; padding:0 24px; height:56px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:200; }
+.app-header { background:var(--text); color:white; padding:0 24px; height:52px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:200; }
 .app-header h1 { font-size:15px; font-weight:600; letter-spacing:-0.2px; flex:1; }
+.app-header-mark { width:28px; height:28px; background:#FFF; border-radius:6px; display:grid; place-items:center; color:#1A1A1A; font-weight:800; font-size:13px; text-decoration:none; flex-shrink:0; }
 .header-badge { font-size:10px; font-weight:500; background:rgba(255,255,255,0.15); padding:3px 9px; border-radius:20px; letter-spacing:0.5px; text-transform:uppercase; }
 
 .tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; overflow-x:auto; }
@@ -221,6 +222,7 @@ table.overview-table { width:100%; border-collapse:collapse; font-size:12px; }
 <body>
 
 <div class="app-header">
+  <a href="https://raphaelfisch.github.io/tools/makeredu.html" class="app-header-mark">M</a>
   <h1>MakerEdu Tracker</h1>
   <span class="header-badge" id="projekt-badge">Kein Projekt</span>
 </div>
