@@ -16,8 +16,8 @@
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;height:100dvh;font-size:13px;}
   .topbar{background:#2D2D2D;flex-shrink:0;}
-  .topbar-inner{max-width:1400px;width:100%;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:12px;height:48px;}
-  .topbar-mark{width:24px;height:24px;background:linear-gradient(135deg,#7C3AED,#1A73E8);border-radius:5px;display:grid;place-items:center;color:white;font-weight:800;font-size:12px;}
+  .topbar-inner{max-width:1400px;width:100%;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:12px;height:52px;}
+  .topbar-mark{width:28px;height:28px;background:#FFF;border-radius:6px;display:grid;place-items:center;color:#1A1A1A;font-weight:800;font-size:13px;text-decoration:none;flex-shrink:0;}
   .topbar h1{color:#FFF;font-size:13px;font-weight:600;flex:1;}
   .pill{padding:4px 10px;font-size:11px;font-weight:600;border-radius:100px;cursor:pointer;border:1px solid #666;background:#444;color:#EEE;transition:all 0.15s;font-family:var(--font);}
   .pill:hover{background:#555;color:#FFF;border-color:#888;}
@@ -99,7 +99,7 @@
 </div>
 <div class="topbar">
   <div class="topbar-inner">
-    <div class="topbar-mark">M</div>
+    <a href="https://raphaelfisch.github.io/tools/makeredu.html" class="topbar-mark">M</a>
     <h1>MakerEdu Beurteilungs-Generator</h1>
     <div style="display:flex;gap:6px">
       <button class="pill" onclick="selectAll()">Alle</button>
