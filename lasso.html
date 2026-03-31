@@ -2636,8 +2636,9 @@
             <div class="confirm-title" id="confirm-dialog-title">Bestätigung</div>
             <div class="confirm-message" id="confirm-dialog-message">Sind Sie sicher?</div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeConfirmDialog(false)">Abbrechen</button>
+        <div class="modal-footer" style="flex-wrap: wrap; gap: 8px;">
+            <button class="btn btn-secondary" onclick="closeConfirmDialog('cancel')">Abbrechen</button>
+            <button class="btn" id="confirm-dialog-secondary-btn" style="display: none;">Sekundär</button>
             <button class="btn btn-primary" id="confirm-dialog-btn" style="background: var(--danger);">Bestätigen</button>
         </div>
     </div>
@@ -3223,15 +3224,14 @@
         const hasData = state.beobachtungen.length > 0 || state.schueler.length > 0;
         
         if (hasData) {
-            showConfirmDialog('Backup erstellen?', 
-                '⚠️ Alle Daten werden gelöscht!\n\nMöchten Sie zuerst ein Backup erstellen?',
+            showConfirmDialog('Alle Daten löschen', 
+                '⚠️ Alle Daten werden unwiderruflich gelöscht!\n\nMöchten Sie zuerst ein Backup erstellen?',
                 () => {
-                    // Backup erstellen
+                    // Backup erstellen, dann löschen
                     exportData();
-                    // Nach kurzer Pause nochmal fragen
                     setTimeout(() => {
                         showConfirmDialog('Daten löschen', 
-                            'Backup wurde heruntergeladen.\n\nJetzt alle Daten löschen und zum Startbildschirm zurückkehren?',
+                            'Backup wurde heruntergeladen.\n\nJetzt alle Daten löschen?',
                             () => {
                                 localStorage.removeItem('las-state');
                                 localStorage.removeItem('lasso_onboarding_seen');
@@ -3240,12 +3240,28 @@
                         );
                     }, 500);
                 },
-                { confirmText: 'Ja, Backup erstellen', danger: false }
+                { 
+                    confirmText: 'Ja, Backup erstellen', 
+                    danger: false,
+                    secondaryText: 'Ohne Backup löschen',
+                    secondaryDanger: true,
+                    onSecondary: () => {
+                        // Direkt löschen ohne Backup
+                        showConfirmDialog('Wirklich löschen?', 
+                            '⚠️ Letzte Warnung!\n\nAlle Daten werden OHNE Backup gelöscht. Dies kann nicht rückgängig gemacht werden.',
+                            () => {
+                                localStorage.removeItem('las-state');
+                                localStorage.removeItem('lasso_onboarding_seen');
+                                location.reload();
+                            }
+                        );
+                    }
+                }
             );
         } else {
-            // Letzte Bestätigung
+            // Keine relevanten Daten - einfache Bestätigung
             showConfirmDialog('Alle Daten löschen', 
-                'Sind Sie sicher? Alle Daten werden unwiderruflich gelöscht.\n\nSie kehren zum Startbildschirm zurück.',
+                'Sind Sie sicher? Sie kehren zum Startbildschirm zurück.',
                 () => {
                     localStorage.removeItem('las-state');
                     localStorage.removeItem('lasso_onboarding_seen');
@@ -5282,11 +5298,14 @@
     
     let confirmCallback = null;
     
+    let secondaryCallback = null;
+    
     function showConfirmDialog(title, message, onConfirm, options = {}) {
         const overlay = document.getElementById('confirm-dialog-overlay');
         const titleEl = document.getElementById('confirm-dialog-title');
         const messageEl = document.getElementById('confirm-dialog-message');
         const confirmBtn = document.getElementById('confirm-dialog-btn');
+        const secondaryBtn = document.getElementById('confirm-dialog-secondary-btn');
         
         titleEl.textContent = title;
         messageEl.innerHTML = message.replace(/\n/g, '<br>');
@@ -5294,19 +5313,35 @@
         confirmBtn.style.background = options.danger !== false ? 'var(--danger)' : 'var(--primary)';
         
         confirmCallback = onConfirm;
-        confirmBtn.onclick = () => closeConfirmDialog(true);
+        confirmBtn.onclick = () => closeConfirmDialog('confirm');
+        
+        // Sekundärer Button (optional)
+        if (options.secondaryText && options.onSecondary) {
+            secondaryBtn.textContent = options.secondaryText;
+            secondaryBtn.style.display = 'block';
+            secondaryBtn.style.background = options.secondaryDanger ? 'var(--danger)' : '';
+            secondaryBtn.style.color = options.secondaryDanger ? 'white' : '';
+            secondaryCallback = options.onSecondary;
+            secondaryBtn.onclick = () => closeConfirmDialog('secondary');
+        } else {
+            secondaryBtn.style.display = 'none';
+            secondaryCallback = null;
+        }
         
         overlay.classList.add('active');
     }
     
-    function closeConfirmDialog(confirmed) {
+    function closeConfirmDialog(action) {
         const overlay = document.getElementById('confirm-dialog-overlay');
         overlay.classList.remove('active');
         
-        if (confirmed && confirmCallback) {
+        if (action === 'confirm' && confirmCallback) {
             confirmCallback();
+        } else if (action === 'secondary' && secondaryCallback) {
+            secondaryCallback();
         }
         confirmCallback = null;
+        secondaryCallback = null;
     }
     
     // ========================================
