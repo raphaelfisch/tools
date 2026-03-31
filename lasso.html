@@ -5335,13 +5335,18 @@
         const overlay = document.getElementById('confirm-dialog-overlay');
         overlay.classList.remove('active');
         
-        if (action === 'confirm' && confirmCallback) {
-            confirmCallback();
-        } else if (action === 'secondary' && secondaryCallback) {
-            secondaryCallback();
-        }
+        // Callbacks in lokale Variablen speichern und dann nullen
+        // (wichtig, falls der Callback einen neuen Dialog öffnet)
+        const confirmCb = confirmCallback;
+        const secondaryCb = secondaryCallback;
         confirmCallback = null;
         secondaryCallback = null;
+        
+        if (action === 'confirm' && confirmCb) {
+            confirmCb();
+        } else if (action === 'secondary' && secondaryCb) {
+            secondaryCb();
+        }
     }
     
     // ========================================
