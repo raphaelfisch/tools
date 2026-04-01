@@ -1,197 +1,33 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MakerEdu Tools</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#F8F8F6;
-  --surface:#FFF;
-  --border:#E2E0DC;
-  --text:#1A1A1A;
-  --muted:#8A8780;
-  --font:'DM Sans',-apple-system,sans-serif;
-  --c-red:#C00000;
-  --c-green:#70AD47;
-  --c-yellow:#FFC000;
-  --c-blue:#5B9BD5;
-}
-html,body{min-height:100vh;min-height:100dvh;}
-body{
-  font-family:var(--font);
-  background:var(--bg);
-  color:var(--text);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:32px 20px;
-}
-
-/* Header */
-.header{text-align:center;margin-bottom:48px;}
-.logo{
-  display:inline-flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:16px;
-}
-.logo-mark{
-  width:40px;height:40px;
-  border-radius:10px;
-  background:#2D2D2D;
-  display:grid;place-items:center;
-  color:white;font-size:18px;font-weight:800;
-}
-.logo-text{font-size:22px;font-weight:800;letter-spacing:-0.5px;}
-.header p{font-size:15px;color:var(--muted);max-width:400px;line-height:1.6;}
-
-/* Dot strip */
-.dot-strip{display:flex;gap:6px;justify-content:center;margin-bottom:16px;}
-.dot{width:8px;height:8px;border-radius:50%;}
-
-/* Cards */
-.cards{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-  max-width:760px;
-  width:100%;
-}
-@media(max-width:600px){.cards{grid-template-columns:1fr;}}
-
-.card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:32px;
-  text-decoration:none;
-  color:var(--text);
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  transition:transform 0.15s, box-shadow 0.15s;
-  position:relative;
-  overflow:hidden;
-}
-.card::before{
-  content:'';
-  position:absolute;
-  top:0;left:0;right:0;
-  height:4px;
-}
-.card-generator::before{background:linear-gradient(90deg, var(--c-red), var(--c-yellow));}
-.card-tracker::before{background:linear-gradient(90deg, var(--c-green), var(--c-blue));}
-.card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.1);}
-
-.card-icon{
-  font-size:28px;
-  width:52px;height:52px;
-  border-radius:12px;
-  display:grid;place-items:center;
-  flex-shrink:0;
-}
-.card-generator .card-icon{background:#FDECEA;}
-.card-tracker .card-icon{background:#F0F7EA;}
-
-.card-title{font-size:18px;font-weight:700;letter-spacing:-0.3px;}
-.card-desc{font-size:13px;color:var(--muted);line-height:1.65;flex:1;}
-
-.card-cta{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  font-size:13px;
-  font-weight:600;
-  padding:8px 0;
-  border:none;
-  background:none;
-  cursor:pointer;
-  font-family:var(--font);
-}
-.card-generator .card-cta{color:var(--c-red);}
-.card-tracker .card-cta{color:#3a7a1f;}
-
-.card-cta svg{width:16px;height:16px;transition:transform 0.15s;}
-.card:hover .card-cta svg{transform:translateX(4px);}
-
-/* Badges */
-.badges{display:flex;gap:6px;flex-wrap:wrap;}
-.badge{
-  font-size:10px;font-weight:600;
-  padding:3px 8px;border-radius:100px;
-  letter-spacing:0.3px;
-}
-.card-generator .badge{background:#FDECEA;color:var(--c-red);}
-.card-tracker .badge{background:#F0F7EA;color:#3a7a1f;}
-
-/* Footer */
-.footer{margin-top:40px;font-size:11px;color:var(--muted);text-align:center;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MakerEdu</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #fff;
+      color: #111;
+    }
+    div { text-align: center; }
+    p {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+    a { color: #111; font-size: 0.95rem; }
+  </style>
 </head>
 <body>
-
-<div class="header">
-  <div class="logo">
-    <div class="logo-mark">M</div>
-    <div class="logo-text">MakerEdu</div>
+  <div>
+    <p>Diese Seite ist umgezogen.</p>
+    <a href="https://raphaelfisch.github.io/makeredu/">raphaelfisch.github.io/makeredu</a>
   </div>
-  <div class="dot-strip">
-    <div class="dot" style="background:var(--c-red)"></div>
-    <div class="dot" style="background:var(--c-yellow)"></div>
-    <div class="dot" style="background:var(--c-green)"></div>
-    <div class="dot" style="background:var(--c-blue)"></div>
-  </div>
-  <p>Tools für die Beurteilung im Making-Unterricht.</p>
-</div>
-
-<div class="cards">
-
-  <a href="https://raphaelfisch.github.io/tools/makeredu_generator.html" class="card card-generator">
-    <div class="card-icon">📄</div>
-    <div>
-      <div class="card-title">Beurteilungs-Generator</div>
-    </div>
-    <div class="card-desc">
-      Wähle Indikatoren aus vier Kompetenzbereichen und erstelle ein druckfertiges Beurteilungsblatt als PDF — für Selbst- und Fremdeinschätzung.
-    </div>
-    <div class="badges">
-      <span class="badge">Personale Kompetenzen</span>
-      <span class="badge">Methodenkompetenzen</span>
-      <span class="badge">Soziale Kompetenzen</span>
-      <span class="badge">Fachkompetenzen</span>
-    </div>
-    <div class="card-cta">
-      Generator öffnen
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    </div>
-  </a>
-
-  <a href="https://raphaelfisch.github.io/tools/makeredu_tracker.html" class="card card-tracker">
-    <div class="card-icon">📊</div>
-    <div>
-      <div class="card-title">Lektions-Tracker</div>
-    </div>
-    <div class="card-desc">
-      Beurteile Schüler:innen Lektion für Lektion. Verfolge den Verlauf über ein ganzes Projekt und werte aus mit Boxplots und Verlaufsgrafiken.
-    </div>
-    <div class="badges">
-      <span class="badge">Verlauf pro Indikator</span>
-      <span class="badge">Boxplot-Auswertung</span>
-      <span class="badge">Export / Import</span>
-    </div>
-    <div class="card-cta">
-      Tracker öffnen
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    </div>
-  </a>
-
-</div>
-
-<div class="footer">MakerEdu · © Raphael Fisch</div>
-
 </body>
 </html>
