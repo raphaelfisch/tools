@@ -1450,7 +1450,7 @@
                             <strong id="dashboard-semester-name" style="font-size: 1.1rem;">Aktuelles Semester</strong>
                             <span id="dashboard-semester-dates" style="margin-left: 12px; opacity: 0.85; font-size: 0.9rem;"></span>
                         </div>
-                        <a href="#" onclick="showScreen('config'); return false;" style="color: white; opacity: 0.85; font-size: 0.85rem; text-decoration: none;">
+                        <a href="#" onclick="showScreen('config'); showConfigTab('semester'); return false;" style="color: white; opacity: 0.85; font-size: 0.85rem; text-decoration: none;">
                             Bearbeiten →
                         </a>
                     </div>
@@ -2802,6 +2802,18 @@
     
     <script>
         // ========================================
+        // HELPER FUNCTIONS
+        // ========================================
+        
+        // Lokales Datum als YYYY-MM-DD (ohne Zeitzone-Verschiebung durch toISOString)
+        function formatDateLocal(d) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // ========================================
         // DATA STRUCTURES
         // ========================================
         
@@ -3548,19 +3560,20 @@
                 return { percent: 100, status: 'green', daysLeft: 0, empfohlen: state.semester.questionsPerRound };
             }
             
-            // Verbleibende Schultage berechnen (ohne Wochenenden und Ferien)
+            // Verbleibende Schultage berechnen (ohne Wochenenden und echte Ferien)
             let schultage = 0;
             const checkDate = new Date(now);
             while (checkDate <= semesterEnd) {
                 const dayOfWeek = checkDate.getDay();
                 if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Kein Wochenende
-                    // Prüfe ob in Ferien
-                    const inFerien = state.ferien && state.ferien.some(f => {
+                    // Prüfe ob in echten Ferien (istSchulwoche=true zählt als Schultag)
+                    const ferien = state.ferien && state.ferien.find(f => {
                         const start = new Date(f.start);
                         const end = new Date(f.end);
                         return checkDate >= start && checkDate <= end;
                     });
-                    if (!inFerien) {
+                    const inEchtenFerien = ferien && ferien.istSchulwoche !== true;
+                    if (!inEchtenFerien) {
                         schultage++;
                     }
                 }
@@ -3832,13 +3845,14 @@
             while (checkDate < now) {
                 const dayOfWeek = checkDate.getDay();
                 if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Kein Wochenende
-                    // Prüfe ob in Ferien
-                    const inFerien = state.ferien && state.ferien.some(f => {
+                    // Prüfe ob in echten Ferien (istSchulwoche=true zählt als Schultag)
+                    const ferien = state.ferien && state.ferien.find(f => {
                         const start = new Date(f.start);
                         const end = new Date(f.end);
                         return checkDate >= start && checkDate <= end;
                     });
-                    if (!inFerien) {
+                    const inEchtenFerien = ferien && ferien.istSchulwoche !== true;
+                    if (!inEchtenFerien) {
                         schultageInaktiv++;
                     }
                 }
@@ -7356,12 +7370,6 @@
             
             html += '</tbody></table>';
             
-            // Schulwochen-Info
-            const schulwochen = berechneVerbleibendeSchulwochen();
-            html += `<p style="font-size: 0.8rem; color: var(--text-light); margin-top: 8px;">
-                Verbleibende Schulwochen: ${schulwochen}
-            </p>`;
-            
             container.innerHTML = html;
         }
 
@@ -7410,11 +7418,13 @@
                 
                 // Nur Mo-Fr und nur wenn Fach an diesem Tag stattfindet
                 if (wochentag >= 1 && wochentag <= 5 && lektionenProTag[wochentag] > 0) {
-                    const dateStr = current.toISOString().split('T')[0];
+                    const dateStr = formatDateLocal(current);
                     // Ferien UND Feiertage sind beide in state.ferien (Feiertage mit start=end)
-                    const inFerienOderFeiertag = (state.ferien || []).some(f => dateStr >= f.start && dateStr <= f.end);
+                    // ABER: istSchulwoche=true (z.B. Skilager) zählt als Schultag
+                    const ferien = (state.ferien || []).find(f => dateStr >= f.start && dateStr <= f.end);
+                    const inEchtenFerien = ferien && ferien.istSchulwoche !== true;
                     
-                    if (!inFerienOderFeiertag) {
+                    if (!inEchtenFerien) {
                         count += lektionenProTag[wochentag];
                     }
                 }
@@ -7423,48 +7433,6 @@
             }
             
             return count;
-        }
-
-        function berechneVerbleibendeSchulwochen() {
-            if (!state.semester.start || !state.semester.end) return 0;
-            
-            const heute = new Date();
-            const start = new Date(state.semester.start);
-            const end = new Date(state.semester.end);
-            const effektivStart = heute > start ? heute : start;
-            
-            if (effektivStart >= end) return 0;
-            
-            // Zähle Wochen (vereinfacht: Tage / 7, abzüglich Ferien)
-            let schulwochen = 0;
-            let current = new Date(effektivStart);
-            
-            while (current <= end) {
-                // Prüfe ob es eine Schulwoche ist (nicht in Ferien)
-                const wochenStart = new Date(current);
-                const wochenEnde = new Date(current);
-                wochenEnde.setDate(wochenEnde.getDate() + 6);
-                
-                // Vereinfacht: Zähle Woche wenn mindestens ein Schultag drin ist
-                let hatSchultag = false;
-                for (let d = new Date(wochenStart); d <= wochenEnde && d <= end; d.setDate(d.getDate() + 1)) {
-                    const tag = d.getDay();
-                    if (tag >= 1 && tag <= 5) { // Mo-Fr
-                        const dateStr = d.toISOString().split('T')[0];
-                        const inFerien = (state.ferien || []).some(f => dateStr >= f.start && dateStr <= f.end);
-                        const istFeiertag = (state.feiertage || []).some(ft => ft.date === dateStr);
-                        if (!inFerien && !istFeiertag) {
-                            hatSchultag = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if (hatSchultag) schulwochen++;
-                current.setDate(current.getDate() + 7);
-            }
-            
-            return schulwochen;
         }
 
         function updateFachEinstellung(fachId, typ, value) {
