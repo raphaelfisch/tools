@@ -4650,7 +4650,6 @@
                 const groupWidth = endX - startX;
                 const centerX = startX + groupWidth / 2;
                 const centerY = padding.top + chartHeight / 2;
-                const weeksCount = group.endIndex - group.startIndex + 1;
                 
                 ctx.save();
                 ctx.font = '600 12px system-ui';
@@ -4658,13 +4657,16 @@
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
-                if (weeksCount === 1) {
-                    // Einwöchig: vertikal
+                // Textbreite messen
+                const textWidth = ctx.measureText(group.name).width;
+                
+                // Vertikal wenn Text breiter als verfügbarer Platz (mit etwas Puffer)
+                if (textWidth > groupWidth - 10) {
                     ctx.translate(centerX, centerY);
                     ctx.rotate(-Math.PI / 2);
                     ctx.fillText(group.name, 0, 0);
                 } else {
-                    // Mehrwöchig: horizontal
+                    // Horizontal passt
                     ctx.fillText(group.name, centerX, centerY);
                 }
                 ctx.restore();
