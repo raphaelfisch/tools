@@ -3949,6 +3949,29 @@
             const lessonEndInfo = getLessonEndInfo();
             
             if (lessonEndInfo && state.faecherEnabled[lessonEndInfo.id]) {
+                // Prüfe ob für dieses Fach noch Lücken existieren (Ziele nicht erreicht)
+                const fach = state.faecher.find(f => f.id === lessonEndInfo.id);
+                const ziel = state.fachZiele[lessonEndInfo.id] || state.semester.targetObservations || 3;
+                const enabledKriterien = KRITERIEN.filter(k => state.kriterienEnabled[k.id] !== false);
+                
+                let hatLuecken = false;
+                if (fach) {
+                    for (const schuelerId of fach.schuelerIds) {
+                        for (const krit of enabledKriterien) {
+                            const count = state.beobachtungen.filter(b => 
+                                b.schuelerId === schuelerId && 
+                                b.fachId === lessonEndInfo.id && 
+                                b.kriteriumId === krit.id
+                            ).length;
+                            if (count < ziel) {
+                                hatLuecken = true;
+                                break;
+                            }
+                        }
+                        if (hatLuecken) break;
+                    }
+                }
+                
                 // Prüfe ob diese Lektion heute schon in pending ist
                 const today = new Date().toDateString();
                 const alreadyPending = state.pendingLessons.some(p => 
@@ -4036,6 +4059,8 @@
                 body.innerHTML = '<p style="color: var(--text-light);">Keine offenen Beobachtungen.</p>';
             } else {
                 const today = new Date().toDateString();
+                const enabledKriterien = KRITERIEN.filter(k => state.kriterienEnabled[k.id] !== false);
+                
                 let html = '';
                 state.pendingLessons.forEach((pending, index) => {
                     // Zeige Datum nur wenn nicht heute
@@ -4045,10 +4070,35 @@
                         ? `<span style="font-size: 0.75rem; color: var(--text-light); margin-left: 8px;">${pendingDate.toLocaleDateString('de-CH')}</span>` 
                         : '';
                     
+                    // Prüfe ob Ziel für dieses Fach erreicht
+                    const fach = state.faecher.find(f => f.id === pending.fachId);
+                    const ziel = state.fachZiele[pending.fachId] || state.semester.targetObservations || 3;
+                    let zielErreicht = true;
+                    if (fach) {
+                        for (const schuelerId of fach.schuelerIds) {
+                            for (const krit of enabledKriterien) {
+                                const count = state.beobachtungen.filter(b => 
+                                    b.schuelerId === schuelerId && 
+                                    b.fachId === pending.fachId && 
+                                    b.kriteriumId === krit.id
+                                ).length;
+                                if (count < ziel) {
+                                    zielErreicht = false;
+                                    break;
+                                }
+                            }
+                            if (!zielErreicht) break;
+                        }
+                    }
+                    
+                    const zielBadge = zielErreicht 
+                        ? '<span style="font-size: 0.7rem; background: var(--success); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">✓ Ziel erreicht</span>'
+                        : '';
+                    
                     html += `
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border-radius: var(--radius); margin-bottom: 8px;">
                             <div>
-                                <strong>${pending.fachName} ${pending.fachKlasse}</strong>${dateStr}
+                                <strong>${pending.fachName} ${pending.fachKlasse}</strong>${zielBadge}${dateStr}
                                 <div style="font-size: 0.85rem; color: var(--text-light);">Lektion ${pending.lektionIndex}</div>
                             </div>
                             <div style="display: flex; gap: 8px;">
@@ -4083,8 +4133,13 @@
             currentSession.completed = 0;
 
             if (currentSession.questions.length === 0) {
-                showToast('Keine Fragen verfügbar', 'error');
+                showToast('Keine Fragen möglich (keine Schüler oder Kriterien)', 'error');
                 return;
+            }
+            
+            // Info-Toast wenn Ziel bereits erreicht
+            if (checkZielErreicht(fach.id)) {
+                showToast('✓ Ziel erreicht – zusätzliche Beobachtungen', 'success');
             }
 
             document.getElementById('obs-modal-fach').textContent = `${fach.name} ${fach.klasse}`;
@@ -4130,6 +4185,9 @@
 
             state.faecher.forEach(fach => {
                 if (!state.faecherEnabled[fach.id]) return;
+                
+                // Fach-spezifisches oder globales Ziel
+                const ziel = state.fachZiele[fach.id] || state.semester.targetObservations || 3;
 
                 fach.schuelerIds.forEach(schuelerId => {
                     enabledKriterien.forEach(krit => {
@@ -4139,7 +4197,7 @@
                             b.kriteriumId === krit.id
                         ).length;
 
-                        if (count < state.semester.targetObservations) {
+                        if (count < ziel) {
                             gaps.push({
                                 schuelerId,
                                 fachId: fach.id,
@@ -6308,8 +6366,13 @@
             currentSession.completed = 0;
 
             if (currentSession.questions.length === 0) {
-                showToast('Keine Fragen verfügbar für diese Auswahl.', 'error');
+                showToast('Keine Fragen möglich (keine Schüler oder Kriterien)', 'error');
                 return;
+            }
+            
+            // Info-Toast wenn Ziel bereits erreicht
+            if (checkZielErreicht(fachId)) {
+                showToast('✓ Ziel erreicht – zusätzliche Beobachtungen', 'success');
             }
 
             document.getElementById('observation-container').style.display = 'block';
@@ -6319,13 +6382,71 @@
             showCurrentQuestion();
         }
 
+        // Prüft ob alle Ziele für ein Fach erreicht sind
+        function checkZielErreicht(fachId) {
+            const fach = state.faecher.find(f => f.id === fachId);
+            if (!fach) return false;
+            
+            const enabledKriterien = KRITERIEN.filter(k => state.kriterienEnabled[k.id] !== false);
+            const ziel = state.fachZiele[fachId] || state.semester.targetObservations || 3;
+            
+            for (const schuelerId of fach.schuelerIds) {
+                for (const krit of enabledKriterien) {
+                    const count = state.beobachtungen.filter(b => 
+                        b.schuelerId === schuelerId && 
+                        b.fachId === fachId && 
+                        b.kriteriumId === krit.id
+                    ).length;
+                    if (count < ziel) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
         function generateQuestions(fachId, count) {
             const fach = state.faecher.find(f => f.id === fachId);
             if (!fach) return [];
 
             const enabledKriterien = KRITERIEN.filter(k => state.kriterienEnabled[k.id] !== false);
             const questions = [];
-            const gaps = calculateGaps().filter(g => g.fachId === fachId);
+            
+            // Fach-spezifisches oder globales Ziel
+            const ziel = state.fachZiele[fachId] || state.semester.targetObservations || 3;
+            
+            // Alle Kombinationen sammeln (mit Lücken-Info)
+            const allCombinations = [];
+            const gaps = [];
+            fach.schuelerIds.forEach(schuelerId => {
+                enabledKriterien.forEach(krit => {
+                    const beobachtungenCount = state.beobachtungen.filter(b => 
+                        b.schuelerId === schuelerId && 
+                        b.fachId === fachId && 
+                        b.kriteriumId === krit.id
+                    ).length;
+                    
+                    const combo = {
+                        schuelerId,
+                        kriteriumId: krit.id,
+                        count: beobachtungenCount
+                    };
+                    
+                    allCombinations.push(combo);
+                    
+                    if (beobachtungenCount < ziel) {
+                        gaps.push(combo);
+                    }
+                });
+            });
+            
+            // Wenn keine Kombinationen möglich: abbrechen
+            if (allCombinations.length === 0) {
+                return [];
+            }
+            
+            // Wähle aus Lücken falls vorhanden, sonst aus allen
+            const pool = gaps.length > 0 ? gaps : allCombinations;
             
             // Konfigurierbare Einstellungen
             const MAX_PER_SCHUELER = state.semester.maxQuestionsPerStudent || 3;
@@ -6334,47 +6455,24 @@
             // Zähler für Schüler
             const schuelerCount = {};
 
-            // Wenn Priorisierung aktiv: Lücken zuerst füllen
-            if (prioritizeGaps) {
-                // Mische die Gaps für Variation
-                const shuffledGaps = [...gaps].sort(() => Math.random() - 0.5);
-                
-                for (const gap of shuffledGaps) {
-                    if (questions.length >= count) break;
-                    
-                    // Max pro Schüler prüfen
-                    if ((schuelerCount[gap.schuelerId] || 0) >= MAX_PER_SCHUELER) continue;
-                    
-                    const krit = enabledKriterien.find(k => k.id === gap.kriteriumId);
-                    if (!krit) continue;
-
-                    // Nur aktive Indikatoren verwenden
-                    const indikatoren = getActiveIndikatoren(krit.id);
-                    if (indikatoren.length === 0) continue;
-                    
-                    const indikator = indikatoren[Math.floor(Math.random() * indikatoren.length)];
-
-                    questions.push({
-                        schuelerId: gap.schuelerId,
-                        kriteriumId: krit.id,
-                        indikator
-                    });
-                    
-                    schuelerCount[gap.schuelerId] = (schuelerCount[gap.schuelerId] || 0) + 1;
-                }
+            // Sortiere: wenigste Beobachtungen zuerst (wenn Priorisierung aktiv und Lücken vorhanden)
+            let sortedPool;
+            if (prioritizeGaps && gaps.length > 0) {
+                sortedPool = [...pool].sort((a, b) => a.count - b.count);
+            } else {
+                // Zufällig mischen
+                sortedPool = [...pool].sort(() => Math.random() - 0.5);
             }
-
-            // Restliche Fragen zufällig füllen
-            let attempts = 0;
-            while (questions.length < count && attempts < 100) {
-                attempts++;
-                const schuelerId = fach.schuelerIds[Math.floor(Math.random() * fach.schuelerIds.length)];
+            
+            for (const item of sortedPool) {
+                if (questions.length >= count) break;
                 
                 // Max pro Schüler prüfen
-                if ((schuelerCount[schuelerId] || 0) >= MAX_PER_SCHUELER) continue;
+                if ((schuelerCount[item.schuelerId] || 0) >= MAX_PER_SCHUELER) continue;
                 
-                const krit = enabledKriterien[Math.floor(Math.random() * enabledKriterien.length)];
-                
+                const krit = enabledKriterien.find(k => k.id === item.kriteriumId);
+                if (!krit) continue;
+
                 // Nur aktive Indikatoren verwenden
                 const indikatoren = getActiveIndikatoren(krit.id);
                 if (indikatoren.length === 0) continue;
@@ -6382,12 +6480,12 @@
                 const indikator = indikatoren[Math.floor(Math.random() * indikatoren.length)];
 
                 questions.push({
-                    schuelerId,
+                    schuelerId: item.schuelerId,
                     kriteriumId: krit.id,
                     indikator
                 });
                 
-                schuelerCount[schuelerId] = (schuelerCount[schuelerId] || 0) + 1;
+                schuelerCount[item.schuelerId] = (schuelerCount[item.schuelerId] || 0) + 1;
             }
 
             return questions;
@@ -7052,8 +7150,13 @@
             currentSession.completed = 0;
 
             if (currentSession.questions.length === 0) {
-                showToast('Keine Fragen verfügbar', 'error');
+                showToast('Keine Fragen möglich (keine Schüler oder Kriterien)', 'error');
                 return;
+            }
+            
+            // Info-Toast wenn Ziel bereits erreicht
+            if (checkZielErreicht(currentFach.id)) {
+                showToast('✓ Ziel erreicht – zusätzliche Beobachtungen', 'success');
             }
 
             document.getElementById('obs-modal-fach').textContent = `${currentFach.name} ${currentFach.klasse}`;
