@@ -217,6 +217,16 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
   .card-body { padding:14px; }
   .card-header { padding:12px 14px; }
 }
+/* ── PROJECT DROPDOWN ── */
+.proj-item-wrap { display:flex; align-items:center; border-bottom:1px solid var(--border-lt); }
+.proj-item { flex:1; padding:10px 14px; cursor:pointer; font-size:13px; color:var(--text); }
+.proj-item:hover { background:var(--bg); }
+.proj-item.active { font-weight:600; }
+.proj-item.active::before { content:'✓ '; color:var(--r3); font-size:11px; }
+.proj-delete { background:none; border:none; color:var(--dim2); cursor:pointer; font-size:12px; padding:4px 10px; transition:all 0.15s; line-height:1; align-self:stretch; display:flex; align-items:center; }
+.proj-delete:hover { color:var(--r1); background:var(--r1-bg); }
+.proj-new { padding:10px 14px; font-size:13px; color:var(--dim); cursor:pointer; font-weight:500; }
+.proj-new:hover { background:var(--bg); color:var(--text); }
 </style>
 </head>
 <body>
@@ -228,7 +238,10 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
     <span class="app-header-brand">Sport-Tracker</span>
     <span class="app-header-sep">›</span>
     <span class="app-header-title">Beobachtung</span>
-    <div id="project-badge" class="header-badge" onclick="openProjectModal()">Kein Thema</div>
+    <div style="position:relative">
+      <div id="project-badge" class="header-badge" onclick="toggleDropdown(event)">Kein Thema</div>
+      <div id="project-dropdown" style="display:none;position:absolute;top:36px;right:0;background:white;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);min-width:240px;z-index:300;overflow:hidden;"></div>
+    </div>
   </div>
 </div>
 
@@ -320,30 +333,50 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
         <div class="lektion-selector">
           <select id="lektion-select" onchange="changeLektion(this.value)"></select>
         </div>
-        <div style="margin-left:auto;display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm btn-prev" onclick="prevStudent()">← Zurück</button>
-          <button class="btn btn-primary btn-sm btn-next" onclick="nextStudent()">Weiter →</button>
+        <div style="margin-left:auto;display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0">
+          <button id="mode-btn-schueler" onclick="setMode('schueler')" style="padding:5px 12px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:var(--font);background:var(--text);color:white;transition:all 0.15s">👤 Schüler:in</button>
+          <button id="mode-btn-indikator" onclick="setMode('indikator')" style="padding:5px 12px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:var(--font);background:none;color:var(--dim);transition:all 0.15s">📋 Indikator</button>
         </div>
       </div>
-      <div class="erfassung-layout">
-        <div class="schueler-sidebar card" style="padding:12px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--dim);margin-bottom:8px">Schüler:innen</div>
-          <div id="schueler-nav" class="schueler-nav"></div>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-lt)">
-            <div class="progress-bar-wrap" style="max-width:100%;margin-bottom:4px"><div class="progress-bar-fill" id="prog-bar" style="width:0%"></div></div>
-            <div style="font-size:10px;color:var(--dim)" id="prog-label">0 / 0</div>
+
+      <!-- Modus: Schüler:in -->
+      <div id="erfassen-schueler-main">
+        <div class="erfassung-layout">
+          <div class="schueler-sidebar card" style="padding:12px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--dim);margin-bottom:8px">Schüler:innen</div>
+            <div id="schueler-nav" class="schueler-nav"></div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-lt)">
+              <div class="progress-bar-wrap" style="max-width:100%;margin-bottom:4px"><div class="progress-bar-fill" id="prog-bar" style="width:0%"></div></div>
+              <div style="font-size:10px;color:var(--dim)" id="prog-label">0 / 0</div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+              <div style="font-size:15px;font-weight:600" id="cur-name">–</div>
+            </div>
+            <div id="ind-list" class="ind-bewertung-list"></div>
+            <div class="nav-bottom">
+              <button class="btn btn-secondary btn-prev" onclick="prevStudent()">← Zurück</button>
+              <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-bar2" style="width:0%"></div></div>
+              <button class="btn btn-primary btn-next" onclick="nextStudent()">Weiter →</button>
+            </div>
           </div>
         </div>
-        <div>
-          <div class="card" style="padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
-            <div style="font-size:15px;font-weight:600" id="cur-name">–</div>
+      </div>
+
+      <!-- Modus: Indikator -->
+      <div id="erfassen-ind-main" style="display:none">
+        <div class="card" style="padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:0">
+            <div id="cur-ind-sub" style="font-size:10px;color:var(--dim);margin-bottom:2px"></div>
+            <div id="cur-ind-text" style="font-size:15px;font-weight:600">–</div>
           </div>
-          <div id="ind-list" class="ind-bewertung-list"></div>
-          <div class="nav-bottom">
-            <button class="btn btn-secondary btn-prev" onclick="prevStudent()">← Zurück</button>
-            <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-bar2" style="width:0%"></div></div>
-            <button class="btn btn-primary btn-next" onclick="nextStudent()">Weiter →</button>
-          </div>
+        </div>
+        <div id="ind-schueler-list" class="ind-bewertung-list"></div>
+        <div class="nav-bottom">
+          <button class="btn btn-secondary btn-ind-prev" onclick="prevInd()">← Zurück</button>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-bar-ind" style="width:0%"></div></div>
+          <button class="btn btn-primary btn-ind-next" onclick="nextInd()">Weiter →</button>
         </div>
       </div>
     </div>
@@ -390,19 +423,6 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
 </div><!-- /main -->
 
 <!-- MODALS -->
-<div class="modal-overlay" id="modal-project" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal">
-    <h3>Thema / Klasse</h3>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <input type="text" class="form-input" id="modal-projekt" placeholder="z.B. Handball">
-      <input type="text" class="form-input" id="modal-klasse" placeholder="z.B. 3d">
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="document.getElementById('modal-project').style.display='none'">Abbrechen</button>
-      <button class="btn btn-primary" onclick="saveProjectModal()">Speichern</button>
-    </div>
-  </div>
-</div>
 
 <div class="modal-overlay" id="modal-add-student" style="display:none" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal">
@@ -435,17 +455,156 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
 // ══════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════
-const STORAGE_KEY = 'sport_tracker_v1';
+const PROJ_INDEX_KEY = 'sport_tracker_projects';
+const PROJ_PREFIX    = 'sport_tracker_proj_';
 
 let state = {
   project: '', klasse: '',
-  students: [],     // [{id, vorname, nachname}]
-  indicators: [],   // [{id, type:'indicator'|'group', label}]
+  students: [],
+  indicators: [],
   lektionen: 1, currentLektion: 1,
-  ratings: {},      // {sid: {lk: {iid: 0-4}}}
+  ratings: {},
 };
 let _dirty = false;
+let _activeProjectId = null;
 let selectedStudentId = null;
+let erfassungMode = 'schueler'; // 'schueler' | 'indikator'
+let selectedIndIdx = 0;
+
+// ══════════════════════════════════════════════
+// MULTI-PROJECT STORAGE
+// ══════════════════════════════════════════════
+function getProjIndex() {
+  try { return JSON.parse(localStorage.getItem(PROJ_INDEX_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveProjIndex(idx) {
+  try { localStorage.setItem(PROJ_INDEX_KEY, JSON.stringify(idx)); } catch(e) {}
+}
+function save() {
+  if (!_activeProjectId) _activeProjectId = 'proj_' + Date.now();
+  try {
+    localStorage.setItem(PROJ_PREFIX + _activeProjectId, JSON.stringify(state));
+    let idx = getProjIndex();
+    const entry = { id: _activeProjectId, name: state.project || 'Unbenanntes Thema', klasse: state.klasse || '' };
+    const ei = idx.findIndex(p => p.id === _activeProjectId);
+    if (ei >= 0) idx[ei] = entry; else idx.push(entry);
+    saveProjIndex(idx);
+    _dirty = false;
+  } catch(e) {}
+}
+function loadProject(id) {
+  try {
+    const idx = getProjIndex();
+    // Migration: legacy single-key
+    if (!id && idx.length === 0) {
+      const legacy = localStorage.getItem('sport_tracker_v1');
+      if (legacy) {
+        state = JSON.parse(legacy);
+        _activeProjectId = 'proj_' + Date.now();
+        save();
+        localStorage.removeItem('sport_tracker_v1');
+        return;
+      }
+    }
+    const targetId = id || (idx.length > 0 ? idx[0].id : null);
+    if (targetId) {
+      const d = localStorage.getItem(PROJ_PREFIX + targetId);
+      if (d) { state = JSON.parse(d); _activeProjectId = targetId; return; }
+    }
+    // Nothing found — create fresh
+    _activeProjectId = 'proj_' + Date.now();
+    save();
+  } catch(e) {}
+}
+
+function switchProject(id) {
+  if (id === _activeProjectId) { closeDropdown(); return; }
+  if (_dirty) {
+    showConfirm('Ungespeicherte Änderungen', 'Vor dem Wechsel speichern?', () => { save(); doSwitch(id); });
+  } else { doSwitch(id); }
+}
+function doSwitch(id) {
+  state = {project:'',klasse:'',students:[],indicators:[],lektionen:1,currentLektion:1,ratings:{}};
+  selectedStudentId = null;
+  loadProject(id);
+  refreshUI();
+  closeDropdown();
+  showTab('setup');
+  showToast('Thema gewechselt');
+}
+function newProject() {
+  if (_dirty) save();
+  state = {project:'',klasse:'',students:[],indicators:[],lektionen:1,currentLektion:1,ratings:{}};
+  _activeProjectId = 'proj_' + Date.now();
+  selectedStudentId = null;
+  save(); refreshUI(); closeDropdown(); showTab('setup');
+  showToast('Neues Thema erstellt');
+  setTimeout(() => document.getElementById('projekt-input').focus(), 100);
+}
+function deleteProject(id, name) {
+  closeDropdown();
+  showConfirm('Thema löschen', '«' + name + '» wirklich löschen? Alle Daten gehen verloren.', () => {
+    localStorage.removeItem(PROJ_PREFIX + id);
+    let idx = getProjIndex().filter(p => p.id !== id);
+    saveProjIndex(idx);
+    if (_activeProjectId === id) {
+      state = {project:'',klasse:'',students:[],indicators:[],lektionen:1,currentLektion:1,ratings:{}};
+      _activeProjectId = null; selectedStudentId = null;
+      if (idx.length > 0) loadProject(idx[0].id);
+      else { _activeProjectId = 'proj_' + Date.now(); save(); }
+      refreshUI(); showTab('setup');
+    }
+    showToast('Thema gelöscht');
+  });
+}
+
+function refreshUI() {
+  document.getElementById('projekt-input').value = state.project || '';
+  document.getElementById('klasse-input').value = state.klasse || '';
+  updateProjectBadge();
+  renderSchuelerList(); renderIndicatorList(); renderSchuelerNav();
+  renderLektionenList(); renderLektionSelect(); renderErfassen();
+  updateSetupStats();
+}
+
+// ══════════════════════════════════════════════
+// DROPDOWN
+// ══════════════════════════════════════════════
+function toggleDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('project-dropdown');
+  if (dd.style.display === 'none' || !dd.style.display) { renderDropdown(); dd.style.display = 'block'; }
+  else closeDropdown();
+}
+function closeDropdown() {
+  const dd = document.getElementById('project-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('project-dropdown');
+  if (!dd || dd.style.display === 'none') return;
+  if (!dd.contains(e.target) && !e.target.closest('#project-badge')) closeDropdown();
+});
+function renderDropdown() {
+  const idx = getProjIndex();
+  const dd = document.getElementById('project-dropdown');
+  dd.innerHTML = idx.map(p => {
+    const label = [p.name, p.klasse].filter(Boolean).join(' · ');
+    return `<div class="proj-item-wrap">
+      <div class="proj-item ${p.id === _activeProjectId ? 'active' : ''}" data-switch="${p.id}">${esc(label)}</div>
+      <button class="proj-delete" data-delete="${p.id}" data-name="${esc(p.name || 'Unbenanntes Thema')}" title="Löschen">✕</button>
+    </div>`;
+  }).join('') + `<div class="proj-new" data-new="1">＋ Neues Thema</div>`;
+  dd.onclick = e => {
+    const sw  = e.target.closest('[data-switch]');
+    const del = e.target.closest('[data-delete]');
+    const nw  = e.target.closest('[data-new]');
+    if (del) { deleteProject(del.dataset.delete, del.dataset.name); return; }
+    if (sw)  { switchProject(sw.dataset.switch); return; }
+    if (nw)  { newProject(); return; }
+  };
+}
+
 
 // ══════════════════════════════════════════════
 // TEMPLATES
@@ -503,14 +662,13 @@ const TEMPLATES = {
 // INIT
 // ══════════════════════════════════════════════
 function init() {
-  loadFromStorage();
+  loadProject(null);
   renderTemplatePills();
   renderIndicatorList();
   renderSchuelerList();
   renderLektionenList();
   renderSchuelerNav();
   renderLektionSelect();
-  renderErfassen();
   updateProjectBadge();
   updateSetupStats();
   document.getElementById('projekt-input').value = state.project;
@@ -525,11 +683,6 @@ function init() {
   showTab(TAB_NAMES.includes(savedTab) ? savedTab : 'setup');
 }
 
-function loadFromStorage() {
-  try { const r = localStorage.getItem(STORAGE_KEY); if (r) Object.assign(state, JSON.parse(r)); } catch(e) {}
-}
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); _dirty = false; }
-
 // ══════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════
@@ -540,7 +693,7 @@ function showTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', TAB_NAMES[i] === tab));
   document.getElementById('mobile-student-bar').style.display =
     (tab === 'erfassen' && window.innerWidth <= 640) ? 'block' : 'none';
-  if (tab === 'erfassen') { renderSchuelerNav(); renderErfassen(); renderMobileBar(); }
+  if (tab === 'erfassen') { renderSchuelerNav(); renderMobileBar(); setMode(erfassungMode); }
   if (tab === 'uebersicht') renderUebersicht();
   if (tab === 'daten') renderStats();
   sessionStorage.setItem('sport_tracker_tab', tab);
@@ -553,19 +706,6 @@ function saveProject() {
   state.project = document.getElementById('projekt-input').value.trim();
   state.klasse = document.getElementById('klasse-input').value.trim();
   updateProjectBadge(); _dirty = true; save();
-}
-function openProjectModal() {
-  document.getElementById('modal-projekt').value = state.project;
-  document.getElementById('modal-klasse').value = state.klasse;
-  document.getElementById('modal-project').style.display = 'flex';
-}
-function saveProjectModal() {
-  state.project = document.getElementById('modal-projekt').value.trim();
-  state.klasse = document.getElementById('modal-klasse').value.trim();
-  document.getElementById('projekt-input').value = state.project;
-  document.getElementById('klasse-input').value = state.klasse;
-  updateProjectBadge(); _dirty = true; save();
-  document.getElementById('modal-project').style.display = 'none';
 }
 function updateProjectBadge() {
   const badge = document.getElementById('project-badge');
@@ -583,7 +723,7 @@ function addLektion() {
   renderLektionenList(); renderLektionSelect(); renderErfassen();
   showToast('Lektion ' + state.lektionen + ' gestartet');
 }
-function changeLektion(val) { state.currentLektion = parseInt(val); renderErfassen(); }
+function changeLektion(val) { state.currentLektion = parseInt(val); setMode(erfassungMode); }
 function deleteLektion(lk) {
   showConfirm(
     'Lektion ' + lk + ' löschen?',
@@ -903,7 +1043,87 @@ function setRating(iid, val) {
   if (!state.ratings[sid][lk]) state.ratings[sid][lk] = {};
   if (state.ratings[sid][lk][iid] === val) delete state.ratings[sid][lk][iid];
   else state.ratings[sid][lk][iid] = val;
-  _dirty = true; save(); renderErfassen(); renderSchuelerNav();
+  _dirty = true; save();
+  if (erfassungMode === 'schueler') { renderErfassen(); renderSchuelerNav(); }
+  else renderIndMode();
+}
+function setRatingForStudent(sid, iid, val) {
+  const lk = state.currentLektion;
+  if (!state.ratings[sid]) state.ratings[sid] = {};
+  if (!state.ratings[sid][lk]) state.ratings[sid][lk] = {};
+  if (state.ratings[sid][lk][iid] === val) delete state.ratings[sid][lk][iid];
+  else state.ratings[sid][lk][iid] = val;
+  _dirty = true; save(); renderIndMode();
+}
+
+// ══════════════════════════════════════════════
+// MODUS
+// ══════════════════════════════════════════════
+function setMode(mode) {
+  erfassungMode = mode;
+  const bs = document.getElementById('mode-btn-schueler');
+  const bi = document.getElementById('mode-btn-indikator');
+  if (bs && bi) {
+    bs.style.background = mode === 'schueler' ? 'var(--text)' : 'none';
+    bs.style.color = mode === 'schueler' ? 'white' : 'var(--dim)';
+    bi.style.background = mode === 'indikator' ? 'var(--text)' : 'none';
+    bi.style.color = mode === 'indikator' ? 'white' : 'var(--dim)';
+  }
+  document.getElementById('erfassen-schueler-main').style.display = mode === 'schueler' ? '' : 'none';
+  document.getElementById('erfassen-ind-main').style.display = mode === 'indikator' ? '' : 'none';
+  if (mode === 'schueler') { renderErfassen(); renderSchuelerNav(); }
+  else renderIndMode();
+}
+
+function indsOnly() { return state.indicators.filter(i => i.type === 'indicator'); }
+
+function renderIndMode() {
+  const inds = indsOnly();
+  if (!inds.length) return;
+  if (selectedIndIdx >= inds.length) selectedIndIdx = 0;
+  const ind = inds[selectedIndIdx];
+
+  document.getElementById('cur-ind-sub').textContent = `Indikator ${selectedIndIdx + 1} / ${inds.length}`;
+  document.getElementById('cur-ind-text').textContent = ind.label || '—';
+
+  // Progress
+  const pct = inds.length > 1 ? (selectedIndIdx / (inds.length - 1) * 100) : 100;
+  document.getElementById('prog-bar-ind').style.width = pct + '%';
+  document.querySelectorAll('.btn-ind-prev').forEach(b => b.style.visibility = selectedIndIdx > 0 ? '' : 'hidden');
+  document.querySelectorAll('.btn-ind-next').forEach(b => b.style.visibility = selectedIndIdx < inds.length - 1 ? '' : 'hidden');
+
+  const sorted = sortedStudents();
+  const el = document.getElementById('ind-schueler-list');
+  if (!sorted.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--dim);padding:12px 0">Keine Schüler:innen.</div>';
+    return;
+  }
+  el.innerHTML = sorted.map(s => {
+    const val = ((state.ratings[s.id]||{})[state.currentLektion]||{})[ind.id];
+    const v = val !== undefined ? val : null;
+    const sel = n => v === n ? (n===0?'selected':'selected sel-'+n) : '';
+    const ini = (s.vorname[0]||'') + (s.nachname[0]||'');
+    return `<div class="ind-bewertung-row">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+        <div class="schueler-avatar" style="width:26px;height:26px;font-size:9px">${esc(ini.toUpperCase())}</div>
+        <span class="ind-text" style="font-size:13px;font-weight:500">${esc(s.vorname)} ${esc(s.nachname)}</span>
+      </div>
+      <div class="rating-row">
+        <button class="rating-btn ${sel(1)}" onclick="setRatingForStudent('${s.id}','${ind.id}',1)">−−</button>
+        <button class="rating-btn ${sel(2)}" onclick="setRatingForStudent('${s.id}','${ind.id}',2)">−</button>
+        <button class="rating-btn ${sel(3)}" onclick="setRatingForStudent('${s.id}','${ind.id}',3)">+</button>
+        <button class="rating-btn ${sel(4)}" onclick="setRatingForStudent('${s.id}','${ind.id}',4)">++</button>
+        <button class="rating-btn skip-btn ${v===0?'selected':''}" onclick="setRatingForStudent('${s.id}','${ind.id}',0)" title="Überspringen">→</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function prevInd() {
+  if (selectedIndIdx > 0) { selectedIndIdx--; renderIndMode(); }
+}
+function nextInd() {
+  if (selectedIndIdx < indsOnly().length - 1) { selectedIndIdx++; renderIndMode(); }
 }
 
 // ══════════════════════════════════════════════
@@ -1014,11 +1234,7 @@ function importJSON(input) {
       const data = JSON.parse(e.target.result);
       showConfirm('Daten importieren?', 'Bestehende Daten werden überschrieben.', () => {
         Object.assign(state, data); save();
-        document.getElementById('projekt-input').value = state.project;
-        document.getElementById('klasse-input').value = state.klasse;
-        renderSchuelerList(); renderIndicatorList(); renderSchuelerNav();
-        renderLektionenList(); renderLektionSelect(); renderErfassen();
-        updateProjectBadge(); updateSetupStats();
+        refreshUI();
         showToast('Import erfolgreich');
       });
     } catch { showToast('Fehler beim Import'); }
@@ -1026,14 +1242,10 @@ function importJSON(input) {
   reader.readAsText(file); input.value = '';
 }
 function confirmReset() {
-  showConfirm('Alle Daten löschen?', 'Schüler:innen, Indikatoren und alle Bewertungen werden unwiderruflich gelöscht.', () => {
+  showConfirm('Thema zurücksetzen?', 'Alle Daten dieses Themas werden unwiderruflich gelöscht.', () => {
     state = {project:'',klasse:'',students:[],indicators:[],lektionen:1,currentLektion:1,ratings:{}};
     selectedStudentId = null; save();
-    document.getElementById('projekt-input').value = '';
-    document.getElementById('klasse-input').value = '';
-    renderSchuelerList(); renderIndicatorList(); renderSchuelerNav();
-    renderLektionenList(); renderLektionSelect(); renderErfassen();
-    updateProjectBadge(); updateSetupStats();
+    refreshUI(); showTab('setup');
     showToast('Daten gelöscht');
   });
 }
