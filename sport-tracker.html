@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sport-Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --bg: #F5F4F1;
+  --surface: #FFFFFF;
+  --border: #E2E0DC;
+  --border-lt: #EEEDE9;
+  --text: #1A1A1A;
+  --dim: #8A8680;
+  --dim2: #B5B2AC;
+  --r1: #DC2626;
+  --r2: #D97706;
+  --r3: #059669;
+  --r4: #2563EB;
+  --r1-bg: #FEF2F2;
+  --r2-bg: #FFFBEB;
+  --r3-bg: #ECFDF5;
+  --r4-bg: #EFF6FF;
+  --shadow: 0 1px 4px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+  --radius: 8px;
+  --radius-sm: 5px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { max-width:100%; overflow-x:hidden; }
+body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; min-height:100dvh; }
+
+/* ── HEADER ── */
+.app-header { background:var(--text); color:white; height:52px; display:flex; align-items:center; position:sticky; top:0; z-index:200; }
+.app-header-inner { max-width:1400px; width:100%; margin:0 auto; padding:0 24px; display:flex; align-items:center; gap:12px; height:52px; }
+.app-header-mark { width:28px; height:28px; background:#FFF; border-radius:6px; display:grid; place-items:center; color:#1A1A1A; font-weight:800; font-size:13px; flex-shrink:0; }
+.app-header-brand { color:#FFF; font-size:15px; font-weight:600; letter-spacing:-0.2px; }
+.app-header-sep { color:rgba(255,255,255,0.35); font-size:15px; margin:0 2px; }
+.app-header-title { font-size:15px; font-weight:500; letter-spacing:-0.2px; color:rgba(255,255,255,0.6); flex:1; }
+.header-badge { font-size:10px; font-weight:500; background:rgba(255,255,255,0.15); padding:3px 9px; border-radius:20px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer; transition:background 0.15s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+.header-badge:hover { background:rgba(255,255,255,0.25); }
+.header-badge.has-name { background:rgba(255,255,255,0.2); }
+.header-btn { font-size:11px; font-weight:600; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); color:white; padding:5px 12px; border-radius:20px; cursor:pointer; font-family:var(--font); transition:background 0.15s; white-space:nowrap; }
+.header-btn:hover { background:rgba(255,255,255,0.22); }
+
+/* ── TABS ── */
+.tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); overflow-x:auto; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tabs-inner { display:flex; max-width:1400px; width:100%; margin:0 auto; padding:0 24px; }
+.tab-btn { padding:14px 20px; font-size:13px; font-weight:500; color:var(--dim); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; transition:all 0.15s; font-family:var(--font); }
+.tab-btn:hover { color:var(--text); }
+.tab-btn.active { color:var(--text); border-bottom-color:var(--text); border-bottom-width:3px; }
+
+/* ── LAYOUT ── */
+.main { padding:24px; max-width:1400px; margin:0 auto; }
+
+/* ── CARD ── */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); width:100%; overflow:hidden; }
+.card-header { padding:14px 18px; border-bottom:1px solid var(--border-lt); display:flex; align-items:center; gap:10px; }
+.card-title { font-size:13px; font-weight:600; }
+.card-body { padding:18px; }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; font-size:13px; font-weight:500; border-radius:var(--radius-sm); border:none; cursor:pointer; font-family:var(--font); transition:all 0.15s; white-space:nowrap; }
+.btn-primary { background:var(--text); color:white; }
+.btn-primary:hover { background:#333; }
+.btn-secondary { background:var(--bg); color:var(--text); border:1px solid var(--border); }
+.btn-secondary:hover { border-color:var(--dim); }
+.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-danger { background:#FEF2F2; color:var(--r1); border:1px solid #FECACA; }
+.btn-danger:hover { background:#FECACA; }
+
+/* ── FORM ── */
+.form-label { display:block; font-size:11px; font-weight:600; color:var(--dim); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px; }
+.form-input { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font); font-size:13px; color:var(--text); background:var(--bg); outline:none; transition:border-color 0.15s; }
+.form-input:focus { border-color:var(--text); background:white; }
+
+/* ── SETUP ── */
+.setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+@media(max-width:700px){ .setup-grid { grid-template-columns:1fr; } }
+
+.schueler-list { display:flex; flex-direction:column; gap:5px; }
+.schueler-item { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--bg); border-radius:var(--radius-sm); border:1px solid var(--border-lt); }
+.schueler-avatar { width:28px; height:28px; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--dim); flex-shrink:0; }
+.schueler-name { font-size:13px; font-weight:500; flex:1; }
+.remove-btn { background:none; border:none; color:var(--dim2); cursor:pointer; font-size:14px; padding:4px 6px; border-radius:3px; transition:all 0.15s; line-height:1; }
+.remove-btn:hover { color:var(--r1); background:var(--r1-bg); }
+
+/* ── INDIKATOREN ── */
+.ind-item { display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--bg); border:1px solid var(--border-lt); border-radius:var(--radius-sm); margin-bottom:5px; transition:background 0.1s; }
+.ind-item.dragging { opacity:0.4; }
+.ind-item.drag-over { border-color:var(--text); background:var(--surface); }
+.ind-item .ind-label-text { flex:1; font-size:13px; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ind-item input.ind-edit-input { flex:1; background:white; border:1px solid var(--text); border-radius:3px; font-family:var(--font); font-size:13px; color:var(--text); outline:none; padding:2px 6px; }
+.ind-group-item { display:flex; align-items:center; gap:8px; padding:6px 12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:5px; transition:background 0.1s; }
+.ind-group-item.dragging { opacity:0.4; }
+.ind-group-item.drag-over { border-color:var(--text); }
+.ind-group-item .ind-label-text { flex:1; font-size:12px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:0.5px; }
+.ind-group-item input.ind-edit-input { flex:1; background:white; border:1px solid var(--text); border-radius:3px; font-family:var(--font); font-size:12px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:0.5px; outline:none; padding:2px 6px; }
+.drag-handle { color:var(--dim2); cursor:grab; font-size:14px; flex-shrink:0; user-select:none; }
+.drag-handle:active { cursor:grabbing; }
+.edit-btn { background:none; border:none; color:var(--dim2); cursor:pointer; font-size:13px; padding:2px 4px; line-height:1; transition:color 0.15s; flex-shrink:0; }
+.edit-btn:hover { color:var(--text); }
+.del-btn { background:none; border:none; color:var(--dim2); cursor:pointer; font-size:16px; padding:2px 4px; line-height:1; transition:color 0.15s; flex-shrink:0; }
+.del-btn:hover { color:var(--r1); }
+
+.template-pills { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.template-pill { font-size:12px; font-weight:500; padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--dim); cursor:pointer; transition:all 0.15s; }
+.template-pill:hover { border-color:var(--text); color:var(--text); }
+
+/* ── ERFASSEN ── */
+.erfassung-layout { display:grid; grid-template-columns:220px 1fr; gap:16px; }
+@media(max-width:800px){ .erfassung-layout { grid-template-columns:1fr; } }
+
+.schueler-sidebar { position:sticky; top:112px; height:fit-content; }
+.schueler-nav { display:flex; flex-direction:column; gap:2px; }
+.schueler-nav-item { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:var(--radius-sm); cursor:pointer; transition:all 0.12s; }
+.schueler-nav-item:hover { background:var(--bg); }
+.schueler-nav-item.active { background:var(--text); color:white; }
+.s-nav-avatar { width:26px; height:26px; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:var(--dim); flex-shrink:0; }
+.schueler-nav-item.active .s-nav-avatar { background:rgba(255,255,255,0.2); color:white; }
+.s-nav-name { font-size:12px; font-weight:500; }
+.schueler-nav-item.active .s-nav-name { color:white; }
+
+/* Mobile student strip */
+.mobile-student-bar { display:none; background:var(--surface); border-bottom:1px solid var(--border); overflow-x:auto; scrollbar-width:none; }
+.mobile-student-bar::-webkit-scrollbar { display:none; }
+.mobile-student-inner { display:flex; gap:6px; padding:8px 16px; min-width:max-content; }
+.mobile-chip { font-size:12px; font-weight:500; padding:6px 14px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--dim); cursor:pointer; white-space:nowrap; transition:all 0.15s; }
+.mobile-chip.active { background:var(--text); border-color:var(--text); color:white; }
+
+/* Rating */
+.ind-bewertung-list { display:flex; flex-direction:column; gap:5px; }
+.ind-bewertung-row { background:var(--bg); border:1px solid var(--border-lt); border-radius:var(--radius); padding:10px 14px; display:flex; align-items:center; gap:12px; }
+.ind-group-header { padding:12px 0 4px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--dim); border-bottom:1px solid var(--border-lt); margin-bottom:2px; }
+.ind-text { font-size:12px; line-height:1.4; flex:1; min-width:0; }
+.rating-row { display:flex; gap:3px; flex-shrink:0; }
+.rating-btn { width:38px; height:32px; border:2px solid var(--border); border-radius:var(--radius-sm); background:white; cursor:pointer; font-family:var(--font); font-size:12px; font-weight:700; text-align:center; transition:all 0.12s; line-height:1; }
+.rating-btn:hover { border-color:var(--dim); }
+.rating-btn.skip-btn { color:var(--dim); font-weight:400; }
+.rating-btn.skip-btn.selected { background:var(--border); border-color:var(--dim); color:var(--text); }
+.rating-btn.selected.sel-1 { background:var(--r1); color:white; border-color:var(--r1); }
+.rating-btn.selected.sel-2 { background:#F59E0B; color:white; border-color:#F59E0B; }
+.rating-btn.selected.sel-3 { background:#10B981; color:white; border-color:#10B981; }
+.rating-btn.selected.sel-4 { background:#3B82F6; color:white; border-color:#3B82F6; }
+
+.nav-bottom { display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:16px; border-top:1px solid var(--border-lt); gap:12px; }
+.progress-bar-wrap { flex:1; max-width:300px; height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+.progress-bar-fill { height:100%; background:var(--text); border-radius:2px; transition:width 0.3s; }
+
+.lektion-selector select { padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font); font-size:13px; background:var(--bg); color:var(--text); outline:none; cursor:pointer; }
+
+/* ── ÜBERSICHT ── */
+.uebersicht-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:16px; }
+@media(max-width:600px){ .uebersicht-grid { grid-template-columns:1fr; } }
+
+.praedikat-badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; }
+
+.boxplot-chart { flex:1; height:32px; background:white; border-radius:6px; position:relative; border:1px solid var(--border); overflow:hidden; min-width:0; }
+.boxplot-track { position:absolute; top:50%; left:2%; right:2%; height:1px; background:var(--border); transform:translateY(-50%); }
+.boxplot-box { position:absolute; top:25%; height:50%; background:rgba(37,99,235,0.15); border:1.5px solid #2563EB; border-radius:2px; }
+.boxplot-median { position:absolute; top:15%; height:70%; width:2px; background:var(--text); transform:translateX(-50%); border-radius:1px; }
+.boxplot-whisker { position:absolute; top:50%; height:1.5px; background:var(--dim); transform:translateY(-50%); }
+.boxplot-whisker-end { position:absolute; top:30%; height:40%; width:1.5px; background:var(--dim); transform:translateX(-50%); }
+.boxplot-scale { display:flex; position:relative; font-size:10px; color:var(--dim); height:16px; margin-top:2px; }
+.boxplot-scale span { position:absolute; transform:translateX(-50%); }
+.boxplot-scale span:nth-child(1){left:2%;transform:translateX(0);}
+.boxplot-scale span:nth-child(2){left:34%;}
+.boxplot-scale span:nth-child(3){left:66%;}
+.boxplot-scale span:nth-child(4){left:auto;right:0;transform:none;}
+
+.ind-bar-row { display:flex; align-items:center; gap:8px; }
+.ind-bar-label { width:130px; flex-shrink:0; font-size:11px; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ind-bar-track { flex:1; height:5px; background:var(--border-lt); border-radius:3px; overflow:hidden; }
+.ind-bar-fill { height:100%; border-radius:3px; transition:width 0.3s; }
+.ind-bar-count { font-size:10px; color:var(--dim2); white-space:nowrap; min-width:16px; text-align:right; }
+
+/* ── STATS ── */
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; }
+.stat-box { background:var(--bg); border:1px solid var(--border-lt); border-radius:var(--radius-sm); padding:12px; text-align:center; }
+.stat-val { font-size:26px; font-weight:700; color:var(--text); }
+.stat-label { font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align:center; padding:50px 20px; color:var(--dim); }
+.empty-state .em { font-size:36px; margin-bottom:10px; }
+.empty-state h3 { font-size:14px; font-weight:600; color:var(--text); margin-bottom:5px; }
+.empty-state p { font-size:12px; line-height:1.6; }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--text); color:white; padding:10px 20px; border-radius:20px; font-size:13px; font-weight:500; z-index:9999; transition:transform 0.3s; pointer-events:none; white-space:nowrap; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* ── MODAL ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:999; display:flex; align-items:center; justify-content:center; padding:20px; }
+.modal { background:white; border-radius:var(--radius); padding:24px; max-width:440px; width:100%; box-shadow:var(--shadow-md); }
+.modal h3 { font-size:15px; font-weight:600; margin-bottom:14px; }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .main { padding:12px; }
+  .tabs-inner { padding:0 8px; }
+  .tab-btn { font-size:11px; padding:10px 10px; }
+  .app-header-brand { display:none; }
+  .header-badge { max-width:120px; }
+  .erfassung-layout { grid-template-columns:1fr; }
+  .schueler-sidebar { display:none !important; }
+  .mobile-student-bar { display:block; }
+  .ind-bewertung-row { flex-direction:column; align-items:stretch; gap:8px; }
+  .rating-row { gap:4px; }
+  .rating-btn { flex:1; width:auto; height:40px; }
+  .card-body { padding:14px; }
+  .card-header { padding:12px 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="app-header-inner">
+    <div class="app-header-mark">S</div>
+    <span class="app-header-brand">Sport-Tracker</span>
+    <span class="app-header-sep">›</span>
+    <span class="app-header-title">Beobachtung</span>
+    <div id="project-badge" class="header-badge" onclick="openProjectModal()">Kein Thema</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="showTab('setup')">⚙ Setup</button>
+    <button class="tab-btn" onclick="showTab('indikatoren')">☰ Indikatoren</button>
+    <button class="tab-btn" onclick="showTab('erfassen')">📝 Erfassen</button>
+    <button class="tab-btn" onclick="showTab('uebersicht')">📊 Übersicht</button>
+    <button class="tab-btn" onclick="showTab('daten')">💾 Daten</button>
+  </div>
+</div>
+
+<!-- MOBILE STUDENT BAR -->
+<div class="mobile-student-bar" id="mobile-student-bar" style="display:none">
+  <div class="mobile-student-inner" id="mobile-student-inner"></div>
+</div>
+
+<div class="main">
+
+  <!-- SETUP -->
+  <div id="tab-setup">
+    <div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:600;white-space:nowrap">Thema</span>
+      <input type="text" class="form-input" id="projekt-input" placeholder="z.B. Handball" oninput="saveProject()" style="flex:1;min-width:160px">
+      <span style="font-size:13px;font-weight:600;white-space:nowrap">Klasse</span>
+      <input type="text" class="form-input" id="klasse-input" placeholder="z.B. 3d" oninput="saveProject()" style="max-width:90px">
+    </div>
+    <div class="setup-grid">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Schüler:innen</div></div>
+        <div class="card-body">
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+              📥 Excel importieren
+              <input type="file" id="excel-import" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
+            </label>
+            <button class="btn btn-secondary btn-sm" onclick="openAddStudentModal()">＋ Manuell</button>
+            <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="confirmClearStudents()">✕ Leeren</button>
+          </div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:12px">Spalte A = Vorname, Spalte B = Nachname</div>
+          <div id="schueler-list" class="schueler-list"></div>
+          <div id="schueler-empty" style="font-size:12px;color:var(--dim2);padding:6px 0;display:none">Keine Schüler:innen</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Lektionen</div></div>
+        <div class="card-body">
+          <div id="lektionen-list"></div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="addLektion()">＋ Lektion hinzufügen</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="showTab('erfassen')">▶ Erfassen starten</button>
+      <span style="font-size:12px;color:var(--dim)" id="setup-stats">0 Schüler:innen · 0 Indikatoren</span>
+    </div>
+  </div>
+
+  <!-- INDIKATOREN -->
+  <div id="tab-indikatoren" style="display:none">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Vorlagen</div></div>
+      <div class="card-body">
+        <div class="template-pills" id="template-pills"></div>
+        <div style="font-size:11px;color:var(--dim);margin-bottom:14px">Oder eigene Indikatoren und Gruppen definieren</div>
+        <div id="indicator-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="addIndicatorRow()">＋ Indikator</button>
+          <button class="btn btn-secondary btn-sm" onclick="addGroupRow()">＋ Gruppe</button>
+          <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="confirmClearIndicators()">✕ Alles löschen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERFASSEN -->
+  <div id="tab-erfassen" style="display:none">
+    <div id="erfassen-empty" class="empty-state" style="display:none">
+      <div class="em">📋</div>
+      <h3>Noch keine Indikatoren</h3>
+      <p>Definiere zuerst Indikatoren im Tab «Indikatoren».</p>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="showTab('indikatoren')">Zu den Indikatoren</button>
+    </div>
+    <div id="erfassen-content">
+      <div class="card" style="padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:600">Lektion:</span>
+        <div class="lektion-selector">
+          <select id="lektion-select" onchange="changeLektion(this.value)"></select>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm btn-prev" onclick="prevStudent()">← Zurück</button>
+          <button class="btn btn-primary btn-sm btn-next" onclick="nextStudent()">Weiter →</button>
+        </div>
+      </div>
+      <div class="erfassung-layout">
+        <div class="schueler-sidebar card" style="padding:12px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--dim);margin-bottom:8px">Schüler:innen</div>
+          <div id="schueler-nav" class="schueler-nav"></div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-lt)">
+            <div class="progress-bar-wrap" style="max-width:100%;margin-bottom:4px"><div class="progress-bar-fill" id="prog-bar" style="width:0%"></div></div>
+            <div style="font-size:10px;color:var(--dim)" id="prog-label">0 / 0</div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+            <div style="font-size:15px;font-weight:600" id="cur-name">–</div>
+          </div>
+          <div id="ind-list" class="ind-bewertung-list"></div>
+          <div class="nav-bottom">
+            <button class="btn btn-secondary btn-prev" onclick="prevStudent()">← Zurück</button>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-bar2" style="width:0%"></div></div>
+            <button class="btn btn-primary btn-next" onclick="nextStudent()">Weiter →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÜBERSICHT -->
+  <div id="tab-uebersicht" style="display:none">
+    <div id="uebersicht-empty" class="empty-state" style="display:none">
+      <div class="em">📊</div>
+      <h3>Keine Daten</h3>
+      <p>Erfasse zuerst Bewertungen im Tab «Erfassen».</p>
+    </div>
+    <div class="uebersicht-grid" id="uebersicht-grid"></div>
+  </div>
+
+  <!-- DATEN -->
+  <div id="tab-daten" style="display:none">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Statistik</div></div>
+        <div class="card-body"><div class="stat-grid" id="stat-grid"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Export / Import</div></div>
+        <div class="card-body">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="exportJSON()">⬇ JSON exportieren</button>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+              ⬆ JSON importieren
+              <input type="file" id="json-import" accept=".json" style="display:none" onchange="importJSON(this)">
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Zurücksetzen</div></div>
+        <div class="card-body">
+          <button class="btn btn-danger btn-sm" onclick="confirmReset()">⚠ Alle Daten löschen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-project" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3>Thema / Klasse</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input type="text" class="form-input" id="modal-projekt" placeholder="z.B. Handball">
+      <input type="text" class="form-input" id="modal-klasse" placeholder="z.B. 3d">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('modal-project').style.display='none'">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveProjectModal()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-student" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3>Schüler:in hinzufügen</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input type="text" class="form-input" id="modal-vorname" placeholder="Vorname" style="flex:1;min-width:120px">
+      <input type="text" class="form-input" id="modal-nachname" placeholder="Nachname" style="flex:1;min-width:120px">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('modal-add-student').style.display='none'">Abbrechen</button>
+      <button class="btn btn-primary" onclick="addStudentManual()">Hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-confirm" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3 id="modal-confirm-title">Sicher?</h3>
+    <p style="font-size:13px;color:var(--dim);margin-top:4px" id="modal-confirm-msg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('modal-confirm').style.display='none'">Abbrechen</button>
+      <button class="btn btn-danger" id="modal-confirm-ok">Löschen</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+const STORAGE_KEY = 'sport_tracker_v1';
+
+let state = {
+  project: '', klasse: '',
+  students: [],     // [{id, vorname, nachname}]
+  indicators: [],   // [{id, type:'indicator'|'group', label}]
+  lektionen: 1, currentLektion: 1,
+  ratings: {},      // {sid: {lk: {iid: 0-4}}}
+};
+let _dirty = false;
+let selectedStudentId = null;
+
+// ══════════════════════════════════════════════
+// TEMPLATES
+// ══════════════════════════════════════════════
+const TEMPLATES = {
+  'Spiel': [
+    {type:'group', label:'Taktik'},
+    {type:'indicator', label:'Anspielbarkeit und Laufwege'},
+    {type:'indicator', label:'Verteidigungsposition'},
+    {type:'indicator', label:'Ballbesitz'},
+    {type:'indicator', label:'Punkteeffizienz (Pässe und Tore/Körbe)'},
+    {type:'indicator', label:'Orientierung / Übersicht'},
+    {type:'group', label:'Technik'},
+    {type:'indicator', label:'Ballkontrolle'},
+    {type:'indicator', label:'Passgenauigkeit'},
+    {type:'group', label:'Einsatz'},
+    {type:'indicator', label:'Leistungsfähigkeit über Spielzeit'},
+    {type:'indicator', label:'Kooperation und Teamverhalten'},
+  ],
+  'Leichtathletik': [
+    {type:'group', label:'Technik'},
+    {type:'indicator', label:'Starttechnik'},
+    {type:'indicator', label:'Lauftechnik / Schrittfrequenz'},
+    {type:'indicator', label:'Zieltechnik'},
+    {type:'group', label:'Leistung'},
+    {type:'indicator', label:'Zeit / Weite / Höhe'},
+    {type:'group', label:'Einsatz'},
+    {type:'indicator', label:'Trainingsbereitschaft'},
+    {type:'indicator', label:'Selbsteinschätzung'},
+  ],
+  'Geräteturnen': [
+    {type:'group', label:'Technik'},
+    {type:'indicator', label:'Grundform / Haltung'},
+    {type:'indicator', label:'Bewegungsfluss'},
+    {type:'indicator', label:'Rhythmus und Timing'},
+    {type:'group', label:'Sicherheit'},
+    {type:'indicator', label:'Sicherungsverhalten'},
+    {type:'group', label:'Einsatz'},
+    {type:'indicator', label:'Übungsbereitschaft'},
+  ],
+  'Fitness': [
+    {type:'group', label:'Ausdauer'},
+    {type:'indicator', label:'Belastungstoleranz'},
+    {type:'indicator', label:'Erholungsfähigkeit'},
+    {type:'group', label:'Kraft'},
+    {type:'indicator', label:'Kraftausdauer'},
+    {type:'indicator', label:'Koordination unter Last'},
+    {type:'group', label:'Einsatz'},
+    {type:'indicator', label:'Effort und Motivation'},
+    {type:'indicator', label:'Selbstorganisation'},
+  ],
+};
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+function init() {
+  loadFromStorage();
+  renderTemplatePills();
+  renderIndicatorList();
+  renderSchuelerList();
+  renderLektionenList();
+  renderSchuelerNav();
+  renderLektionSelect();
+  renderErfassen();
+  updateProjectBadge();
+  updateSetupStats();
+  document.getElementById('projekt-input').value = state.project;
+  document.getElementById('klasse-input').value = state.klasse;
+  document.getElementById('modal-nachname').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addStudentManual();
+  });
+  window.addEventListener('beforeunload', e => {
+    if (_dirty) { e.preventDefault(); e.returnValue = ''; }
+  });
+  const savedTab = sessionStorage.getItem('sport_tracker_tab');
+  showTab(TAB_NAMES.includes(savedTab) ? savedTab : 'setup');
+}
+
+function loadFromStorage() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) Object.assign(state, JSON.parse(r)); } catch(e) {}
+}
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); _dirty = false; }
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+const TAB_NAMES = ['setup','indikatoren','erfassen','uebersicht','daten'];
+
+function showTab(tab) {
+  TAB_NAMES.forEach(t => document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none');
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', TAB_NAMES[i] === tab));
+  document.getElementById('mobile-student-bar').style.display =
+    (tab === 'erfassen' && window.innerWidth <= 640) ? 'block' : 'none';
+  if (tab === 'erfassen') { renderSchuelerNav(); renderErfassen(); renderMobileBar(); }
+  if (tab === 'uebersicht') renderUebersicht();
+  if (tab === 'daten') renderStats();
+  sessionStorage.setItem('sport_tracker_tab', tab);
+}
+
+// ══════════════════════════════════════════════
+// PROJECT
+// ══════════════════════════════════════════════
+function saveProject() {
+  state.project = document.getElementById('projekt-input').value.trim();
+  state.klasse = document.getElementById('klasse-input').value.trim();
+  updateProjectBadge(); _dirty = true; save();
+}
+function openProjectModal() {
+  document.getElementById('modal-projekt').value = state.project;
+  document.getElementById('modal-klasse').value = state.klasse;
+  document.getElementById('modal-project').style.display = 'flex';
+}
+function saveProjectModal() {
+  state.project = document.getElementById('modal-projekt').value.trim();
+  state.klasse = document.getElementById('modal-klasse').value.trim();
+  document.getElementById('projekt-input').value = state.project;
+  document.getElementById('klasse-input').value = state.klasse;
+  updateProjectBadge(); _dirty = true; save();
+  document.getElementById('modal-project').style.display = 'none';
+}
+function updateProjectBadge() {
+  const badge = document.getElementById('project-badge');
+  const parts = [state.project, state.klasse].filter(Boolean);
+  badge.textContent = parts.length ? parts.join(' · ') : 'Kein Thema';
+  badge.classList.toggle('has-name', !!parts.length);
+}
+
+// ══════════════════════════════════════════════
+// LEKTIONEN
+// ══════════════════════════════════════════════
+function addLektion() {
+  state.lektionen++; state.currentLektion = state.lektionen;
+  _dirty = true; save();
+  renderLektionenList(); renderLektionSelect(); renderErfassen();
+  showToast('Lektion ' + state.lektionen + ' gestartet');
+}
+function changeLektion(val) { state.currentLektion = parseInt(val); renderErfassen(); }
+function deleteLektion(lk) {
+  showConfirm(
+    'Lektion ' + lk + ' löschen?',
+    'Alle Bewertungen dieser Lektion werden unwiderruflich gelöscht.',
+    () => {
+      // Remove ratings for this lektion
+      for (const sid in state.ratings) {
+        delete state.ratings[sid][lk];
+      }
+      // Renumber: shift all lektionen > lk down by 1
+      for (const sid in state.ratings) {
+        const newLdata = {};
+        for (const l in state.ratings[sid]) {
+          const n = parseInt(l);
+          if (n < lk) newLdata[n] = state.ratings[sid][l];
+          else if (n > lk) newLdata[n - 1] = state.ratings[sid][l];
+        }
+        state.ratings[sid] = newLdata;
+      }
+      state.lektionen--;
+      if (state.lektionen < 1) state.lektionen = 1;
+      if (state.currentLektion > state.lektionen) state.currentLektion = state.lektionen;
+      else if (state.currentLektion >= lk && state.currentLektion > 1) state.currentLektion--;
+      _dirty = true; save();
+      renderLektionenList(); renderLektionSelect(); renderErfassen();
+      showToast('Lektion ' + lk + ' gelöscht');
+    }
+  );
+}
+function renderLektionenList() {
+  let html = '';
+  for (let i = 1; i <= state.lektionen; i++) {
+    const active = i === state.currentLektion;
+    html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border-lt);border-radius:var(--radius-sm);background:${active?'var(--text)':'var(--bg)'};margin-bottom:5px">
+      <div style="width:26px;height:26px;border-radius:50%;background:${active?'rgba(255,255,255,0.2)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${active?'white':'var(--dim)'};flex-shrink:0">${i}</div>
+      <span style="font-size:13px;font-weight:500;color:${active?'white':'var(--text)'}">Lektion ${i}</span>
+      ${active?'<span style="font-size:10px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;margin-left:auto;color:white">Aktiv</span>':''}
+      <button onclick="deleteLektion(${i})" style="margin-left:${active?'8px':'auto'};background:none;border:none;cursor:pointer;font-size:13px;color:${active?'rgba(255,255,255,0.5)':'var(--dim2)'};padding:2px 4px;line-height:1;transition:color 0.15s" title="Lektion löschen" onmouseover="this.style.color='${active?'white':'var(--r1)'}'" onmouseout="this.style.color='${active?'rgba(255,255,255,0.5)':'var(--dim2)'}'">×</button>
+    </div>`;
+  }
+  document.getElementById('lektionen-list').innerHTML = html;
+}
+function renderLektionSelect() {
+  let html = '';
+  for (let i = 1; i <= state.lektionen; i++)
+    html += `<option value="${i}" ${i===state.currentLektion?'selected':''}>Lektion ${i}</option>`;
+  document.getElementById('lektion-select').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+// STUDENTS
+// ══════════════════════════════════════════════
+function importExcel(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1});
+    let added = 0;
+    rows.forEach(row => {
+      const vn = String(row[0]||'').trim(), nn = String(row[1]||'').trim();
+      if (vn && vn.toLowerCase() !== 'vorname') { state.students.push({id:uid(), vorname:vn, nachname:nn}); added++; }
+    });
+    _dirty = true; save();
+    renderSchuelerList(); renderSchuelerNav(); renderMobileBar(); updateSetupStats();
+    showToast(added + ' Schüler:innen importiert');
+  };
+  reader.readAsArrayBuffer(file); input.value = '';
+}
+function openAddStudentModal() {
+  document.getElementById('modal-vorname').value = '';
+  document.getElementById('modal-nachname').value = '';
+  document.getElementById('modal-add-student').style.display = 'flex';
+  setTimeout(() => document.getElementById('modal-vorname').focus(), 50);
+}
+function addStudentManual() {
+  const vn = document.getElementById('modal-vorname').value.trim();
+  const nn = document.getElementById('modal-nachname').value.trim();
+  if (!vn) return;
+  state.students.push({id:uid(), vorname:vn, nachname:nn});
+  _dirty = true; save();
+  renderSchuelerList(); renderSchuelerNav(); renderMobileBar(); updateSetupStats();
+  document.getElementById('modal-add-student').style.display = 'none';
+  showToast(vn + ' hinzugefügt');
+}
+function removeStudent(id) {
+  state.students = state.students.filter(s => s.id !== id);
+  delete state.ratings[id];
+  if (selectedStudentId === id) selectedStudentId = null;
+  _dirty = true; save();
+  renderSchuelerList(); renderSchuelerNav(); renderMobileBar(); renderErfassen(); updateSetupStats();
+}
+function confirmClearStudents() {
+  showConfirm('Schüler:innen löschen?', 'Alle Schüler:innen und Bewertungen werden gelöscht.', () => {
+    state.students = []; state.ratings = {}; selectedStudentId = null;
+    _dirty = true; save();
+    renderSchuelerList(); renderSchuelerNav(); renderMobileBar(); renderErfassen(); updateSetupStats();
+  });
+}
+function renderSchuelerList() {
+  const el = document.getElementById('schueler-list');
+  const empty = document.getElementById('schueler-empty');
+  const sorted = sortedStudents();
+  if (!sorted.length) { el.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  el.innerHTML = sorted.map(s => {
+    const ini = (s.vorname[0]||'') + (s.nachname[0]||'');
+    return `<div class="schueler-item">
+      <div class="schueler-avatar">${esc(ini.toUpperCase())}</div>
+      <span class="schueler-name">${esc(s.vorname)} ${esc(s.nachname)}</span>
+      <button class="remove-btn" onclick="removeStudent('${s.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// INDICATORS
+// ══════════════════════════════════════════════
+function renderTemplatePills() {
+  document.getElementById('template-pills').innerHTML = Object.keys(TEMPLATES).map(k =>
+    `<div class="template-pill" onclick="loadTemplate('${k}')">${k}</div>`).join('');
+}
+function loadTemplate(key) {
+  state.indicators = TEMPLATES[key].map((item,i) => ({id:'ind_'+i+'_'+Date.now(), ...item}));
+  _dirty = true; save(); renderIndicatorList(); updateSetupStats();
+  showToast('Vorlage «' + key + '» geladen');
+}
+function addIndicatorRow() {
+  const newItem = {id:uid(), type:'indicator', label:''};
+  state.indicators.push(newItem);
+  _dirty = true; save(); renderIndicatorList(); updateSetupStats();
+  setTimeout(() => startEditInd(newItem.id), 30);
+}
+function addGroupRow() {
+  const newItem = {id:uid(), type:'group', label:''};
+  state.indicators.push(newItem);
+  _dirty = true; save(); renderIndicatorList(); updateSetupStats();
+  setTimeout(() => startEditInd(newItem.id), 30);
+}
+function removeIndicator(id) {
+  state.indicators = state.indicators.filter(i => i.id !== id);
+  _dirty = true; save(); renderIndicatorList(); updateSetupStats();
+}
+function updateIndLabel(id, val) {
+  const ind = state.indicators.find(i => i.id === id);
+  if (ind) { ind.label = val; _dirty = true; save(); updateSetupStats(); }
+}
+function confirmClearIndicators() {
+  showConfirm('Indikatoren löschen?', 'Alle Indikatoren werden entfernt.', () => {
+    state.indicators = []; _dirty = true; save(); renderIndicatorList(); updateSetupStats();
+  });
+}
+function renderIndicatorList() {
+  const el = document.getElementById('indicator-list');
+  if (!state.indicators.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--dim2);padding:8px 0">Noch keine Indikatoren — Vorlage laden oder manuell hinzufügen</div>';
+    return;
+  }
+  el.innerHTML = state.indicators.map((item, idx) => {
+    const isGroup = item.type === 'group';
+    const cls = isGroup ? 'ind-group-item' : 'ind-item';
+    return `<div class="${cls}" draggable="true" data-idx="${idx}"
+      ondragstart="dndStart(event,${idx})"
+      ondragover="dndOver(event)"
+      ondragleave="dndLeave(event)"
+      ondrop="dndDrop(event,${idx})">
+      <span class="drag-handle" title="Verschieben">⠿</span>
+      <span class="ind-label-text" id="ind-label-${item.id}" title="${esc(item.label)}">${esc(item.label) || '<span style="color:var(--dim2)">—</span>'}</span>
+      <button class="edit-btn" onclick="startEditInd('${item.id}')" title="Umbenennen">✎</button>
+      <button class="del-btn" onclick="removeIndicator('${item.id}')" title="Löschen">×</button>
+    </div>`;
+  }).join('');
+}
+
+// D&D state
+let _dragIdx = null;
+
+function dndStart(e, idx) {
+  _dragIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+function dndOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function dndLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function dndDrop(e, toIdx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (_dragIdx === null || _dragIdx === toIdx) return;
+  const items = [...state.indicators];
+  const [moved] = items.splice(_dragIdx, 1);
+  items.splice(toIdx, 0, moved);
+  state.indicators = items;
+  _dragIdx = null;
+  _dirty = true; save(); renderIndicatorList();
+}
+
+function startEditInd(id) {
+  const ind = state.indicators.find(i => i.id === id);
+  if (!ind) return;
+  const span = document.getElementById('ind-label-' + id);
+  if (!span) return;
+  const parent = span.parentElement;
+  // Replace span with input
+  const input = document.createElement('input');
+  input.className = 'ind-edit-input';
+  input.value = ind.label;
+  parent.replaceChild(input, span);
+  input.focus();
+  input.select();
+  const finish = () => {
+    ind.label = input.value.trim();
+    _dirty = true; save();
+    renderIndicatorList();
+    updateSetupStats();
+  };
+  input.addEventListener('blur', finish);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { input.value = ind.label; input.blur(); } });
+}
+
+// ══════════════════════════════════════════════
+// ERFASSEN
+// ══════════════════════════════════════════════
+function renderSchuelerNav() {
+  const el = document.getElementById('schueler-nav');
+  const sorted = sortedStudents();
+  el.innerHTML = sorted.map(s => {
+    const ini = (s.vorname[0]||'') + (s.nachname[0]||'');
+    return `<div class="schueler-nav-item ${s.id===selectedStudentId?'active':''}" onclick="selectStudent('${s.id}')">
+      <div class="s-nav-avatar">${esc(ini.toUpperCase())}</div>
+      <span class="s-nav-name">${esc(s.vorname)} ${esc(s.nachname)}</span>
+    </div>`;
+  }).join('');
+  updateProgress();
+}
+function renderMobileBar() {
+  const el = document.getElementById('mobile-student-inner');
+  el.innerHTML = sortedStudents().map(s =>
+    `<div class="mobile-chip ${s.id===selectedStudentId?'active':''}" onclick="selectStudent('${s.id}')">${esc(s.vorname)}</div>`
+  ).join('');
+  const active = el.querySelector('.mobile-chip.active');
+  if (active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+}
+function selectStudent(id) {
+  selectedStudentId = id;
+  renderSchuelerNav(); renderMobileBar(); renderErfassen();
+}
+function prevStudent() {
+  const sorted = sortedStudents(); if (!sorted.length) return;
+  const idx = sorted.findIndex(s => s.id === selectedStudentId);
+  if (idx > 0) selectStudent(sorted[idx-1].id);
+}
+function nextStudent() {
+  const sorted = sortedStudents(); if (!sorted.length) return;
+  const idx = sorted.findIndex(s => s.id === selectedStudentId);
+  if (idx < sorted.length-1) selectStudent(sorted[idx+1].id);
+}
+function updateProgress() {
+  const sorted = sortedStudents();
+  const idx = sorted.findIndex(s => s.id === selectedStudentId);
+  const pct = sorted.length ? ((idx+1)/sorted.length*100) : 0;
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-bar2').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = (idx+1) + ' / ' + sorted.length;
+
+  const hasPrev = idx > 0;
+  const hasNext = idx < sorted.length - 1;
+  document.querySelectorAll('.btn-prev').forEach(b => b.style.visibility = hasPrev ? '' : 'hidden');
+  document.querySelectorAll('.btn-next').forEach(b => b.style.visibility = hasNext ? '' : 'hidden');
+}
+function renderErfassen() {
+  const indsOnly = state.indicators.filter(i => i.type === 'indicator');
+  const empty = document.getElementById('erfassen-empty');
+  const content = document.getElementById('erfassen-content');
+  if (!indsOnly.length) { empty.style.display = ''; content.style.display = 'none'; return; }
+  empty.style.display = 'none'; content.style.display = '';
+
+  const sorted = sortedStudents();
+  if (!selectedStudentId && sorted.length) selectedStudentId = sorted[0].id;
+  const student = state.students.find(s => s.id === selectedStudentId);
+  document.getElementById('cur-name').textContent = student ? student.vorname + ' ' + student.nachname : '–';
+  renderLektionSelect();
+
+  const ratings = student ? ((state.ratings[student.id]||{})[state.currentLektion]||{}) : {};
+  const el = document.getElementById('ind-list');
+
+  if (!student) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--dim);padding:12px 0">Keine Schüler:innen — bitte im Setup hinzufügen.</div>';
+    return;
+  }
+
+  el.innerHTML = state.indicators.map(ind => {
+    if (ind.type === 'group') return `<div class="ind-group-header">${esc(ind.label)}</div>`;
+    const val = ratings[ind.id] !== undefined ? ratings[ind.id] : null;
+    const sel = v => val === v ? (v===0?'selected':'selected sel-'+v) : '';
+    return `<div class="ind-bewertung-row">
+      <div class="ind-text">${esc(ind.label)||'<span style="color:var(--dim2)">—</span>'}</div>
+      <div class="rating-row">
+        <button class="rating-btn ${sel(1)}" onclick="setRating('${ind.id}',1)">−−</button>
+        <button class="rating-btn ${sel(2)}" onclick="setRating('${ind.id}',2)">−</button>
+        <button class="rating-btn ${sel(3)}" onclick="setRating('${ind.id}',3)">+</button>
+        <button class="rating-btn ${sel(4)}" onclick="setRating('${ind.id}',4)">++</button>
+        <button class="rating-btn skip-btn ${val===0?'selected':''}" onclick="setRating('${ind.id}',0)" title="Überspringen">→</button>
+      </div>
+    </div>`;
+  }).join('');
+  updateProgress();
+}
+function setRating(iid, val) {
+  const sid = selectedStudentId; if (!sid) return;
+  const lk = state.currentLektion;
+  if (!state.ratings[sid]) state.ratings[sid] = {};
+  if (!state.ratings[sid][lk]) state.ratings[sid][lk] = {};
+  if (state.ratings[sid][lk][iid] === val) delete state.ratings[sid][lk][iid];
+  else state.ratings[sid][lk][iid] = val;
+  _dirty = true; save(); renderErfassen(); renderSchuelerNav();
+}
+
+// ══════════════════════════════════════════════
+// ÜBERSICHT
+// ══════════════════════════════════════════════
+function getStudentVals(sid) {
+  const vals = [], byInd = {};
+  const ldata = state.ratings[sid] || {};
+  for (const lk in ldata) for (const iid in ldata[lk]) {
+    const v = ldata[lk][iid];
+    if (v > 0) { vals.push(v); if (!byInd[iid]) byInd[iid] = []; byInd[iid].push(v); }
+  }
+  return {vals, byInd};
+}
+function calcBoxplot(vals) {
+  if (!vals.length) return null;
+  const s = [...vals].sort((a,b)=>a-b), n = s.length;
+  return { min:s[0], q1:s[Math.floor(n*0.25)],
+    median: n%2===0?(s[n/2-1]+s[n/2])/2:s[Math.floor(n/2)],
+    q3:s[Math.floor(n*0.75)], max:s[n-1],
+    mean: vals.reduce((a,b)=>a+b,0)/n };
+}
+function praedikat(mean) {
+  if (mean===null) return {label:'–', bg:'var(--border-lt)', color:'var(--dim)'};
+  if (mean>=3.5) return {label:'Sehr gut', bg:'var(--r3-bg)', color:'var(--r3)'};
+  if (mean>=2.5) return {label:'Gut', bg:'var(--r4-bg)', color:'var(--r4)'};
+  if (mean>=1.5) return {label:'Genügend', bg:'var(--r2-bg)', color:'var(--r2)'};
+  return {label:'Nicht genügend', bg:'var(--r1-bg)', color:'var(--r1)'};
+}
+function boxplotHTML(bp) {
+  if (!bp) return '<div style="font-size:11px;color:var(--dim2);padding:4px 0">Keine Daten</div>';
+  function x(v) { return ((v-1)/3*96+2); }
+  return `<div style="margin:6px 0 2px">
+    <div class="boxplot-chart">
+      <div class="boxplot-track"></div>
+      <div class="boxplot-whisker" style="left:${x(bp.min)}%;right:${100-x(bp.q1)}%"></div>
+      <div class="boxplot-whisker" style="left:${x(bp.q3)}%;right:${100-x(bp.max)}%"></div>
+      <div class="boxplot-whisker-end" style="left:${x(bp.min)}%"></div>
+      <div class="boxplot-whisker-end" style="left:${x(bp.max)}%"></div>
+      <div class="boxplot-box" style="left:${x(bp.q1)}%;right:${100-x(bp.q3)}%"></div>
+      <div class="boxplot-median" style="left:${x(bp.median)}%"></div>
+    </div>
+    <div class="boxplot-scale"><span>−−</span><span>−</span><span>+</span><span>++</span></div>
+  </div>`;
+}
+function renderUebersicht() {
+  const grid = document.getElementById('uebersicht-grid');
+  const empty = document.getElementById('uebersicht-empty');
+  const indsOnly = state.indicators.filter(i => i.type === 'indicator');
+  if (!state.students.length) { empty.style.display = ''; grid.innerHTML = ''; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = sortedStudents().map(s => {
+    const {vals, byInd} = getStudentVals(s.id);
+    const mean = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+    const bp = calcBoxplot(vals);
+    const pr = praedikat(mean);
+    const ini = (s.vorname[0]||'') + (s.nachname[0]||'');
+    const bars = indsOnly.slice(0,5).map(ind => {
+      const iv = byInd[ind.id]||[];
+      const avg = iv.length ? iv.reduce((a,b)=>a+b,0)/iv.length : 0;
+      const pct = avg>0 ? Math.max(((avg-1)/3*100),6) : 0;
+      const col = avg>=3.5?'var(--r3)':avg>=2.5?'var(--r4)':avg>=1.5?'#F59E0B':avg>0?'var(--r1)':'var(--border)';
+      return `<div class="ind-bar-row">
+        <span class="ind-bar-label" title="${esc(ind.label)}">${esc(ind.label)}</span>
+        <div class="ind-bar-track"><div class="ind-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+        <span class="ind-bar-count">${iv.length||''}</span>
+      </div>`;
+    }).join('');
+    return `<div class="card">
+      <div class="card-header">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--dim);flex-shrink:0">${esc(ini.toUpperCase())}</div>
+        <span style="font-size:14px;font-weight:600;flex:1">${esc(s.vorname)} ${esc(s.nachname)}</span>
+        <span class="praedikat-badge" style="background:${pr.bg};color:${pr.color}">${pr.label}</span>
+      </div>
+      <div class="card-body" style="padding:14px">
+        ${boxplotHTML(bp)}
+        <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px">${bars||'<span style="font-size:11px;color:var(--dim2)">Keine Bewertungen</span>'}</div>
+        ${vals.length?`<div style="margin-top:8px;font-size:10px;color:var(--dim2)">${vals.length} Bewertungen · Ø ${mean.toFixed(2)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// DATEN
+// ══════════════════════════════════════════════
+function renderStats() {
+  const totalR = Object.values(state.ratings).reduce((sum,ld) =>
+    sum + Object.values(ld).reduce((s,id) => s + Object.keys(id).length, 0), 0);
+  document.getElementById('stat-grid').innerHTML = [
+    {val:state.students.length, label:'Schüler:innen'},
+    {val:state.indicators.filter(i=>i.type==='indicator').length, label:'Indikatoren'},
+    {val:state.lektionen, label:'Lektionen'},
+    {val:totalR, label:'Bewertungen'},
+  ].map(s=>`<div class="stat-box"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('');
+}
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'sport_tracker_' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+  showToast('Export erfolgreich');
+}
+function importJSON(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      showConfirm('Daten importieren?', 'Bestehende Daten werden überschrieben.', () => {
+        Object.assign(state, data); save();
+        document.getElementById('projekt-input').value = state.project;
+        document.getElementById('klasse-input').value = state.klasse;
+        renderSchuelerList(); renderIndicatorList(); renderSchuelerNav();
+        renderLektionenList(); renderLektionSelect(); renderErfassen();
+        updateProjectBadge(); updateSetupStats();
+        showToast('Import erfolgreich');
+      });
+    } catch { showToast('Fehler beim Import'); }
+  };
+  reader.readAsText(file); input.value = '';
+}
+function confirmReset() {
+  showConfirm('Alle Daten löschen?', 'Schüler:innen, Indikatoren und alle Bewertungen werden unwiderruflich gelöscht.', () => {
+    state = {project:'',klasse:'',students:[],indicators:[],lektionen:1,currentLektion:1,ratings:{}};
+    selectedStudentId = null; save();
+    document.getElementById('projekt-input').value = '';
+    document.getElementById('klasse-input').value = '';
+    renderSchuelerList(); renderIndicatorList(); renderSchuelerNav();
+    renderLektionenList(); renderLektionSelect(); renderErfassen();
+    updateProjectBadge(); updateSetupStats();
+    showToast('Daten gelöscht');
+  });
+}
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function updateSetupStats() {
+  const inds = state.indicators.filter(i=>i.type==='indicator').length;
+  document.getElementById('setup-stats').textContent = state.students.length + ' Schüler:innen · ' + inds + ' Indikatoren';
+}
+function sortedStudents() { return [...state.students].sort((a,b)=>a.vorname.localeCompare(b.vorname)); }
+function uid() { return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
+function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showConfirm(title, msg, onOk) {
+  document.getElementById('modal-confirm-title').textContent = title;
+  document.getElementById('modal-confirm-msg').textContent = msg;
+  document.getElementById('modal-confirm-ok').onclick = () => {
+    document.getElementById('modal-confirm').style.display = 'none'; onOk();
+  };
+  document.getElementById('modal-confirm').style.display = 'flex';
+}
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+window.addEventListener('resize', () => {
+  const active = document.querySelector('.tab-btn.active');
+  if (active && active.textContent.includes('Erfassen'))
+    document.getElementById('mobile-student-bar').style.display = window.innerWidth<=640?'block':'none';
+});
+
+init();
+</script>
+</body>
+</html>
