@@ -180,8 +180,9 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
 .ind-bar-count { font-size:10px; color:var(--dim2); white-space:nowrap; min-width:16px; text-align:right; }
 
 /* ── STATS ── */
-.stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; }
-.stat-box { background:var(--bg); border:1px solid var(--border-lt); border-radius:var(--radius-sm); padding:12px; text-align:center; }
+.stat-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; }
+@media(max-width:600px){ .stat-grid { grid-template-columns:repeat(2,1fr); } }
+.stat-box { background:var(--bg); border:1px solid var(--border-lt); border-radius:var(--radius); padding:20px; text-align:center; }
 .stat-val { font-size:26px; font-weight:700; color:var(--text); }
 .stat-label { font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
 
