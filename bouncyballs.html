@@ -25,7 +25,7 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'Share Tech Mono', monospace;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -36,20 +36,22 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 20px;
+    padding: 8px 14px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
     z-index: 10;
+    gap: 10px;
   }
 
   #logo {
     font-family: 'Orbitron', monospace;
     font-weight: 900;
-    font-size: 1.1rem;
-    letter-spacing: 0.15em;
+    font-size: clamp(0.7rem, 3vw, 1.1rem);
+    letter-spacing: 0.1em;
     color: var(--accent);
     text-shadow: var(--glow);
+    white-space: nowrap;
   }
 
   #logo span { color: var(--accent2); }
@@ -58,34 +60,39 @@
   #vol-display {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-end;
+    min-width: 0;
   }
 
   #vol-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--text-dim);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    display: none; /* hidden on mobile, dot is enough */
   }
 
   #vol-number {
     font-family: 'Orbitron', monospace;
-    font-size: 1.4rem;
+    font-size: clamp(0.9rem, 3vw, 1.4rem);
     font-weight: 700;
     color: var(--accent);
-    min-width: 3ch;
+    min-width: 2.5ch;
     text-align: right;
     transition: color 0.2s;
     text-shadow: var(--glow);
   }
 
   #vol-bar-wrap {
-    width: 160px;
-    height: 8px;
+    width: clamp(60px, 20vw, 160px);
+    height: 6px;
     background: var(--border);
     border-radius: 4px;
     overflow: hidden;
     position: relative;
+    flex-shrink: 0;
   }
 
   #vol-bar {
@@ -101,7 +108,7 @@
     content: '';
     position: absolute;
     right: 0; top: 0; bottom: 0;
-    width: 6px;
+    width: 5px;
     background: white;
     border-radius: 3px;
     filter: blur(2px);
@@ -110,31 +117,29 @@
 
   /* Status dot */
   #status-dot {
-    width: 10px; height: 10px;
+    width: 9px; height: 9px;
     border-radius: 50%;
     background: #1a3a1a;
     transition: background 0.3s, box-shadow 0.3s;
+    flex-shrink: 0;
   }
   #status-dot.active {
     background: #00ff88;
-    box-shadow: 0 0 12px #00ff88;
+    box-shadow: 0 0 10px #00ff88;
   }
 
   /* Canvas */
-  #canvas {
-    flex: 1;
-    display: block;
-  }
+  #canvas { flex: 1; display: block; }
 
   /* Bottom bar */
   #controls {
     background: var(--surface);
     border-top: 1px solid var(--border);
-    padding: 8px 20px;
+    padding: 8px 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     flex-shrink: 0;
   }
 
@@ -142,34 +147,38 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 24px;
+    gap: 12px;
     flex-wrap: wrap;
+    width: 100%;
   }
 
   #sliders-group {
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .ctrl-group {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
+    flex-wrap: nowrap;
   }
 
   .ctrl-label {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     color: var(--text-dim);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     white-space: nowrap;
   }
 
-  /* Sensitivity slider */
   input[type=range] {
     -webkit-appearance: none;
     appearance: none;
-    width: 100px;
+    width: clamp(60px, 15vw, 100px);
     height: 4px;
     background: var(--border);
     border-radius: 2px;
@@ -177,7 +186,7 @@
   }
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 14px; height: 14px;
+    width: 18px; height: 18px; /* größer für Touch */
     border-radius: 50%;
     background: var(--accent);
     box-shadow: 0 0 8px var(--accent);
@@ -190,13 +199,14 @@
     border: 1px solid var(--border);
     color: var(--text-dim);
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.08em;
-    padding: 4px 10px;
+    font-size: clamp(0.55rem, 2vw, 0.65rem);
+    letter-spacing: 0.05em;
+    padding: 5px 8px;
     border-radius: 3px;
     cursor: pointer;
     transition: all 0.15s;
     text-transform: uppercase;
+    touch-action: manipulation;
   }
   .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
   .theme-btn.active {
@@ -212,16 +222,17 @@
     border: 1px solid var(--accent);
     color: var(--accent);
     font-family: 'Orbitron', monospace;
-    font-size: 0.65rem;
+    font-size: clamp(0.6rem, 2.5vw, 0.75rem);
     font-weight: 700;
-    letter-spacing: 0.15em;
-    padding: 6px 16px;
+    letter-spacing: 0.12em;
+    padding: 8px 28px;
     border-radius: 3px;
     cursor: pointer;
     text-transform: uppercase;
     transition: all 0.15s;
+    touch-action: manipulation;
   }
-  #start-btn:hover {
+  #start-btn:hover, #start-btn:active {
     background: var(--accent);
     color: var(--bg);
     box-shadow: var(--glow);
@@ -230,18 +241,10 @@
     border-color: var(--accent2);
     color: var(--accent2);
   }
-  #start-btn.running:hover {
+  #start-btn.running:hover, #start-btn.running:active {
     background: var(--accent2);
     color: var(--bg);
   }
-
-  /* Count display */
-  #ball-count-wrap {
-    font-size: 0.6rem;
-    color: var(--text-dim);
-    letter-spacing: 0.1em;
-  }
-  #ball-count { color: var(--accent); }
 
   /* Grid overlay on canvas */
   #canvas-wrap {
@@ -258,23 +261,28 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     pointer-events: none;
   }
   #overlay-msg .big {
     font-family: 'Orbitron', monospace;
-    font-size: 1.6rem;
+    font-size: clamp(1rem, 5vw, 1.6rem);
     font-weight: 900;
     color: var(--accent);
     opacity: 0.15;
     letter-spacing: 0.2em;
   }
   #overlay-msg .small {
-    font-size: 0.75rem;
+    font-size: clamp(0.6rem, 2.5vw, 0.75rem);
     color: var(--text-dim);
     letter-spacing: 0.1em;
   }
   #overlay-msg.hidden { display: none; }
+
+  /* Show vol-label on wider screens */
+  @media (min-width: 480px) {
+    #vol-label { display: block; }
+  }
 </style>
 </head>
 <body>
@@ -450,9 +458,7 @@ let densityRatio = 0.35; // 0..1, von wenig bis voll
 
 function calcBallCount() {
   const avgBallArea = Math.PI * 27 * 27;
-  const canvasArea = canvas.width * canvas.height;
-  // Maximale realistische Dichte für zufällige Platzierung ~40%
-  // (bei höherer Dichte überlappen Bälle zu stark beim Start)
+  const canvasArea = (canvas._cssWidth || canvas.width) * (canvas._cssHeight || canvas.height);
   const minCount = Math.max(3, Math.round((canvasArea * 0.04) / avgBallArea));
   const maxCount = Math.min(120, Math.round((canvasArea * 0.40) / avgBallArea));
   ballCount = Math.round(minCount + densityRatio * (maxCount - minCount));
@@ -466,8 +472,16 @@ const ctx = canvas.getContext('2d');
 
 function resize() {
   const wrap = document.getElementById('canvas-wrap');
-  canvas.width = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  canvas.width  = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  canvas._cssWidth  = w;
+  canvas._cssHeight = h;
   calcBallCount();
 }
 window.addEventListener('resize', () => { resize(); rebuildBalls(); });
@@ -478,9 +492,11 @@ function makeBall(i) {
   const ci = i % COLORS.length;
   const r = 18 + Math.random() * 18;
   const col = COLORS[ci];
+  const W = canvas._cssWidth || canvas.width;
+  const H = canvas._cssHeight || canvas.height;
   return {
-    x: r + Math.random() * (canvas.width - 2 * r),
-    y: r + Math.random() * (canvas.height * 0.5),
+    x: r + Math.random() * (W - 2 * r),
+    y: r + Math.random() * (H * 0.5),
     r,
     vx: (Math.random() - 0.5) * 3,
     vy: Math.random() * 2,
@@ -540,7 +556,8 @@ function resolveCollisions() {
 }
 
 function physicsStep(vol) {
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._cssWidth || canvas.width;
+  const H = canvas._cssHeight || canvas.height;
 
   const delta = Math.max(0, vol - prevVolume);
   prevVolume = vol;
@@ -572,19 +589,23 @@ function physicsStep(vol) {
 
 // ─── RENDER ─────────────────────────────────────────────────────────────────
 function drawGrid() {
+  const W = canvas._cssWidth || canvas.width;
+  const H = canvas._cssHeight || canvas.height;
   ctx.strokeStyle = 'rgba(0,212,255,0.04)';
   ctx.lineWidth = 1;
   const step = 60;
-  for (let x = 0; x < canvas.width; x += step) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  for (let x = 0; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
   }
-  for (let y = 0; y < canvas.height; y += step) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  for (let y = 0; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
   }
 }
 
 function render() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const W = canvas._cssWidth || canvas.width;
+  const H = canvas._cssHeight || canvas.height;
+  ctx.clearRect(0, 0, W, H);
   drawGrid();
   const theme = THEMES[currentTheme];
   for (const b of balls) {
