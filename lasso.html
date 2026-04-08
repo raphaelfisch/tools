@@ -2299,7 +2299,7 @@
                         <div style="display: flex; gap: 16px; padding: 16px; background: var(--bg); border-radius: var(--radius);">
                             <div style="flex-shrink: 0; width: 40px; height: 40px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                                 <svg fill="none" stroke="var(--primary)" stroke-width="2" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                                    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                     <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
                             </div>
@@ -2657,6 +2657,10 @@
                 <!-- Step 0: Willkommen -->
                 <div class="wizard-step active" data-step="0">
                     <h2>Willkommen bei LASSO</h2>
+                    <div id="wizard-demo-hint" style="display: none; background: var(--secondary-light, #fff3cd); border: 1px solid var(--secondary); border-radius: var(--radius); padding: 12px; margin-bottom: 16px;">
+                        <strong style="color: var(--secondary);">🎮 Demo-Modus</strong><br>
+                        <span style="font-size: 0.9rem;">Es wurden bereits Beispiel-Daten (Fächer, Schüler:innen, Stundenplan) geladen. Du kannst sofort loslegen!</span>
+                    </div>
                     <p>
                         LASSO unterstützt dich bei der systematischen Beobachtung und Beurteilung des 
                         <strong>Lern-, Arbeits- und Sozialverhaltens</strong> deiner Schüler:innen – 
@@ -3166,6 +3170,9 @@
             updateClock();
             setInterval(updateClock, 60000);
             showToast('Demo-Daten geladen', 'success');
+            
+            // Wizard als Einführung zeigen (mit Hinweis auf vorhandene Demo-Daten)
+            setTimeout(() => openOnboardingWizard(true), 300);
         }
 
         function startEmpty() {
@@ -3230,7 +3237,7 @@
             }
             
             // Bei echten Daten: Backup-Option anbieten
-            const hasData = state.beobachtungen.length > 0 || state.schueler.length > 0;
+            const hasData = state.beobachtungen.length > 0 || state.schueler.length > 0 || state.faecher.length > 0;
             
             if (hasData) {
                 showConfirmDialog('Alle Daten löschen', 
@@ -3376,13 +3383,13 @@
             // Mathe 1. Sek: 4 aus 1c + 4 aus 1d + 7 neue aus 1a/1b
             const mathe1SekAus1c = schueler1c.slice(0, 4);
             const mathe1SekAus1d = schueler1d.slice(0, 4);
-            const schueler1ab = generateSchuelerList(7, '1ab'); // Nur Mathe bei dir
+            const schueler1ab = generateSchuelerList(7, '1ab');
             
             // ICDL: 3 aus 3. Sek + 3 neue
             const icdlAus3Sek = schueler3Sek.slice(0, 3);
             const schuelerICDLNeu = generateSchuelerList(3, 'icdl-other');
 
-            // Alle Schüler sammeln (keine Duplikate, da IDs eindeutig)
+            // Alle Schüler sammeln
             state.schueler = [
                 ...schueler1c, 
                 ...schueler1d, 
@@ -3406,11 +3413,9 @@
                         schuelerIds = [...schueler1c, ...schueler1d].map(s => s.id);
                         break;
                     case 'mi-1cd':
-                        // MI alterniert zwischen 1c und 1d, aber beide Klassen werden separat beurteilt
                         schuelerIds = [...schueler1c, ...schueler1d].map(s => s.id);
                         break;
                     case 'mathe-1sek':
-                        // 4 aus 1c + 4 aus 1d + 7 aus 1a/1b
                         schuelerIds = [
                             ...mathe1SekAus1c.map(s => s.id),
                             ...mathe1SekAus1d.map(s => s.id),
@@ -3421,7 +3426,6 @@
                         schuelerIds = schueler3Sek.map(s => s.id);
                         break;
                     case 'icdl-3kl':
-                        // 3 aus 3. Sek + 3 neue
                         schuelerIds = [
                             ...icdlAus3Sek.map(s => s.id),
                             ...schuelerICDLNeu.map(s => s.id)
@@ -3451,6 +3455,10 @@
             state.faecher.forEach(f => {
                 state.faecherEnabled[f.id] = true;
             });
+            
+            // Fach-spezifische Einstellungen initialisieren
+            state.fachZiele = {};
+            state.fachFragenProRunde = {};
 
             saveState();
         }
@@ -3485,6 +3493,7 @@
             updateFaecherList();
             updateSemesterConfig();
             updateDemoObservationCount();
+            updateDemoBadge();  // Demo-Status immer aktualisieren
         }
 
         function updateDemoObservationCount() {
@@ -5427,7 +5436,10 @@
         let wizardStep = 0;
         const wizardTotalSteps = 7;
         
-        function openOnboardingWizard() {
+        let wizardIsDemo = false;
+        
+        function openOnboardingWizard(isDemo = false) {
+            wizardIsDemo = isDemo;
             wizardStep = 0;
             updateWizardUI();
             document.getElementById('wizard-overlay').classList.add('active');
@@ -5466,6 +5478,12 @@
                 dot.classList.toggle('active', i === wizardStep);
                 dot.classList.toggle('completed', i < wizardStep);
             });
+            
+            // Demo-Hinweis anzeigen/verstecken
+            const demoHint = document.getElementById('wizard-demo-hint');
+            if (demoHint) {
+                demoHint.style.display = wizardIsDemo ? 'block' : 'none';
+            }
             
             // Buttons aktualisieren
             const prevBtn = document.getElementById('wizard-prev');
