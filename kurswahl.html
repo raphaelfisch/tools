@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -29,95 +30,96 @@ header h1{font-family:'DM Serif Display',serif;font-size:1.75rem;flex:1;}
 #view-login.active{display:flex;}
 
 /* LOGIN */
-.login-card{background:var(--card);border-radius:20px;border:1px solid var(--border);padding:44px 36px;box-shadow:var(--shadow);width:340px;text-align:center;}
-.login-card h2{font-family:'DM Serif Display',serif;font-size:1.5rem;margin-bottom:4px;}
-.login-card p{color:var(--muted);font-size:.83rem;margin-bottom:24px;}
-.login-inp{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:1rem;text-align:center;letter-spacing:4px;outline:none;margin-bottom:12px;}
-.login-inp:focus{border-color:var(--accent);}
-.login-inp.error{border-color:var(--danger);animation:shake .3s;}
+.login-card{background:var(–card);border-radius:20px;border:1px solid var(–border);padding:44px 36px;box-shadow:var(–shadow);width:340px;text-align:center;}
+.login-card h2{font-family:‘DM Serif Display’,serif;font-size:1.5rem;margin-bottom:4px;}
+.login-card p{color:var(–muted);font-size:.83rem;margin-bottom:24px;}
+.login-inp{width:100%;padding:11px 14px;border:1.5px solid var(–border);border-radius:8px;font-family:‘DM Sans’,sans-serif;font-size:1rem;text-align:center;letter-spacing:4px;outline:none;margin-bottom:12px;}
+.login-inp:focus{border-color:var(–accent);}
+.login-inp.error{border-color:var(–danger);animation:shake .3s;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.login-err{color:var(--danger);font-size:.78rem;min-height:18px;margin-bottom:10px;}
+.login-err{color:var(–danger);font-size:.78rem;min-height:18px;margin-bottom:10px;}
 
 /* STUDENT */
-.steps-bar{background:#fff;border-bottom:1px solid var(--border);}
+.steps-bar{background:#fff;border-bottom:1px solid var(–border);}
 .steps-bar-inner{max-width:1200px;margin:0 auto;padding:0 22px;display:flex;}
-.step-tab{padding:12px 16px;font-size:.74rem;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;letter-spacing:.4px;text-transform:uppercase;}
-.step-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.step-tab.done{color:var(--ink);}
+.step-tab{padding:12px 16px;font-size:.74rem;font-weight:600;color:var(–muted);border-bottom:3px solid transparent;letter-spacing:.4px;text-transform:uppercase;}
+.step-tab.active{color:var(–accent);border-bottom-color:var(–accent);}
+.step-tab.done{color:var(–ink);}
+.step-tab.done:hover{color:var(–accent);}
 main.smain{max-width:1200px;margin:0 auto;padding:28px 20px 80px;}
 .screen{display:none;} .screen.active{display:block;}
 .class-buttons{display:flex;gap:14px;}
-.class-btn{flex:1;padding:20px 14px;border:2px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;color:var(--ink);display:flex;align-items:center;justify-content:center;}
-.class-btn.selected{border-color:var(--accent);background:#f0f7f4;color:var(--accent);}
+.class-btn{flex:1;padding:20px 14px;border:2px solid var(–border);border-radius:12px;background:#fff;cursor:pointer;font-family:‘DM Sans’,sans-serif;font-size:1rem;font-weight:600;color:var(–ink);display:flex;align-items:center;justify-content:center;}
+.class-btn.selected{border-color:var(–accent);background:#f0f7f4;color:var(–accent);}
 .slider-group{display:flex;flex-direction:column;gap:26px;}
 .slider-poles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px;}
-.pole{font-size:.79rem;line-height:1.4;color:var(--muted);transition:color .2s,font-weight .2s;display:flex;align-items:flex-start;gap:7px;}
+.pole{font-size:.79rem;line-height:1.4;color:var(–muted);transition:color .2s,font-weight .2s;display:flex;align-items:flex-start;gap:7px;}
 .pole.right{text-align:right;flex-direction:row-reverse;}
 .pole .emoji{font-size:1.4rem;flex-shrink:0;}
-.pole.active-left{color:var(--accent);font-weight:600;}
-.pole.active-right{color:var(--accent2);font-weight:600;}
+.pole.active-left{color:var(–accent);font-weight:600;}
+.pole.active-right{color:var(–accent2);font-weight:600;}
 input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;outline:none;cursor:pointer;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.18);cursor:grab;}
-.section-label{font-size:.67rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 9px;display:flex;align-items:center;gap:8px;}
-.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(–ink);box-shadow:0 2px 8px rgba(0,0,0,.18);cursor:grab;}
+.section-label{font-size:.67rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(–muted);margin:22px 0 9px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:’’;flex:1;height:1px;background:var(–border);}
 .courses-grid{display:flex;flex-direction:column;gap:7px;}
-.course-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;position:relative;overflow:hidden;}
-.course-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:10px 0 0 10px;background:var(--muted);}
-.course-card.primary-sel{border-color:var(--cat-color,var(--accent));background:var(--cat-bg,#f0f7f4);}
-.course-card.ersatz-sel{border-color:var(--ersatz-c)!important;background:#f5f5f5!important;}
+.course-card{background:#fff;border:1.5px solid var(–border);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;position:relative;overflow:hidden;}
+.course-card::before{content:’’;position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:10px 0 0 10px;background:var(–muted);}
+.course-card.primary-sel{border-color:var(–cat-color,var(–accent));background:var(–cat-bg,#f0f7f4);}
+.course-card.ersatz-sel{border-color:var(–ersatz-c)!important;background:#f5f5f5!important;}
 .course-match{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;color:white;}
-.match-high{background:var(--accent);} .match-mid{background:#8db48e;} .match-low{background:#ccc;color:#666;}
+.match-high{background:var(–accent);} .match-mid{background:#8db48e;} .match-low{background:#ccc;color:#666;}
 .course-info{flex:1;min-width:0;}
 .course-name{font-weight:600;font-size:.87rem;margin-bottom:2px;}
-.course-desc{font-size:.73rem;color:var(--muted);line-height:1.35;}
+.course-desc{font-size:.73rem;color:var(–muted);line-height:1.35;}
 .course-checks{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
 .cbox-wrap{display:flex;align-items:center;gap:5px;cursor:pointer;padding:3px 6px;border-radius:6px;white-space:nowrap;}
-.cbox-wrap input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;}
-.cbox-wrap input[type=checkbox].ersatz-cb{accent-color:var(--ersatz-c);}
-.cbox-label{font-size:.65rem;font-weight:600;letter-spacing:.3px;color:var(--muted);}
-.cbox-wrap:has(input:checked) .cbox-label{color:var(--ink);}
+.cbox-wrap input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(–accent);flex-shrink:0;}
+.cbox-wrap input[type=checkbox].ersatz-cb{accent-color:var(–ersatz-c);}
+.cbox-label{font-size:.65rem;font-weight:600;letter-spacing:.3px;color:var(–muted);}
+.cbox-wrap:has(input:checked) .cbox-label{color:var(–ink);}
 .req-status{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
 .req-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.71rem;font-weight:600;border:1.5px solid;}
 .req-pill.done{background:#eaffea;border-color:#4caf50;color:#2e7d32;}
 .req-pill.ersatz-done{background:#f0f0f0;border-color:#999;color:#555;}
-.req-pill.todo{background:#fff;border-color:var(--border);color:var(--muted);}
+.req-pill.todo{background:#fff;border-color:var(–border);color:var(–muted);}
 .alert-box-msg{background:#fff8e1;border:1.5px solid #ffe082;border-radius:8px;padding:9px 13px;font-size:.79rem;color:#7a5c00;margin-top:9px;}
 .btn-row{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
 .student-form{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
 .sfield{display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px;}
-.sfield label{font-size:.69rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.sfield input{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-family:'DM Sans',sans-serif;font-size:.875rem;color:var(--ink);background:#fff;outline:none;}
+.sfield label{font-size:.69rem;font-weight:700;color:var(–muted);text-transform:uppercase;letter-spacing:.5px;}
+.sfield input{border:1.5px solid var(–border);border-radius:8px;padding:8px 11px;font-family:‘DM Sans’,sans-serif;font-size:.875rem;color:var(–ink);background:#fff;outline:none;}
 .summary-table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.86rem;}
-.summary-table th{text-align:left;font-size:.66rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--border);}
+.summary-table th{text-align:left;font-size:.66rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(–muted);padding:8px 10px;border-bottom:2px solid var(–border);}
 .summary-table td{padding:9px 10px;border-bottom:1px solid #f0ede7;vertical-align:top;}
 .summary-table tr:last-child td{border-bottom:none;}
 .cat-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle;}
 .tag{display:inline-block;font-size:.61rem;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:3px;vertical-align:middle;}
 .tag-haupt{background:#e8f5e9;color:#2e7d32;} .tag-ersatz{background:#eee;color:#666;}
-.sign-row{display:flex;gap:28px;margin-top:26px;padding-top:18px;border-top:1px solid var(--border);}
+.sign-row{display:flex;gap:28px;margin-top:26px;padding-top:18px;border-top:1px solid var(–border);}
 .sign-field{flex:1;}
-.sign-line{border-bottom:1px solid var(--ink);margin-bottom:4px;height:28px;}
-.sign-label{font-size:.69rem;color:var(--muted);}
+.sign-line{border-bottom:1px solid var(–ink);margin-bottom:4px;height:28px;}
+.sign-label{font-size:.69rem;color:var(–muted);}
 
 /* ADMIN */
-.admin-toolbar{background:#fff;border-bottom:1px solid var(--border);padding:10px 0;}
+.admin-toolbar{background:#fff;border-bottom:1px solid var(–border);padding:10px 0;}
 .admin-toolbar-inner{max-width:1200px;margin:0 auto;padding:0 22px;display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
 .atoolbar-right{margin-left:auto;display:flex;gap:8px;}
-.tab-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:22px;}
-.tab-btn{padding:9px 20px;font-size:.82rem;font-weight:600;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;}
-.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-bar{display:flex;border-bottom:2px solid var(–border);margin-bottom:22px;}
+.tab-btn{padding:9px 20px;font-size:.82rem;font-weight:600;cursor:pointer;background:none;border:none;color:var(–muted);border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tab-btn.active{color:var(–accent);border-bottom-color:var(–accent);}
 main.amain{max-width:1200px;margin:0 auto;padding:26px 22px 80px;}
 .filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
-.filter-btn{padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);}
-.filter-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
-.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);}
+.filter-btn{padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;border:1.5px solid var(–border);background:#fff;color:var(–muted);}
+.filter-btn.active{background:var(–ink);color:#fff;border-color:var(–ink);}
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(–border);box-shadow:var(–shadow);}
 table.atable{width:100%;border-collapse:collapse;background:#fff;min-width:900px;}
-table.atable thead th{background:#f8f7f4;padding:10px 11px;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap;}
+table.atable thead th{background:#f8f7f4;padding:10px 11px;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(–muted);border-bottom:2px solid var(–border);white-space:nowrap;}
 table.atable thead th.sortable{cursor:pointer;user-select:none;}
 table.atable thead th .sort-icon{margin-left:4px;opacity:.4;font-size:.7rem;}
-table.atable thead th.sort-asc .sort-icon::after{content:'↑';opacity:1;}
-table.atable thead th.sort-desc .sort-icon::after{content:'↓';opacity:1;}
-table.atable thead th:not(.sort-asc):not(.sort-desc) .sort-icon::after{content:'↕';}
+table.atable thead th.sort-asc .sort-icon::after{content:‘↑’;opacity:1;}
+table.atable thead th.sort-desc .sort-icon::after{content:‘↓’;opacity:1;}
+table.atable thead th:not(.sort-asc):not(.sort-desc) .sort-icon::after{content:‘↕’;}
 table.atable tbody tr{border-bottom:1px solid #f0ede7;}
 table.atable tbody tr:last-child{border-bottom:none;}
 table.atable tbody tr.inactive{opacity:.42;}
@@ -126,96 +128,98 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
 .tog{position:relative;width:34px;height:19px;cursor:pointer;display:inline-block;flex-shrink:0;}
 .tog input{opacity:0;width:0;height:0;}
 .tog-sl{position:absolute;inset:0;background:#ccc;border-radius:20px;transition:.2s;}
-.tog-sl::before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;}
-.tog input:checked+.tog-sl{background:var(--accent);}
+.tog-sl::before{content:’’;position:absolute;width:13px;height:13px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;}
+.tog input:checked+.tog-sl{background:var(–accent);}
 .tog input:checked+.tog-sl::before{transform:translateX(15px);}
-.lekt-inp{width:48px;border:1.5px solid var(--border);border-radius:6px;padding:4px 5px;font-size:.82rem;text-align:center;font-family:'DM Sans',sans-serif;outline:none;}
-.act-btn{background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px;font-size:.95rem;color:var(--muted);}
+.lekt-inp{width:48px;border:1.5px solid var(–border);border-radius:6px;padding:4px 5px;font-size:.82rem;text-align:center;font-family:‘DM Sans’,sans-serif;outline:none;}
+.act-btn{background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px;font-size:.95rem;color:var(–muted);}
 .dim-cell{display:flex;flex-direction:column;gap:4px;min-width:260px;}
 .dim-row{display:flex;align-items:center;gap:5px;font-size:.67rem;}
-.dim-row .dkey-l{width:52px;flex-shrink:0;color:var(--muted);text-align:right;font-size:.64rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.dim-row .dkey-r{width:52px;flex-shrink:0;color:var(--muted);font-size:.64rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dim-row .dkey-l{width:52px;flex-shrink:0;color:var(–muted);text-align:right;font-size:.64rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dim-row .dkey-r{width:52px;flex-shrink:0;color:var(–muted);font-size:.64rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .dim-row input[type=range]{flex:1;min-width:80px;height:4px;-webkit-appearance:none;border-radius:2px;outline:none;cursor:pointer;}
-.dim-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(--accent);border:1px solid #fff;cursor:pointer;}
+.dim-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(–accent);border:1px solid #fff;cursor:pointer;}
 .dim-val{display:none;}
-.settings-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:20px 22px;margin-bottom:16px;}
-.settings-card h2{font-family:'DM Serif Display',serif;font-size:1.05rem;margin-bottom:13px;}
+.settings-card{background:var(–card);border-radius:12px;border:1px solid var(–border);padding:20px 22px;margin-bottom:16px;}
+.settings-card h2{font-family:‘DM Serif Display’,serif;font-size:1.05rem;margin-bottom:13px;}
 .srow{display:flex;align-items:center;gap:12px;margin-bottom:9px;flex-wrap:wrap;}
 .srow label:not(.tog){font-size:.82rem;font-weight:500;min-width:190px;}
-.srow input[type=number]{width:66px;border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;font-size:.875rem;font-family:'DM Sans',sans-serif;outline:none;}
-.srow input[type=text],.srow input[type=password]{flex:1;min-width:160px;border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;font-size:.875rem;font-family:'DM Sans',sans-serif;outline:none;}
+.srow input[type=number]{width:66px;border:1.5px solid var(–border);border-radius:7px;padding:6px 9px;font-size:.875rem;font-family:‘DM Sans’,sans-serif;outline:none;}
+.srow input[type=text],.srow input[type=password]{flex:1;min-width:160px;border:1.5px solid var(–border);border-radius:7px;padding:6px 9px;font-size:.875rem;font-family:‘DM Sans’,sans-serif;outline:none;}
 /* KATEGORIEN CONFIG */
 .kat-table{width:100%;border-collapse:collapse;}
-.kat-table th{text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--border);}
+.kat-table th{text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(–muted);padding:8px 10px;border-bottom:2px solid var(–border);}
 .kat-table td{padding:9px 10px;border-bottom:1px solid #f0ede7;vertical-align:middle;font-size:.84rem;}
 .kat-table tr:last-child td{border-bottom:none;}
-.kat-inp{border:1.5px solid var(--border);border-radius:6px;padding:5px 9px;font-family:'DM Sans',sans-serif;font-size:.84rem;outline:none;}
-.kat-inp:focus{border-color:var(--accent);}
+.kat-inp{border:1.5px solid var(–border);border-radius:6px;padding:5px 9px;font-family:‘DM Sans’,sans-serif;font-size:.84rem;outline:none;}
+.kat-inp:focus{border-color:var(–accent);}
 .kat-inp-sm{width:52px;}
-.kat-color-inp{width:40px;height:30px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;}
+.kat-color-inp{width:40px;height:30px;border:1.5px solid var(–border);border-radius:6px;cursor:pointer;padding:2px;}
 .kat-row{background:#fff;padding:9px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f0ede7;}
 .kat-row:last-child{border-bottom:none;}
 /* KAT RESPONSIVE LIST */
 .kat-list{display:flex;flex-direction:column;gap:8px;}
-.kat-row{background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;}
-.kat-inp{border:1.5px solid var(--border);border-radius:6px;padding:5px 9px;font-family:'DM Sans',sans-serif;font-size:.84rem;outline:none;}
-.kat-inp:focus{border-color:var(--accent);}
+.kat-row{background:#fff;border:1px solid var(–border);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;}
+.kat-inp{border:1.5px solid var(–border);border-radius:6px;padding:5px 9px;font-family:‘DM Sans’,sans-serif;font-size:.84rem;outline:none;}
+.kat-inp:focus{border-color:var(–accent);}
 .kat-inp-sm{width:52px;}
-.kat-color-inp{width:36px;height:28px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;flex-shrink:0;}
+.kat-color-inp{width:36px;height:28px;border:1.5px solid var(–border);border-radius:6px;cursor:pointer;padding:2px;flex-shrink:0;}
 /* CLASS RULES: 3 cols if space, else 1 col */
 .class-rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media(max-width:680px){.class-rules-grid{grid-template-columns:1fr;}}
-.class-rule-box{border:1.5px solid var(--border);border-radius:10px;padding:14px;}
+.class-rule-box{border:1.5px solid var(–border);border-radius:10px;padding:14px;}
 .class-rule-box h3{font-size:.85rem;font-weight:700;margin-bottom:10px;}
 .rule-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:.82rem;}
 .rule-row label:not(.tog){flex:1;}
 .rule-row .tog{width:34px!important;flex-shrink:0;flex-grow:0;}
-.rule-row input[type=number]{width:52px;border:1.5px solid var(--border);border-radius:6px;padding:4px 7px;font-family:'DM Sans',sans-serif;font-size:.84rem;outline:none;}
-.rule-section-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:8px 0 5px;}
+.rule-row input[type=number]{width:52px;border:1.5px solid var(–border);border-radius:6px;padding:4px 7px;font-family:‘DM Sans’,sans-serif;font-size:.84rem;outline:none;}
+.rule-section-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(–muted);margin:8px 0 5px;}
 /* CONFIRM */
 .confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s;}
 .confirm-bg.open{opacity:1;pointer-events:all;}
 .confirm-box{background:#fff;border-radius:14px;padding:28px 28px 22px;width:380px;max-width:92vw;box-shadow:0 8px 40px rgba(0,0,0,.22);}
-.confirm-box h3{font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:8px;}
-.confirm-box p{font-size:.84rem;color:var(--muted);margin-bottom:20px;line-height:1.5;}
+.confirm-box h3{font-family:‘DM Serif Display’,serif;font-size:1.1rem;margin-bottom:8px;}
+.confirm-box p{font-size:.84rem;color:var(–muted);margin-bottom:20px;line-height:1.5;}
 .confirm-btns{display:flex;gap:10px;justify-content:flex-end;}
 /* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .modal-bg.open{opacity:1;pointer-events:all;}
 .modal{background:#fff;border-radius:16px;padding:30px;width:620px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.2);transform:translateY(10px);transition:transform .2s;}
 .modal-bg.open .modal{transform:translateY(0);}
-.modal h2{font-family:'DM Serif Display',serif;font-size:1.25rem;margin-bottom:18px;}
+.modal h2{font-family:‘DM Serif Display’,serif;font-size:1.25rem;margin-bottom:18px;}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
 .ffull{grid-column:1/-1;}
 .fg{display:flex;flex-direction:column;gap:4px;}
-.fg label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.fg input,.fg select,.fg textarea{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-family:'DM Sans',sans-serif;font-size:.875rem;color:var(--ink);background:#fff;outline:none;}
+.fg label{font-size:.7rem;font-weight:700;color:var(–muted);text-transform:uppercase;letter-spacing:.5px;}
+.fg input,.fg select,.fg textarea{border:1.5px solid var(–border);border-radius:8px;padding:8px 11px;font-family:‘DM Sans’,sans-serif;font-size:.875rem;color:var(–ink);background:#fff;outline:none;}
 .fg textarea{resize:vertical;min-height:66px;}
 .mdims{grid-column:1/-1;margin-top:4px;}
-.mdims h3{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:11px;}
+.mdims h3{font-size:.72rem;font-weight:700;color:var(–muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:11px;}
 .mdr{display:grid;grid-template-columns:80px 1fr 80px 24px;align-items:center;gap:8px;margin-bottom:9px;}
-.mdr .mlabel{font-size:.78rem;color:var(--muted);text-align:right;}
-.mdr .mpoles input[type=range]{width:100%;height:8px;-webkit-appearance:none;border-radius:4px;outline:none;cursor:pointer;display:block;background:linear-gradient(to right,var(--accent) 0%,var(--accent) 40%,var(--border) 40%);}
-.mdr .mpoles input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;}
-.mdr .mpr{font-size:.78rem;color:var(--muted);}
+.mdr .mlabel{font-size:.78rem;color:var(–muted);text-align:right;}
+.mdr .mpoles input[type=range]{width:100%;height:8px;-webkit-appearance:none;border-radius:4px;outline:none;cursor:pointer;display:block;background:linear-gradient(to right,var(–accent) 0%,var(–accent) 40%,var(–border) 40%);}
+.mdr .mpoles input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(–ink);box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;}
+.mdr .mpr{font-size:.78rem;color:var(–muted);}
 .mdr .mnum{display:none;}
 .modal-footer{display:flex;gap:9px;justify-content:flex-end;margin-top:22px;}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:.83rem;font-weight:500;opacity:0;transform:translateY(7px);transition:all .22s;z-index:300;pointer-events:none;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(–ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:.83rem;font-weight:500;opacity:0;transform:translateY(7px);transition:all .22s;z-index:300;pointer-events:none;}
 .toast.show{opacity:1;transform:translateY(0);}
 #imp-file{display:none;}
 @media(max-width:600px){.btn-label{display:none;}}
 @media print{
-  #view-admin,#view-login,.steps-bar,.btn-row,.no-print,.student-form,#screen-class,#screen-slider,#screen-select{display:none!important;}
-  #view-student.active{display:block!important;}
-  #screen-summary{display:block!important;}
-  body{background:white;}
-  .card{box-shadow:none;border:1px solid #ccc;}
+#view-admin,#view-login,.steps-bar,.btn-row,.no-print,.student-form,#screen-class,#screen-slider,#screen-select{display:none!important;}
+#view-student.active{display:block!important;}
+#screen-summary{display:block!important;}
+body{background:white;}
+.card{box-shadow:none;border:1px solid #ccc;}
 }
 </style>
+
 </head>
 <body>
 
 <!-- LOGIN -->
+
 <div id="view-login">
   <div class="login-card">
     <div style="font-size:1.8rem;margin-bottom:6px">🔐</div>
@@ -229,6 +233,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
 </div>
 
 <!-- STUDENT -->
+
 <div id="view-student">
   <header>
     <div class="header-inner">
@@ -262,7 +267,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
     <div class="screen" id="screen-select">
       <div class="card">
         <div class="card-title">Deine Kurswahl</div>
-        <div class="card-sub">Setze bei jedem Kurs ein Häkchen bei <strong>Hauptwahl</strong> und/oder <strong>Ersatzwahl</strong>.</div>
+        <div class="card-sub" id="select-subtitle"></div>
         <div class="req-status" id="req-status"></div>
         <div id="course-sections"></div>
         <div id="alert-box"></div>
@@ -292,6 +297,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
 </div>
 
 <!-- ADMIN -->
+
 <div id="view-admin">
   <header>
     <div class="header-inner">
@@ -338,88 +344,92 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
       </div>
     </div>
 
-    <!-- KATEGORIEN TAB -->
-    <div id="atab-kategorien" style="display:none">
-      <div class="settings-card">
-        <h2>Kategorien</h2>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Lege Kategorien fest. <strong>Pos.</strong> bestimmt die Sortierung (kleinere Zahl = weiter oben).</p>
-        <div class="table-wrap" style="margin-bottom:14px">
-          <table class="atable" style="min-width:400px">
-            <thead><tr>
-              <th style="width:50px">Aktiv</th>
-              <th style="width:70px">Pos.</th>
-              <th>Bezeichnung</th>
-              <th style="width:60px">Farbe</th>
-              <th style="width:40px"></th>
-            </tr></thead>
-            <tbody id="kat-list"></tbody>
-          </table>
-        </div>
-        <button class="btn btn-accent btn-sm" onclick="addKat()">+ Neue Kategorie</button>
-      </div>
-      <div class="settings-card">
-        <h2>Schieberegler</h2>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Lege fest welche Schieberegler in der Kurswahl angezeigt werden. Deaktivierte Schieberegler fliessen nicht in die Passung-Berechnung ein.</p>
-        <div class="table-wrap" style="margin-bottom:14px">
-          <table class="atable" style="min-width:600px">
-            <thead><tr>
-              <th style="width:50px">Aktiv</th>
-              <th style="width:120px">Linker Pol</th>
-              <th style="width:160px">Linker Satz</th>
-              <th style="width:120px">Rechter Pol</th>
-              <th style="width:160px">Rechter Satz</th>
-              <th style="width:40px"></th>
-            </tr></thead>
-            <tbody id="dims-tbody"></tbody>
-          </table>
-        </div>
-        <button class="btn btn-accent btn-sm" onclick="addDim()">+ Neuer Schieberegler</button>
-      </div>
-      <div class="settings-card">
-        <h2>Kategorietyp pro Klasse</h2>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Lege fest ob eine Kategorie für jede Klasse <strong>Pflicht</strong> (1 Kurs muss gewählt werden) oder <strong>Frei</strong> (zählt zu den freien Kursen) ist.</p>
-        <div class="class-rules-grid" id="class-rules-grid"></div>
-      </div>
-      <div class="settings-card">
-        <h2>Freie Kurse – Mindestanzahl</h2>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Wie viele freie Kurse müssen pro Klasse mindestens gewählt werden (Haupt- und Ersatzwahl total).</p>
-        <div class="class-rules-grid" id="frei-rules-grid"></div>
-      </div>
+```
+<!-- KATEGORIEN TAB -->
+<div id="atab-kategorien" style="display:none">
+  <div class="settings-card">
+    <h2>Kategorien</h2>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Lege Kategorien fest. <strong>Pos.</strong> bestimmt die Sortierung (kleinere Zahl = weiter oben).</p>
+    <div class="table-wrap" style="margin-bottom:14px">
+      <table class="atable" style="min-width:400px">
+        <thead><tr>
+          <th style="width:50px">Aktiv</th>
+          <th style="width:70px">Pos.</th>
+          <th>Bezeichnung</th>
+          <th style="width:60px">Farbe</th>
+          <th style="width:40px"></th>
+        </tr></thead>
+        <tbody id="kat-list"></tbody>
+      </table>
     </div>
+    <button class="btn btn-accent btn-sm" onclick="addKat()">+ Neue Kategorie</button>
+  </div>
+  <div class="settings-card">
+    <h2>Schieberegler</h2>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Lege fest welche Schieberegler in der Kurswahl angezeigt werden. Deaktivierte Schieberegler fliessen nicht in die Passung-Berechnung ein.</p>
+    <div class="table-wrap" style="margin-bottom:14px">
+      <table class="atable" style="min-width:600px">
+        <thead><tr>
+          <th style="width:50px">Aktiv</th>
+          <th style="width:120px">Linker Pol</th>
+          <th style="width:160px">Linker Satz</th>
+          <th style="width:120px">Rechter Pol</th>
+          <th style="width:160px">Rechter Satz</th>
+          <th style="width:40px"></th>
+        </tr></thead>
+        <tbody id="dims-tbody"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-accent btn-sm" onclick="addDim()">+ Neuer Schieberegler</button>
+  </div>
+  <div class="settings-card">
+    <h2>Kategorietyp pro Klasse</h2>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Lege fest ob eine Kategorie für jede Klasse <strong>Pflicht</strong> (1 Kurs muss gewählt werden) oder <strong>Frei</strong> (zählt zu den freien Kursen) ist.</p>
+    <div class="class-rules-grid" id="class-rules-grid"></div>
+  </div>
+  <div class="settings-card">
+    <h2>Freie Kurse – Mindestanzahl</h2>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Wie viele freie Kurse müssen pro Klasse mindestens gewählt werden (Haupt- und Ersatzwahl total).</p>
+    <div class="class-rules-grid" id="frei-rules-grid"></div>
+  </div>
+</div>
 
-    <!-- SETTINGS TAB -->
-    <div id="atab-settings" style="display:none">
-      <div class="settings-card">
-        <h2>Allgemein</h2>
-        <div class="srow"><label>Titel (Kurswahl-Seite)</label><input type="text" id="set-titel" oninput="saveSetting('titel',this.value)"></div>
-        <div class="srow"><label>Schuljahr</label><input type="text" id="set-sj" oninput="saveSetting('schuljahr',this.value)"></div>
-        <div class="srow"><label>Schulname</label><input type="text" id="set-sn" oninput="saveSetting('schulname',this.value)"></div>
-      </div>
-      <div class="settings-card">
-        <h2>Klassenauswahl</h2>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Lege fest welche Klassen aktiv sind und wie ihre Bezeichnung lautet.</p>
-        <div id="klassen-config"></div>
-      </div>
-      <div class="settings-card">
-        <h2>Passwort ändern</h2>
-        <div class="srow">
-          <label>Neues Passwort</label>
-          <input type="password" id="set-pw1" placeholder="Neues Passwort">
-          <input type="password" id="set-pw2" placeholder="Bestätigen">
-          <button class="btn btn-ghost btn-sm" onclick="changePw()">Ändern</button>
-        </div>
-        <div id="pw-msg" style="font-size:.79rem;margin-top:4px"></div>
-      </div>
-      <div class="settings-card" style="border-color:#fcc;background:#fff8f8">
-        <h2>Daten zurücksetzen</h2>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Setzt alle Daten auf die Standardwerte zurück.</p>
-        <button class="btn btn-danger btn-sm" onclick="resetToDefault()">⚠ Auf Standarddaten zurücksetzen</button>
-      </div>
+<!-- SETTINGS TAB -->
+<div id="atab-settings" style="display:none">
+  <div class="settings-card">
+    <h2>Allgemein</h2>
+    <div class="srow"><label>Titel (Kurswahl-Seite)</label><input type="text" id="set-titel" oninput="saveSetting('titel',this.value)"></div>
+    <div class="srow"><label>Schuljahr</label><input type="text" id="set-sj" oninput="saveSetting('schuljahr',this.value)"></div>
+    <div class="srow"><label>Schulname</label><input type="text" id="set-sn" oninput="saveSetting('schulname',this.value)"></div>
+  </div>
+  <div class="settings-card">
+    <h2>Klassenauswahl</h2>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Lege fest welche Klassen aktiv sind und wie ihre Bezeichnung lautet.</p>
+    <div id="klassen-config"></div>
+  </div>
+  <div class="settings-card">
+    <h2>Passwort ändern</h2>
+    <div class="srow">
+      <label>Neues Passwort</label>
+      <input type="password" id="set-pw1" placeholder="Neues Passwort">
+      <input type="password" id="set-pw2" placeholder="Bestätigen">
+      <button class="btn btn-ghost btn-sm" onclick="changePw()">Ändern</button>
     </div>
+    <div id="pw-msg" style="font-size:.79rem;margin-top:4px"></div>
+  </div>
+  <div class="settings-card" style="border-color:#fcc;background:#fff8f8">
+    <h2>Daten zurücksetzen</h2>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Setzt alle Daten auf die Standardwerte zurück.</p>
+    <button class="btn btn-danger btn-sm" onclick="resetToDefault()">⚠ Auf Standarddaten zurücksetzen</button>
+  </div>
+</div>
+```
+
   </main>
 </div>
 
 <!-- KURS MODAL -->
+
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
     <h2 id="modal-title">Neuer Kurs</h2>
@@ -440,6 +450,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
 </div>
 
 <!-- KURS INFO POPUP -->
+
 <div class="modal-bg" id="info-bg">
   <div class="modal" style="max-width:500px">
     <h2 id="info-name" style="margin-bottom:8px"></h2>
@@ -450,6 +461,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
 </div>
 
 <!-- CONFIRM -->
+
 <div class="confirm-bg" id="confirm-bg">
   <div class="confirm-box">
     <h3 id="confirm-title">Löschen</h3>
@@ -629,9 +641,19 @@ function changePw(){
 // ═══════════════════════════════════
 // STUDENT – NAVIGATION
 // ═══════════════════════════════════
+let currentStep=1, maxStep=1;
 function sGoTo(n){
+  currentStep=n;
+  if(n>maxStep)maxStep=n;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.step-tab').forEach((t,i)=>{t.classList.toggle('active',i+1===n);t.classList.toggle('done',i+1<n);});
+  document.querySelectorAll('.step-tab').forEach((t,i)=>{
+    const step=i+1;
+    t.classList.toggle('active',step===n);
+    t.classList.toggle('done',step<n);
+    const reachable=step<=maxStep;
+    t.style.cursor=reachable&&step!==n?'pointer':'default';
+    t.onclick=reachable&&step!==n?()=>sGoTo(step):null;
+  });
   document.getElementById(['screen-class','screen-slider','screen-select','screen-summary'][n-1]).classList.add('active');
   if(n===3)renderCourses();
   if(n===4)renderSummary();
@@ -644,6 +666,7 @@ function renderClassButtons(){
 }
 function selectClass(k,btn){
   ss.klasse=k;
+  maxStep=1;
   document.querySelectorAll('.class-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   ss.sliders={};
@@ -735,12 +758,24 @@ function renderCourses(){
     html+=`</div>`;
   }
   if(freiKats.length){
+    const freiBlockTitle=freiRules.haupt===0?'Freie Wahl – optional':freiRules.haupt===1?'Freie Wahl – mind. 1 Kurs':`Freie Wahl – mind. ${freiRules.haupt} Kurse`;
     html+=`<div style="background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--border)">
-      <div style="font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Freie Wahl – mind. ${freiRules.haupt} Kurse total</div>`;
+      <div style="font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">${freiBlockTitle}</div>`;
     freiKats.forEach(kat=>{html+=renderKatSection(kat,withScores,freiTopNames,false);});
     html+=`</div>`;
   }
   document.getElementById('course-sections').innerHTML=html;
+  const sub=document.getElementById('select-subtitle');
+  if(sub){
+    const h=freiRules.haupt, e=freiRules.ersatz;
+    let freiText='';
+    if(h===0&&e===0) freiText='Bei der <strong>Freien Wahl</strong> sind keine Kurse erforderlich.';
+    else if(h===1&&e===1) freiText='Bei der <strong>Freien Wahl</strong> wählst du 1 Kurs als Haupt- und 1 als Ersatzwahl – aus beliebigen Kategorien.';
+    else if(h===1) freiText=`Bei der <strong>Freien Wahl</strong> wählst du 1 Kurs als Hauptwahl und mindestens <strong>${e}</strong> als Ersatzwahl – aus beliebigen Kategorien.`;
+    else if(e===1) freiText=`Bei der <strong>Freien Wahl</strong> wählst du mindestens <strong>${h}</strong> Kurse als Hauptwahl und 1 als Ersatzwahl – aus beliebigen Kategorien.`;
+    else freiText=`Bei der <strong>Freien Wahl</strong> wählst du mindestens <strong>${h}</strong> Kurse als Haupt- und <strong>${e}</strong> als Ersatzwahl – aus beliebigen Kategorien.`;
+    sub.innerHTML=`Wähle bei den <strong>Pflichtkategorien</strong> je 1 Haupt- und 1 Ersatzwahl. ${freiText}`;
+  }
   updateReqs();
 }
 
@@ -1108,5 +1143,6 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 // ═══════════════════════════════════
 loadData();applyConfig();showView('student');
 </script>
+
 </body>
 </html>
