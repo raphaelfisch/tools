@@ -300,7 +300,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
           <div class="sfield"><label>Klasse *</label><input id="inp-kl" placeholder="z.B. 2d" oninput="updateMeta();updatePdfBtn()"></div>
         </div>
         <table class="summary-table" id="sum-table"></table>
-        <div style="background:#f0f7f4;border-radius:10px;padding:13px 15px;font-size:.81rem;color:#2e7d32;border:1px solid #c8e6c9">✅ Alle Pflichtbedingungen erfüllt. Bitte gib dieses Blatt deiner Klassenlehrperson ab.</div>
+        <div id="confirm-box" style="background:#f0f7f4;border-radius:10px;padding:13px 15px;font-size:.81rem;color:#2e7d32;border:1px solid #c8e6c9"></div>
         <div class="sign-row">
           <div class="sign-field"><div class="sign-line"></div><div class="sign-label">Unterschrift Schüler/in</div></div>
           <div class="sign-field"><div class="sign-line"></div><div class="sign-label">Unterschrift Erziehungsberechtigte</div></div>
@@ -419,6 +419,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <div class="srow"><label>Schuljahr</label><input type="text" id="set-sj" oninput="saveSetting('schuljahr',this.value)"></div>
         <div class="srow"><label>Schulname</label><input type="text" id="set-sn" oninput="saveSetting('schulname',this.value)"></div>
         <div class="srow"><label>URL der Datei</label><input type="text" id="set-url" placeholder="z.B. https://schule.ch/tools/kurswahl.html" oninput="saveSetting('baseUrl',this.value)"></div>
+        <div class="srow"><label>Abgabetext</label><input type="text" id="set-abgabe-text" placeholder="Abgabetext..." oninput="saveSetting('abgabeText',this.value)"></div>
       </div>
       <div class="settings-card">
         <h2>Klassenauswahl</h2>
@@ -508,6 +509,7 @@ const DEFAULT_KATEGORIEN = [
 
 const DEFAULT_CFG = {
   titel:'Kursprogramm 2026/27', schuljahr:'2026/27', schulname:'Sekundarschulzentrum Ägelsee', password:'admin', baseUrl:'https://raphaelfisch.github.io/tools/kurswahl.html',
+  abgabeText:'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.',
   klassen:[
     {nr:1,label:'1. Klasse',aktiv:false},
     {nr:2,label:'2. Klasse',aktiv:true},
@@ -591,6 +593,7 @@ function loadData(){
   if(cfg.titel==='Kurswahl 2026/27') cfg.titel='Kursprogramm 2026/27';
   if(!cfg.baseUrl) cfg.baseUrl='https://raphaelfisch.github.io/tools/kurswahl.html';
   if(cfg.schulname==='Sekundarschulzentrum') cfg.schulname='Sekundarschulzentrum Ägelsee';
+  if(!cfg.abgabeText) cfg.abgabeText='Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
   // init sliders state from active dims
   ss.sliders={};
   DIMS.filter(d=>d.aktiv).forEach(d=>ss.sliders[d.key]=50);
@@ -918,6 +921,9 @@ function renderSummary(){
     }
   });
   document.getElementById('sum-table').innerHTML=`<thead><tr><th>Kategorie</th><th>Hauptwahl</th><th>Ersatzwahl</th></tr></thead><tbody>${rows}</tbody>`;
+  // Confirmation box
+  const text=cfg.abgabeText||'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
+  document.getElementById('confirm-box').innerHTML=`✅ Alle Pflichtbedingungen erfüllt. ${text}`;
   updateMeta();
 }
 async function generatePDF(){
@@ -1070,7 +1076,8 @@ async function generatePDF(){
   doc.setFont('helvetica','normal');
   doc.setFontSize(8);
   doc.setTextColor(46,125,50);
-  doc.text('Alle Pflichtbedingungen erfüllt. Bitte gib dieses Blatt deiner Klassenlehrperson ab.',ml+4,y+boxH/2,{baseline:'middle'});
+  const abgabeText=cfg.abgabeText||'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
+  doc.text(`Alle Pflichtbedingungen erfüllt. ${abgabeText}`,ml+4,y+boxH/2,{baseline:'middle',maxWidth:pw-8});
   y+=boxH+6;
 
   y+=16;
@@ -1114,39 +1121,41 @@ function updatePdfBtn(){
   if(btn) btn.disabled=!(vn&&nn&&kl);
 }
 function buildStateURL(){
-  // Ultra-compact: store only indices per category
-  const ak=kurse.filter(k=>k.aktiv);
-  
-  // Encode haupt/ersatz as arrays of indices
-  const h={}, e={};
+  // Auto-generate short keys for category IDs (first 2 chars, extend if collision)
   const kats=getSortedKats().filter(k=>k.aktiv!==false);
+  const idToShort={}, usedShorts=new Set();
   kats.forEach(kat=>{
-    const hv=ss.haupt[kat.id];
-    const ev=ss.ersatz[kat.id];
-    const katKurse=ak.filter(k=>k.katId===kat.id);
-    const toIdx=name=>katKurse.findIndex(k=>k.name===name);
-    if(Array.isArray(hv)) h[kat.id]=hv.map(toIdx).filter(i=>i>=0);
-    else if(hv){const i=toIdx(hv);if(i>=0)h[kat.id]=i;}
-    if(Array.isArray(ev)) e[kat.id]=ev.map(toIdx).filter(i=>i>=0);
-    else if(ev){const i=toIdx(ev);if(i>=0)e[kat.id]=i;}
+    let s=kat.id.slice(0,2);
+    let len=2;
+    while(usedShorts.has(s)) s=kat.id.slice(0,++len);
+    idToShort[kat.id]=s;
+    usedShorts.add(s);
   });
 
-  const state={
-    k:ss.klasse,h,e,
-    sl:ss.sliders,
-    vn:document.getElementById('inp-vn')?.value||'',
-    nn:document.getElementById('inp-nn')?.value||'',
-    kl:document.getElementById('inp-kl')?.value||'',
-  };
-  const base=cfg.baseUrl||window.location.href.split('#')[0];
+  const ak=kurse.filter(k=>k.aktiv);
+  const h={}, e={};
+  kats.forEach(kat=>{
+    const sk=idToShort[kat.id];
+    const katKurse=ak.filter(k=>k.katId===kat.id);
+    const toIdx=name=>katKurse.findIndex(k=>k.name===name);
+    const hv=ss.haupt[kat.id];
+    const ev=ss.ersatz[kat.id];
+    if(Array.isArray(hv)){const a=hv.map(toIdx).filter(i=>i>=0);if(a.length)h[sk]=a;}
+    else if(hv){const i=toIdx(hv);if(i>=0)h[sk]=i;}
+    if(Array.isArray(ev)){const a=ev.map(toIdx).filter(i=>i>=0);if(a.length)e[sk]=a;}
+    else if(ev){const i=toIdx(ev);if(i>=0)e[sk]=i;}
+  });
+
+  const state={k:ss.klasse,h,e,sl:ss.sliders,vn:document.getElementById('inp-vn')?.value||'',nn:document.getElementById('inp-nn')?.value||'',kl:document.getElementById('inp-kl')?.value||''};
   const b64=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  const base=cfg.baseUrl||window.location.href.split('#')[0];
   return base+'#'+b64;
 }
 function updateMeta(){
   const v=document.getElementById('inp-vn')?.value||'';
   const n=document.getElementById('inp-nn')?.value||'';
   const k=document.getElementById('inp-kl')?.value||'';
-  document.getElementById('print-meta').textContent=`${[v,n].filter(Boolean).join(' ')||'Schüler/in'}${k?' · Klasse '+k:''} · ${ss.klasse}. Sekundarstufe · Schuljahr ${cfg.schuljahr||'2026/27'}`;
+  document.getElementById('print-meta').textContent=`${[v,n].filter(Boolean).join(' ')||''}${k?' · Klasse '+k:''} · ${ss.klasse}. Sekundarstufe · Schuljahr ${cfg.schuljahr||'2026/27'}`;
   const btn=document.getElementById('btn-pdf');
   if(btn) btn.disabled=!(v.trim()&&n.trim()&&k.trim());
 }
@@ -1325,6 +1334,7 @@ function renderSettings(){
   document.getElementById('set-sj').value=cfg.schuljahr||'';
   document.getElementById('set-sn').value=cfg.schulname||'';
   if(document.getElementById('set-url')) document.getElementById('set-url').value=cfg.baseUrl||'';
+  if(document.getElementById('set-abgabe-text')) document.getElementById('set-abgabe-text').value=cfg.abgabeText||'';
   // Frei rules
   const klassen=cfg.klassen||DEFAULT_CFG.klassen;
   const fr=cfg.freiRules||DEFAULT_CFG.freiRules;
@@ -1493,11 +1503,19 @@ document.addEventListener('DOMContentLoaded',()=>{
         ss.klasse=state.k;
         initSelectionState();
         const kats=getSortedKats().filter(k=>k.aktiv!==false);
+        // Build shortKey -> katId mapping (same logic as buildStateURL)
+        const usedShorts=new Set(), shortToId={};
         kats.forEach(kat=>{
+          let s=kat.id.slice(0,2), len=2;
+          while(usedShorts.has(s)) s=kat.id.slice(0,++len);
+          shortToId[s]=kat.id; usedShorts.add(s);
+        });
+        kats.forEach(kat=>{
+          const sk=Object.keys(shortToId).find(k=>shortToId[k]===kat.id)||kat.id;
           const katKurse=ak.filter(k=>k.katId===kat.id);
           const toName=i=>katKurse[i]?.name;
-          const hv=state.h[kat.id];
-          const ev=state.e?.[kat.id];
+          const hv=state.h[sk]??state.h[kat.id];
+          const ev=state.e?.[sk]??state.e?.[kat.id];
           if(hv!==undefined){
             if(Array.isArray(hv)) ss.haupt[kat.id]=hv.map(toName).filter(Boolean);
             else if(typeof hv==='number') ss.haupt[kat.id]=toName(hv)||null;
