@@ -406,7 +406,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
       </div>
       <div class="settings-card">
         <h2>Freie Kurse – Mindestanzahl</h2>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Wie viele freie Kurse müssen pro Klasse mindestens gewählt werden (Haupt- und Ersatzwahl total).</p>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Wie viele freie Kurse müssen pro Klasse mindestens gewählt werden – getrennt nach Hauptwahl und Ersatzwahl.</p>
         <div class="class-rules-grid" id="frei-rules-grid"></div>
       </div>
     </div>
@@ -609,9 +609,10 @@ function saveSetting(k,v){cfg[k]=v;saveData();applyConfig();}
 function getSortedKats(){return [...kategorien].sort((a,b)=>a.order-b.order);}
 function getKat(id){return kategorien.find(k=>k.id===id)||{label:id,color:'#888',pflicht:false};}
 function catBg(hex){
-  // lighten hex color for background
+  if(!hex||hex.length<7) return 'rgba(0,0,0,0.05)';
   const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},0.1)`;
+  if(isNaN(r)||isNaN(g)||isNaN(b)) return 'rgba(0,0,0,0.05)';
+  return `rgba(${r},${g},${b},0.25)`;
 }
 function isPflichtForKlasse(katId, klasse){
   const overrides=(cfg.katRules||{})[klasse]||{};
@@ -747,7 +748,7 @@ function darkenColor(hex){
   const b=Math.max(0,parseInt(hex.slice(5,7),16)-60);
   return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 }
-function renderKatSection(kat,withScores,freiTopNames,isPflicht){
+function renderKatSection(kat,withScores,freiTopNames,freiMidNames,isPflicht){
   const katKurse=withScores.filter(k=>k.katId===kat.id);
   if(!katKurse.length)return'';
   const labelColor=getContrastColor(kat.color)==='#ffffff'?kat.color:darkenColor(kat.color);
@@ -760,9 +761,10 @@ function renderKatSection(kat,withScores,freiTopNames,isPflicht){
     let cls=`course-card`;
     const color=kat.color,bg=catBg(color);
     let style=`--cat-color:${color};--cat-bg:${bg};border-left-color:${color};`;
+    if(!isPri&&!isErs) style+=`background:${bg};`;
     if(isPri)cls+=' primary-sel';
     if(isErs)cls+=' ersatz-sel';
-    const mc=isPflicht?(idx===0?'match-high':'match-low'):(freiTopNames.has(k.name)?'match-high':'match-low');
+    const mc=isPflicht?(idx===0?'match-high':idx===1?'match-mid':'match-low'):(freiTopNames.has(k.name)?'match-high':freiMidNames.has(k.name)?'match-mid':'match-low');
     const esc=k.name.replace(/'/g,"\\'");
     html+=`<div class="${cls}" onclick="openInfo('${esc}')" style="${style}">
       <div class="course-match ${mc}">${k.match}%</div>
@@ -786,34 +788,36 @@ function renderCourses(){
   const withScores=ak.map(k=>({...k,match:Math.round(matchScore(k)*100)}));
   const freiKurse=withScores.filter(k=>{const kat=getKat(k.katId);return kat.aktiv!==false&&!isPflichtForKlasse(k.katId,ss.klasse);}).sort((a,b)=>b.match-a.match);
   const freiTopNames=new Set(freiKurse.slice(0,freiRules.haupt).map(k=>k.name));
+  const freiMidNames=new Set(freiKurse.slice(freiRules.haupt,freiRules.haupt*2).map(k=>k.name));
   const pflichtKats=kats.filter(k=>isPflichtForKlasse(k.id,ss.klasse));
   const freiKats=kats.filter(k=>!isPflichtForKlasse(k.id,ss.klasse));
   let html='';
   if(pflichtKats.length){
-    html+=`<div style="background:#f8f7f4;border-radius:12px;padding:16px 18px;margin-bottom:16px;border:1px solid var(--border)">
-      <div style="font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Pflichtkategorien – je 1 Kurs wählen</div>`;
-    pflichtKats.forEach(kat=>{html+=renderKatSection(kat,withScores,freiTopNames,true);});
+    html+=`<div style="background:#f8f7f4;border-radius:12px;padding:16px 18px;margin-bottom:16px;border:1px solid var(--border);border-left:4px solid var(--accent)">
+      <div style="font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:4px">✅ Pflichtkategorien – je 1 Kurs wählen</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:14px">Wähle je 1 Hauptwahl und 1 Ersatzwahl pro Kategorie.</div>`;
+    pflichtKats.forEach(kat=>{html+=renderKatSection(kat,withScores,freiTopNames,freiMidNames,true);});
     html+=`</div>`;
   }
   if(freiKats.length){
-    const freiBlockTitle=freiRules.haupt===0?'Freie Wahl – optional':freiRules.haupt===1?'Freie Wahl – mind. 1 Kurs':`Freie Wahl – mind. ${freiRules.haupt} Kurse`;
-    html+=`<div style="background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--border)">
-      <div style="font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">${freiBlockTitle}</div>`;
-    freiKats.forEach(kat=>{html+=renderKatSection(kat,withScores,freiTopNames,false);});
+    const h=freiRules.haupt, e=freiRules.ersatz;
+    const isFreiwillig=h===0&&e===0;
+    const freiBlockTitle=isFreiwillig?'Zusätzliche Kurse – freiwillig':h===1?'Freie Wahl – mind. 1 Hauptwahl und mind. 1 Ersatzwahl':`Freie Wahl – mind. ${h} Hauptwahl und mind. ${e} Ersatzwahl`;
+    const freiBlockSub=isFreiwillig?'Du kannst Kurse wählen, musst aber nicht.':`Mindestens ${h} Hauptwahl und mindestens ${e} Ersatzwahl – aus beliebigen Kategorien.`;
+    const freiStyle=isFreiwillig
+      ?'background:#f5f5f5;border-radius:12px;padding:16px 18px;border:1px dashed #ccc;opacity:0.85'
+      :'background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--border);border-left:4px solid #7aab7a';
+    const titleColor=isFreiwillig?'var(--muted)':'#4a7a4a';
+    const titleIcon=isFreiwillig?'🎯':'🎯';
+    html+=`<div style="${freiStyle}">
+      <div style="font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${titleColor};margin-bottom:4px">${titleIcon} ${freiBlockTitle}</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:14px">Die Kurse können aus beliebigen Kategorien gewählt werden.</div>`;
+    freiKats.forEach(kat=>{html+=renderKatSection(kat,withScores,freiTopNames,freiMidNames,false);});
     html+=`</div>`;
   }
   document.getElementById('course-sections').innerHTML=html;
   const sub=document.getElementById('select-subtitle');
-  if(sub){
-    const h=freiRules.haupt, e=freiRules.ersatz;
-    let freiText='';
-    if(h===0&&e===0) freiText='Bei der <strong>Freien Wahl</strong> sind keine Kurse erforderlich.';
-    else if(h===1&&e===1) freiText='Bei der <strong>Freien Wahl</strong> wählst du 1 Kurs als Haupt- und 1 als Ersatzwahl – aus beliebigen Kategorien.';
-    else if(h===1) freiText=`Bei der <strong>Freien Wahl</strong> wählst du 1 Kurs als Hauptwahl und mindestens <strong>${e}</strong> als Ersatzwahl – aus beliebigen Kategorien.`;
-    else if(e===1) freiText=`Bei der <strong>Freien Wahl</strong> wählst du mindestens <strong>${h}</strong> Kurse als Hauptwahl und 1 als Ersatzwahl – aus beliebigen Kategorien.`;
-    else freiText=`Bei der <strong>Freien Wahl</strong> wählst du mindestens <strong>${h}</strong> Kurse als Haupt- und <strong>${e}</strong> als Ersatzwahl – aus beliebigen Kategorien.`;
-    sub.innerHTML=`Wähle bei den <strong>Pflichtkategorien</strong> je 1 Haupt- und 1 Ersatzwahl. ${freiText}`;
-  }
+  if(sub) sub.innerHTML='';
   updateReqs();
 }
 
@@ -882,8 +886,8 @@ function updateReqs(){
   const totalH=freiKats.reduce((s,k)=>s+(ss.haupt[k.id]||[]).length,0);
   const totalE=freiKats.reduce((s,k)=>s+(ss.ersatz[k.id]||[]).length,0);
   if(freiKats.length>0){
-    reqs.push({l:`Freie Kurse Hauptwahl (${totalH}/${fr.haupt}+)`,done:totalH>=fr.haupt,ers:false});
-    reqs.push({l:`Freie Kurse Ersatzwahl (${totalE}/${fr.ersatz}+)`,done:totalE>=fr.ersatz,ers:true});
+    reqs.push({l:`Freie Kurse Hauptwahl`,done:totalH>=fr.haupt,ers:false});
+    reqs.push({l:`Freie Kurse Ersatzwahl`,done:totalE>=fr.ersatz,ers:true});
   }
   document.getElementById('req-status').innerHTML=reqs.map(r=>`<div class="req-pill ${r.done?(r.ers?'ersatz-done':'done'):'todo'}">${r.done?'✓':'○'} ${r.l}</div>`).join('');
   const ok=reqs.every(r=>r.done);
