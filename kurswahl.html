@@ -691,7 +691,7 @@ function sGoTo(n){
 function renderClassButtons(){
   const klassen=(cfg.klassen||DEFAULT_CFG.klassen).filter(k=>k.aktiv!==false);
   const el=document.getElementById('class-buttons');
-  if(el) el.innerHTML=klassen.map(k=>`<button class="class-btn" onclick="selectClass(${k.nr},this)">${k.label}</button>`).join('');
+  if(el) el.innerHTML=klassen.map(k=>`<button class="class-btn${ss.klasse===k.nr?' selected':''}" onclick="selectClass(${k.nr},this)">${k.label}</button>`).join('');
 }
 function selectClass(k,btn){
   const klassChanged=ss.klasse!==k;
@@ -713,9 +713,10 @@ function selectClass(k,btn){
 function buildSliders(){
   const c=document.getElementById('sliders');c.innerHTML='';
   DIMS.filter(d=>d.aktiv).forEach(d=>{
+    const v=ss.sliders[d.key]??50;
     const div=document.createElement('div');div.className='slider-item';
-    div.innerHTML=`<div class="slider-poles"><div class="pole left" id="pl-${d.key}"><span class="emoji">${d.le}</span><span>${d.lt}</span></div><div class="pole right" id="pr-${d.key}"><span class="emoji">${d.re}</span><span>${d.rt}</span></div></div><input type="range" min="0" max="100" value="50" oninput="onSlider(this,'${d.key}')">`;
-    c.appendChild(div);setBg(div.querySelector('input'),50);
+    div.innerHTML=`<div class="slider-poles"><div class="pole left${v<40?' active-left':''}" id="pl-${d.key}"><span class="emoji">${d.le}</span><span>${d.lt}</span></div><div class="pole right${v>60?' active-right':''}" id="pr-${d.key}"><span class="emoji">${d.re}</span><span>${d.rt}</span></div></div><input type="range" min="0" max="100" value="${v}" oninput="onSlider(this,'${d.key}')">`;
+    c.appendChild(div);setBg(div.querySelector('input'),v);
   });
 }
 function onSlider(el,key){const v=parseInt(el.value);ss.sliders[key]=v;setBg(el,v);document.getElementById('pl-'+key).className='pole left'+(v<40?' active-left':'');document.getElementById('pr-'+key).className='pole right'+(v>60?' active-right':'');}
@@ -1131,6 +1132,7 @@ function buildStateURL(){
 
   const state={
     k:ss.klasse,h,e,
+    sl:ss.sliders,
     vn:document.getElementById('inp-vn')?.value||'',
     nn:document.getElementById('inp-nn')?.value||'',
     kl:document.getElementById('inp-kl')?.value||'',
@@ -1505,6 +1507,7 @@ document.addEventListener('DOMContentLoaded',()=>{
           }
         });
         loadedFromHash=true;
+        if(state.sl) ss.sliders=state.sl;
       }
     }catch(e){console.log('No valid state in URL');}
   }
