@@ -911,12 +911,6 @@ function renderSummary(){
   document.getElementById('sum-table').innerHTML=`<thead><tr><th>Kategorie</th><th>Hauptwahl</th><th>Ersatzwahl</th></tr></thead><tbody>${rows}</tbody>`;
   updateMeta();
 }
-function buildStateURL(vn,nn,kl){
-  const state={v:vn,n:nn,k:kl,kl:ss.klasse,h:ss.haupt,e:ss.ersatz};
-  const json=JSON.stringify(state);
-  const b64=btoa(unescape(encodeURIComponent(json)));
-  return window.location.href.split('#')[0]+'#k='+b64;
-}
 async function generatePDF(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -927,7 +921,7 @@ async function generatePDF(){
   const titel=cfg.titel||('Kurswahl '+(cfg.schuljahr||'2026/27'));
   const now=new Date();
   const dateStr=now.toLocaleDateString('de-CH')+' '+now.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
-  const meta=`${name}${kl?' · Klasse '+kl:''} · ${ss.klasse}. Sekundarstufe · Schuljahr ${cfg.schuljahr||'2026/27'} · ${dateStr}`;
+  const meta=`${name}${kl?' · Klasse '+kl:''} · ${ss.klasse}. Sekundarstufe · Schuljahr ${cfg.schuljahr||'2026/27'} · Erstellt am ${dateStr}`;
 
   let y=18;
   const ml=14,mr=14,pw=210-ml-mr;
@@ -947,10 +941,7 @@ async function generatePDF(){
   doc.setFontSize(9);
   doc.setTextColor(122,115,105);
   doc.text(meta,ml,y,{maxWidth:textW});
-  y+=5;
-  doc.setFontSize(7.5);
-  doc.text('Erstellt am '+dateStr,ml,y);
-  y+=7;
+  y+=12;
 
   // Build table data
   const kats=getSortedKats().filter(k=>k.aktiv!==false);
