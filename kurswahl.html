@@ -507,16 +507,17 @@ const DEFAULT_KATEGORIEN = [
 ];
 
 const DEFAULT_CFG = {
-  titel:'Kurswahl 2026/27', schuljahr:'2026/27', schulname:'Sekundarschulzentrum', password:'admin',
+  titel:'Kursprogramm 2026/27', schuljahr:'2026/27', schulname:'Sekundarschulzentrum Ägelsee', password:'admin', baseUrl:'https://raphaelfisch.github.io/tools/kurswahl.html',
   klassen:[
     {nr:1,label:'1. Klasse',aktiv:false},
     {nr:2,label:'2. Klasse',aktiv:true},
     {nr:3,label:'3. Klasse',aktiv:true},
   ],
-  // freiRules: per klasse min haupt/ersatz
-  freiRules:{1:{haupt:3,ersatz:3},2:{haupt:3,ersatz:3},3:{haupt:3,ersatz:3}},
-  // katRules: override pflicht per klasse per katId
-  katRules:{},  // e.g. {2:{gestalten:false}}
+  freiRules:{1:{haupt:0,ersatz:0},2:{haupt:0,ersatz:0},3:{haupt:3,ersatz:3}},
+  // 2. Sek: nur Gestalten + Sport Pflicht, Rest frei
+  katRules:{
+    2:{nmg:false,sprachen:false,musik:false,mui:false,weitere:false},
+  },
 };
 
 const DEFAULT_KURSE = [
@@ -586,6 +587,10 @@ function loadData(){
   try{cfg=JSON.parse(localStorage.getItem('kw_c'))||JSON.parse(JSON.stringify(DEFAULT_CFG));}catch(e){cfg=JSON.parse(JSON.stringify(DEFAULT_CFG));}
   try{kategorien=JSON.parse(localStorage.getItem('kw_kat'))||JSON.parse(JSON.stringify(DEFAULT_KATEGORIEN));}catch(e){kategorien=JSON.parse(JSON.stringify(DEFAULT_KATEGORIEN));}
   try{const d=localStorage.getItem('kw_dims');if(d)DIMS=JSON.parse(d);}catch(e){}
+  // Migrate old default values to new ones
+  if(cfg.titel==='Kurswahl 2026/27') cfg.titel='Kursprogramm 2026/27';
+  if(!cfg.baseUrl) cfg.baseUrl='https://raphaelfisch.github.io/tools/kurswahl.html';
+  if(cfg.schulname==='Sekundarschulzentrum') cfg.schulname='Sekundarschulzentrum Ägelsee';
   // init sliders state from active dims
   ss.sliders={};
   DIMS.filter(d=>d.aktiv).forEach(d=>ss.sliders[d.key]=50);
@@ -1090,6 +1095,7 @@ async function generatePDF(){
     if(canvas){
       const qrImg=canvas.toDataURL('image/png');
       doc.addImage(qrImg,'PNG',qrX,qrY,qrSize,qrSize);
+        doc.link(qrX,qrY,qrSize,qrSize,{url:stateUrl});
     }
     document.body.removeChild(qrDiv);
     const filename=`Kurswahl_${[vn,nn].filter(Boolean).join('_')||'Schueler'}.pdf`;
