@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kurswahl</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root{--bg:#f5f2eb;--card:#fff;--ink:#1a1814;--muted:#7a7369;--accent:#2d6a4f;--accent2:#e07a3a;--danger:#c0392b;--ersatz-c:#888;--border:#ddd8ce;--shadow:0 2px 16px rgba(0,0,0,.07);}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -90,14 +92,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 .sfield input{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-family:'DM Sans',sans-serif;font-size:.875rem;color:var(--ink);background:#fff;outline:none;}
 .summary-table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.86rem;}
 .summary-table th{text-align:left;font-size:.66rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--border);}
-.summary-table td{padding:9px 10px;border-bottom:1px solid #f0ede7;vertical-align:top;}
+.summary-table td{padding:8px 10px;border-bottom:1px solid #f0ede7;vertical-align:middle;}
+.summary-table td:first-child{white-space:nowrap;}
 .summary-table tr:last-child td{border-bottom:none;}
-.cat-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle;}
-.tag{display:inline-block;font-size:.61rem;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:3px;vertical-align:middle;}
-.tag-haupt{background:#e8f5e9;color:#2e7d32;} .tag-ersatz{background:#eee;color:#666;}
+.cat-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;flex-shrink:0;}
 .sign-row{display:flex;gap:28px;margin-top:26px;padding-top:18px;border-top:1px solid var(--border);}
 .sign-field{flex:1;}
-.sign-line{border-bottom:1px solid var(--ink);margin-bottom:4px;height:28px;}
+.sign-line{border-bottom:1px solid var(--ink);margin-bottom:6px;height:48px;}
 .sign-label{font-size:.69rem;color:var(--muted);}
 
 /* ADMIN */
@@ -245,7 +246,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
     <input class="login-inp" type="password" id="pw-inp" placeholder="Passwort" onkeydown="if(event.key==='Enter')tryLogin()">
     <div class="login-err" id="login-err"></div>
     <button class="btn btn-primary" style="width:100%" onclick="tryLogin()">Anmelden</button>
-    <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="showView('student')">← Zur Kurswahl</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="showView('student')">Zur Kurswahl</button>
   </div>
 </div>
 
@@ -278,7 +279,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <div class="card-sub">Schieb den Regler dahin, wo du dich wiedererkennst – kein Richtig oder Falsch!</div>
         <div class="slider-group" id="sliders"></div>
       </div>
-      <div class="btn-row"><button class="btn btn-ghost" onclick="sGoTo(1)">Zurück</button><button class="btn btn-primary" onclick="sGoTo(3)">Kurse ansehen →</button></div>
+      <div class="btn-row"><button class="btn btn-ghost" onclick="sGoTo(1)">Zurück</button><button class="btn btn-primary" onclick="sGoTo(3)">Kurse ansehen</button></div>
     </div>
     <div class="screen" id="screen-select">
       <div class="card">
@@ -288,7 +289,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <div id="course-sections"></div>
         <div id="alert-box"></div>
       </div>
-      <div class="btn-row"><button class="btn btn-ghost" onclick="sGoTo(2)">Zurück</button><button class="btn btn-primary" id="btn-weiter" onclick="sGoTo(4)" disabled>Zusammenfassung →</button></div>
+      <div class="btn-row"><button class="btn btn-ghost" onclick="sGoTo(2)">Zurück</button><button class="btn btn-primary" id="btn-weiter" onclick="sGoTo(4)" disabled>Zusammenfassung</button></div>
     </div>
     <div class="screen" id="screen-summary">
       <div class="card">
@@ -307,7 +308,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
           <div class="sign-field"><div class="sign-line"></div><div class="sign-label">Datum</div></div>
         </div>
       </div>
-      <div class="btn-row no-print"><button class="btn btn-ghost" onclick="sGoTo(3)">Zurück</button><button class="btn btn-primary" onclick="window.print()">🖨 Drucken / PDF</button></div>
+      <div class="btn-row no-print"><button class="btn btn-ghost" onclick="sGoTo(3)">Zurück</button><button class="btn btn-primary" onclick="generatePDF()">PDF speichern</button></div>
     </div>
   </main>
 </div>
@@ -318,7 +319,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
     <div class="header-inner">
       <h1>Administration</h1>
       <span style="font-size:.82rem;color:#999;font-weight:300" class="btn-label" id="a-sj-label"></span>
-      <button class="btn btn-ghost btn-sm" style="color:#aaa;border-color:#555" onclick="showView('student')">← <span class="btn-label">Kurswahl</span></button>
+      <button class="btn btn-ghost btn-sm" style="color:#aaa;border-color:#555" onclick="showView('student')"><span class="btn-label">Kurswahl</span></button>
       <button class="btn btn-ghost btn-sm" style="color:#aaa;border-color:#555" onclick="logout()"><span class="btn-label">Abmelden</span><span class="btn-icon">✕</span></button>
     </div>
   </header>
@@ -434,7 +435,11 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         </div>
         <div id="pw-msg" style="font-size:.79rem;margin-top:4px"></div>
       </div>
-      <div class="settings-card" style="border-color:#fcc;background:#fff8f8">
+      <div class="settings-card">
+        <h2>Test-PDF</h2>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Generiert ein Beispiel-PDF mit Testdaten ohne die Kurswahl durchzuklicken.</p>
+        <button class="btn btn-ghost btn-sm" onclick="generateTestPDF()">PDF Vorschau generieren</button>
+      </div>
         <h2>Daten zurücksetzen</h2>
         <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Setzt alle Daten auf die Standardwerte zurück.</p>
         <button class="btn btn-danger btn-sm" onclick="resetToDefault()">⚠ Auf Standarddaten zurücksetzen</button>
@@ -506,7 +511,7 @@ const DEFAULT_KATEGORIEN = [
 ];
 
 const DEFAULT_CFG = {
-  titel:'Kurswahl 2026/27', schuljahr:'2026/27', schulname:'Oberstufenzentrum', password:'admin',
+  titel:'Kurswahl 2026/27', schuljahr:'2026/27', schulname:'Sekundarschulzentrum', password:'admin',
   klassen:[
     {nr:1,label:'1. Klasse',aktiv:false},
     {nr:2,label:'2. Klasse',aktiv:true},
@@ -858,20 +863,204 @@ function renderSummary(){
     const hArr=isPflicht?null:(ss.haupt[kat.id]||[]);
     const eArr=isPflicht?null:(ss.ersatz[kat.id]||[]);
     if(isPflicht){
-      rows+=`<tr><td><span class="cat-dot" style="background:${kat.color}"></span>${kat.label}</td><td>${h||'–'} <span class="tag tag-haupt">Hauptwahl</span></td><td>${e||'–'} <span class="tag tag-ersatz">Ersatzwahl</span></td></tr>`;
+      rows+=`<tr><td><span class="cat-badge" style="background:${kat.color};color:${getContrastColor(kat.color)}">${kat.label}</span></td><td>${h||'–'}</td><td>${e||'–'}</td></tr>`;
     } else {
       const mx=Math.max(hArr.length,eArr.length);
       for(let i=0;i<mx;i++){
-        rows+=`<tr><td>${i===0?`<span class="cat-dot" style="background:${kat.color}"></span>${kat.label}`:''}</td><td>${hArr[i]?hArr[i]+' <span class="tag tag-haupt">Hauptwahl</span>':''}</td><td>${eArr[i]?eArr[i]+' <span class="tag tag-ersatz">Ersatzwahl</span>':''}</td></tr>`;
+        rows+=`<tr><td>${i===0?`<span class="cat-badge" style="background:${kat.color};color:${getContrastColor(kat.color)}">${kat.label}</span>`:''}</td><td>${hArr[i]||''}</td><td>${eArr[i]||''}</td></tr>`;
       }
     }
   });
   document.getElementById('sum-table').innerHTML=`<thead><tr><th>Kategorie</th><th>Hauptwahl</th><th>Ersatzwahl</th></tr></thead><tbody>${rows}</tbody>`;
   updateMeta();
 }
+function generateTestPDF(){
+  // Save current state
+  const prevKlasse=ss.klasse, prevHaupt={...ss.haupt}, prevErsatz={...ss.ersatz};
+
+  // Set test state
+  ss.klasse=(cfg.klassen||DEFAULT_CFG.klassen).find(k=>k.aktiv!==false)?.nr||2;
+  initSelectionState();
+
+  // Fill with first available course per category
+  const kats=getSortedKats().filter(k=>k.aktiv!==false);
+  const ak=kurse.filter(k=>k.aktiv&&(!k.klassen||k.klassen.length===0||k.klassen.includes(ss.klasse)));
+  kats.forEach(kat=>{
+    const katKurse=ak.filter(k=>k.katId===kat.id);
+    if(!katKurse.length)return;
+    const isPflicht=isPflichtForKlasse(kat.id,ss.klasse);
+    if(isPflicht){
+      ss.haupt[kat.id]=katKurse[0]?.name||null;
+      ss.ersatz[kat.id]=katKurse[1]?.name||katKurse[0]?.name||null;
+    } else {
+      ss.haupt[kat.id]=katKurse.slice(0,2).map(k=>k.name);
+      ss.ersatz[kat.id]=katKurse.slice(2,4).map(k=>k.name);
+    }
+  });
+
+  // Set test name fields temporarily
+  const tmpVn='Max', tmpNn='Muster', tmpKl='3a';
+
+  // Monkey-patch getElementById for the PDF function
+  const orig=document.getElementById.bind(document);
+  const fakeEls={'inp-vn':{value:tmpVn},'inp-nn':{value:tmpNn},'inp-kl':{value:tmpKl}};
+  document.getElementById=id=>fakeEls[id]||orig(id);
+
+  generatePDF();
+
+  // Restore
+  document.getElementById=orig;
+  ss.klasse=prevKlasse;
+  ss.haupt=prevHaupt;
+  ss.ersatz=prevErsatz;
+}
+function generatePDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const vn=document.getElementById('inp-vn')?.value||'';
+  const nn=document.getElementById('inp-nn')?.value||'';
+  const kl=document.getElementById('inp-kl')?.value||'';
+  const name=[vn,nn].filter(Boolean).join(' ')||'Schüler/in';
+  const titel=cfg.titel||('Kurswahl '+(cfg.schuljahr||'2026/27'));
+  const meta=`${name}${kl?' · Klasse '+kl:''} · ${ss.klasse}. Sekundarstufe · Schuljahr ${cfg.schuljahr||'2026/27'}`;
+
+  let y=18;
+  const ml=14,mr=14,pw=210-ml-mr;
+
+  // Titel
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(20);
+  doc.setTextColor(26,24,20);
+  doc.text(titel,ml,y);
+  y+=7;
+
+  // Meta
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(122,115,105);
+  doc.text(meta,ml,y);
+  y+=12;
+
+  // Build table data
+  const kats=getSortedKats().filter(k=>k.aktiv!==false);
+  const body=[];
+  kats.forEach(kat=>{
+    const isPflicht=isPflichtForKlasse(kat.id,ss.klasse);
+    const h=isPflicht?[ss.haupt[kat.id]].filter(Boolean):(ss.haupt[kat.id]||[]);
+    const e=isPflicht?[ss.ersatz[kat.id]].filter(Boolean):(ss.ersatz[kat.id]||[]);
+    if(h.length===0&&e.length===0)return;
+    const hex=kat.color.replace('#','');
+    const cr=parseInt(hex.slice(0,2),16),cg=parseInt(hex.slice(2,4),16),cb=parseInt(hex.slice(4,6),16);
+    const tc=getContrastColor(kat.color)==='#ffffff'?[255,255,255]:[26,24,20];
+    const mx=Math.max(h.length,e.length);
+    for(let i=0;i<mx;i++){
+      body.push([
+    i===0?{
+          content:kat.label,
+          rowSpan:mx,
+          styles:{
+            fillColor:[cr,cg,cb],
+            textColor:tc,
+            fontStyle:'bold',
+            fontSize:8,
+            valign:'middle',
+            halign:'center',
+            cellPadding:{top:4,bottom:4,left:6,right:6},
+          }
+        }:null,
+        {content:h[i]||'',styles:{valign:'middle'}},
+        {content:e[i]||'',styles:{valign:'middle'}},
+      ].filter(c=>c!==null));
+    }
+  });
+
+  doc.autoTable({
+    startY:y,
+    head:[[
+      {content:'Kategorie',styles:{halign:'center'}},
+      'Hauptwahl',
+      'Ersatzwahl'
+    ]],
+    body,
+    styles:{
+      font:'helvetica',
+      fontSize:9,
+      cellPadding:{top:4,bottom:4,left:4,right:4},
+      lineColor:[220,216,206],
+      lineWidth:0.2,
+    },
+    headStyles:{
+      fillColor:[245,242,235],
+      textColor:[122,115,105],
+      fontStyle:'bold',
+      fontSize:7,
+      cellPadding:{top:3,bottom:3,left:4,right:4},
+    },
+    columnStyles:{
+      0:{cellWidth:45,fillColor:[255,255,255]},
+      1:{cellWidth:75},
+      2:{cellWidth:62},
+    },
+    margin:{left:ml,right:mr},
+    theme:'grid',
+    didDrawCell:(data)=>{
+      if(data.section==='body'&&data.column.index===0&&data.cell.raw&&typeof data.cell.raw==='object'&&data.cell.raw.rowSpan){
+        const hex=data.cell.raw.styles.fillColor;
+        const cr=hex[0],cg=hex[1],cb=hex[2];
+        const tc=data.cell.raw.styles.textColor;
+        const x=data.cell.x+4;
+        const w=data.cell.width-8;
+        const h=7;
+        const cy=data.cell.y+data.cell.height/2;
+        doc.setFillColor(cr,cg,cb);
+        doc.roundedRect(x,cy-h/2,w,h,3,3,'F');
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(8);
+        doc.setTextColor(tc[0],tc[1],tc[2]);
+        doc.text(data.cell.raw.content,x+w/2,cy+1,{align:'center'});
+      }
+    },
+    didParseCell:(data)=>{
+      if(data.section==='body'&&data.column.index===0&&data.cell.raw&&typeof data.cell.raw==='object'&&data.cell.raw.rowSpan){
+        // Make cell background white, draw pill manually
+        data.cell.styles.fillColor=[255,255,255];
+        data.cell.styles.textColor=[255,255,255]; // hide default text
+      }
+    },
+  });
+
+  y=doc.lastAutoTable.finalY+8;
+  // Green confirmation box
+  doc.setFillColor(240,247,244);
+  doc.setDrawColor(200,230,201);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(ml,y,pw,10,2,2,'FD');
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  doc.setTextColor(46,125,50);
+  doc.text('Alle Pflichtbedingungen erfüllt. Bitte gib dieses Blatt deiner Klassenlehrperson ab.',ml+4,y+6.5);
+  y+=18;
+
+  y+=16;
+  // Signature lines
+  doc.setDrawColor(26,24,20);
+  doc.setLineWidth(0.3);
+  const sigW=52,sigGap=8;
+  ['Unterschrift Schüler/in','Unterschrift Erziehungsberechtigte','Datum'].forEach((label,i)=>{
+    const x=ml+i*(sigW+sigGap);
+    doc.line(x,y,x+sigW,y);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7);
+    doc.setTextColor(122,115,105);
+    doc.text(label,x,y+4);
+  });
+
+  const filename=`Kurswahl_${[vn,nn].filter(Boolean).join('_')||'Schueler'}.pdf`;
+  doc.save(filename);
+}
 function updateMeta(){
   const v=document.getElementById('inp-vn')?.value||'',n=document.getElementById('inp-nn')?.value||'',k=document.getElementById('inp-kl')?.value||'';
-  document.getElementById('print-meta').textContent=`${[v,n].filter(Boolean).join(' ')||'Schüler/in'}${k?' · Klasse '+k:''} · ${ss.klasse}. Oberstufe · Schuljahr ${cfg.schuljahr||'2026/27'}`;
+  document.getElementById('print-meta').textContent=`${[v,n].filter(Boolean).join(' ')||'Schüler/in'}${k?' · Klasse '+k:''} · ${ss.klasse}. Sekundarstufe · Schuljahr ${cfg.schuljahr||'2026/27'}`;
 }
 
 // ═══════════════════════════════════
