@@ -1519,9 +1519,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(state.vn) document.getElementById('inp-vn').value=state.vn;
     if(state.nn) document.getElementById('inp-nn').value=state.nn;
     if(state.kl) document.getElementById('inp-kl').value=state.kl;
-    buildSliders();
     maxStep=4;
     sGoTo(4);
+    buildSliders();
+    renderClassButtons();
     updateMeta();
     updatePdfBtn();
   }
