@@ -301,11 +301,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         </div>
         <table class="summary-table" id="sum-table"></table>
         <div id="confirm-box" style="background:#f0f7f4;border-radius:10px;padding:13px 15px;font-size:.81rem;color:#2e7d32;border:1px solid #c8e6c9"></div>
-        <div class="sign-row">
-          <div class="sign-field"><div class="sign-line"></div><div class="sign-label">Unterschrift Schüler/in</div></div>
-          <div class="sign-field"><div class="sign-line"></div><div class="sign-label">Unterschrift Erziehungsberechtigte</div></div>
-          <div class="sign-field"><div class="sign-line"></div><div class="sign-label">Datum</div></div>
-        </div>
+        <div class="sign-row no-print" style="display:none"></div>
       </div>
       <div class="btn-row no-print"><button class="btn btn-ghost" onclick="sGoTo(3)">Zurück</button><button class="btn btn-primary" id="btn-pdf" onclick="generatePDF()" disabled>PDF speichern</button></div>
     </div>
@@ -936,7 +932,7 @@ async function generatePDF(){
   const titel=cfg.titel||('Kurswahl '+(cfg.schuljahr||'2026/27'));
   const now=new Date();
   const dateStr=now.toLocaleDateString('de-CH')+' '+now.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
-  const meta=`${name}${kl?' · Klasse '+kl:''} · ${ss.klasse}. Sekundarstufe · Schuljahr ${cfg.schuljahr||'2026/27'} · Erstellt am ${dateStr}`;
+  const meta=`${name}${kl?' · Klasse '+kl:''} · Schuljahr ${cfg.schuljahr||'2026/27'} · Erstellt am ${dateStr}`;
 
   let y=18;
   const ml=14,mr=14,pw=210-ml-mr;
@@ -1085,9 +1081,14 @@ async function generatePDF(){
   // Signature lines
   doc.setDrawColor(26,24,20);
   doc.setLineWidth(0.3);
-  const sigW=52,sigGap=8;
-  ['Unterschrift Schüler/in','Unterschrift Erziehungsberechtigte','Datum'].forEach((label,i)=>{
+  const labels=['Datum','Unterschrift Schüler/in','Unterschrift Erziehungsberechtigte'];
+  const totalW=210-ml-mr;
+  const sigGap=8;
+  const sigW=(totalW-(labels.length-1)*sigGap)/labels.length;
+  labels.forEach((label,i)=>{
     const x=ml+i*(sigW+sigGap);
+    doc.setDrawColor(26,24,20);
+    doc.setLineWidth(0.3);
     doc.line(x,y,x+sigW,y);
     doc.setFont('helvetica','normal');
     doc.setFontSize(7);
@@ -1109,7 +1110,7 @@ async function generatePDF(){
         doc.link(qrX,qrY,qrSize,qrSize,{url:stateUrl});
     }
     document.body.removeChild(qrDiv);
-    const filename=`Kurswahl_${[vn,nn].filter(Boolean).join('_')||'Schueler'}.pdf`;
+    const filename=`${kl||'Klasse'}_${vn||'Vorname'}_${nn||'Nachname'}.pdf`;
     doc.save(filename);
   },300);
 }
@@ -1155,7 +1156,7 @@ function updateMeta(){
   const v=document.getElementById('inp-vn')?.value||'';
   const n=document.getElementById('inp-nn')?.value||'';
   const k=document.getElementById('inp-kl')?.value||'';
-  document.getElementById('print-meta').textContent=`${[v,n].filter(Boolean).join(' ')||''}${k?' · Klasse '+k:''} · ${ss.klasse}. Sekundarstufe · Schuljahr ${cfg.schuljahr||'2026/27'}`;
+  document.getElementById('print-meta').textContent=`${[v,n].filter(Boolean).join(' ')||''}${k?' · Klasse '+k:''} · Schuljahr ${cfg.schuljahr||'2026/27'}`;
   const btn=document.getElementById('btn-pdf');
   if(btn) btn.disabled=!(v.trim()&&n.trim()&&k.trim());
 }
