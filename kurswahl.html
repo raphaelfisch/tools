@@ -112,7 +112,9 @@ main.amain{max-width:1200px;margin:0 auto;padding:26px 22px 80px;}
 .filter-btn{padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);}
 .filter-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
 .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);}
-table.atable{width:100%;border-collapse:collapse;background:#fff;min-width:900px;}
+table.atable{width:100%;border-collapse:collapse;background:#fff;}
+@media(min-width:701px){#atab-kurse table.atable{min-width:900px;}}
+@media(max-width:700px){.dim-txt-col{display:none;}}
 table.atable thead th{background:#f8f7f4;padding:10px 11px;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap;}
 table.atable thead th.sortable{cursor:pointer;user-select:none;}
 table.atable thead th .sort-icon{margin-left:4px;opacity:.4;font-size:.7rem;}
@@ -157,7 +159,6 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
 .kat-row{background:#fff;padding:9px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f0ede7;}
 .kat-row:last-child{border-bottom:none;}
 /* KAT RESPONSIVE LIST */
-.kat-list{display:flex;flex-direction:column;gap:8px;}
 .kat-row{background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;}
 .kat-inp{border:1.5px solid var(--border);border-radius:6px;padding:5px 9px;font-family:'DM Sans',sans-serif;font-size:.84rem;outline:none;}
 .kat-inp:focus{border-color:var(--accent);}
@@ -204,7 +205,26 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:.83rem;font-weight:500;opacity:0;transform:translateY(7px);transition:all .22s;z-index:300;pointer-events:none;}
 .toast.show{opacity:1;transform:translateY(0);}
 #imp-file{display:none;}
-@media(max-width:600px){.btn-label{display:none;}}
+@media(max-width:700px){
+  #atab-kurse .table-wrap{display:none;}
+  .kurs-cards{display:flex;flex-direction:column;gap:10px;}
+  .btn-label{display:none;}
+  .btn-icon{display:inline;}
+  header h1{font-size:1.2rem;}
+  .header-inner{padding:0 14px;}
+  .admin-toolbar-inner{padding:0 14px;}
+  .dim-txt-col{display:none;}
+}
+@media(min-width:701px){
+  .kurs-cards{display:none;}
+  .btn-icon{display:none;}
+}
+.kurs-card-item{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;}
+.kurs-card-item.inactive{opacity:.45;}
+.kurs-card-top{display:flex;align-items:center;gap:10px;}
+.kurs-card-name{font-weight:600;font-size:.9rem;flex:1;}
+.kurs-card-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.78rem;color:var(--muted);}
+.kurs-card-actions{display:flex;gap:6px;margin-left:auto;}
 @media print{
   #view-admin,#view-login,.steps-bar,.btn-row,.no-print,.student-form,#screen-class,#screen-slider,#screen-select{display:none!important;}
   #view-student.active{display:block!important;}
@@ -297,22 +317,22 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
   <header>
     <div class="header-inner">
       <h1>Administration</h1>
-      <span style="font-size:.82rem;color:#999;font-weight:300" id="a-sj-label"></span>
-      <button class="btn btn-ghost btn-sm" style="color:#aaa;border-color:#555" onclick="showView('student')">← Kurswahl</button>
-      <button class="btn btn-ghost btn-sm" style="color:#aaa;border-color:#555;margin-left:4px" onclick="logout()">Abmelden</button>
+      <span style="font-size:.82rem;color:#999;font-weight:300" class="btn-label" id="a-sj-label"></span>
+      <button class="btn btn-ghost btn-sm" style="color:#aaa;border-color:#555" onclick="showView('student')">← <span class="btn-label">Kurswahl</span></button>
+      <button class="btn btn-ghost btn-sm" style="color:#aaa;border-color:#555" onclick="logout()"><span class="btn-label">Abmelden</span><span class="btn-icon">✕</span></button>
     </div>
   </header>
   <div class="admin-toolbar">
     <div class="admin-toolbar-inner">
-      <div class="tab-bar" style="border:none;margin:0">
-        <button class="tab-btn active" onclick="showATab('settings',this)">Allgemein</button>
-        <button class="tab-btn" onclick="showATab('kategorien',this)">Kategorien</button>
-        <button class="tab-btn" onclick="showATab('kurse',this)">Kurse</button>
+      <div class="tab-bar" style="border:none;margin:0;flex-shrink:0">
+        <button class="tab-btn active" onclick="showATab('settings',this)"><span class="btn-label">Allgemein</span><span class="btn-icon">Allg.</span></button>
+        <button class="tab-btn" onclick="showATab('kategorien',this)"><span class="btn-label">Kategorien</span><span class="btn-icon">Kat.</span></button>
+        <button class="tab-btn" onclick="showATab('kurse',this)"><span class="btn-label">Kurse</span><span class="btn-icon">Kurse</span></button>
       </div>
       <div class="atoolbar-right">
-        <button class="btn btn-ghost btn-sm" id="btn-import" style="display:none" onclick="document.getElementById('imp-file').click()">⬆ <span class="btn-label">Import JSON</span></button>
-        <button class="btn btn-ghost btn-sm" id="btn-export" style="display:none" onclick="exportJSON()">⬇ <span class="btn-label">Export JSON</span></button>
-        <button class="btn btn-accent btn-sm" id="btn-new-kurs" style="display:none" onclick="openModal(null)">+ Neuer Kurs</button>
+        <button class="btn btn-ghost btn-sm" id="btn-import" style="display:none" onclick="document.getElementById('imp-file').click()">⬆ <span class="btn-label">Import</span></button>
+        <button class="btn btn-ghost btn-sm" id="btn-export" style="display:none" onclick="exportJSON()">⬇ <span class="btn-label">Export</span></button>
+        <button class="btn btn-accent btn-sm" id="btn-new-kurs" style="display:none" onclick="openModal(null)">+ <span class="btn-label">Neuer Kurs</span></button>
         <input type="file" id="imp-file" accept=".json" onchange="handleImport(event)">
       </div>
     </div>
@@ -327,16 +347,19 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
             <th>Aktiv</th>
             <th class="sortable" onclick="sortTable('name',this)">Kursname<span class="sort-icon"></span></th>
             <th class="sortable" style="width:140px" onclick="sortTable('katId',this)">Kategorie<span class="sort-icon"></span></th>
+            <th>Klassen</th>
             <th class="sortable" onclick="sortTable('lekt',this)">Lektionen<span class="sort-icon"></span></th>
             <th>Voraussetzung</th>
             <th>Kurzbeschreibung</th>
             <th>Vollständige Beschreibung</th>
+            <th>Klassen</th>
             <th style="text-align:center">Passung-Profil</th>
             <th></th>
           </tr></thead>
           <tbody id="kurs-tbody"></tbody>
         </table>
       </div>
+      <div class="kurs-cards" id="kurs-cards"></div>
     </div>
 
     <!-- KATEGORIEN TAB -->
@@ -345,13 +368,13 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <h2>Kategorien</h2>
         <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Lege Kategorien fest. <strong>Pos.</strong> bestimmt die Sortierung (kleinere Zahl = weiter oben).</p>
         <div class="table-wrap" style="margin-bottom:14px">
-          <table class="atable" style="min-width:400px">
+          <table class="atable" style="min-width:380px">
             <thead><tr>
               <th style="width:50px">Aktiv</th>
-              <th style="width:70px">Pos.</th>
+              <th style="width:60px">Pos.</th>
               <th>Bezeichnung</th>
-              <th style="width:60px">Farbe</th>
-              <th style="width:40px"></th>
+              <th style="width:50px">Farbe</th>
+              <th style="width:36px"></th>
             </tr></thead>
             <tbody id="kat-list"></tbody>
           </table>
@@ -362,14 +385,14 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <h2>Schieberegler</h2>
         <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Lege fest welche Schieberegler in der Kurswahl angezeigt werden. Deaktivierte Schieberegler fliessen nicht in die Passung-Berechnung ein.</p>
         <div class="table-wrap" style="margin-bottom:14px">
-          <table class="atable" style="min-width:600px">
+          <table class="atable" style="min-width:500px">
             <thead><tr>
               <th style="width:50px">Aktiv</th>
-              <th style="width:120px">Linker Pol</th>
-              <th style="width:160px">Linker Satz</th>
-              <th style="width:120px">Rechter Pol</th>
-              <th style="width:160px">Rechter Satz</th>
-              <th style="width:40px"></th>
+              <th>Linker Pol</th>
+              <th class="dim-txt-col">Linker Satz</th>
+              <th>Rechter Pol</th>
+              <th class="dim-txt-col">Rechter Satz</th>
+              <th style="width:36px"></th>
             </tr></thead>
             <tbody id="dims-tbody"></tbody>
           </table>
@@ -431,6 +454,11 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
       <div class="fg ffull"><label>Voraussetzung</label><input type="text" id="f-voraus"></div>
       <div class="fg ffull"><label>Kurzbeschreibung (Liste)</label><textarea id="f-desc"></textarea></div>
       <div class="fg ffull"><label>Vollständige Beschreibung (Popup)</label><textarea id="f-desc-lang" style="min-height:100px"></textarea></div>
+      <div class="fg ffull">
+        <label>Sichtbar für Klassen</label>
+        <div id="f-klassen" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px"></div>
+        <div style="font-size:.74rem;color:var(--muted);margin-top:6px">Klassen können unter Allgemein → Klassenauswahl aktiviert werden.</div>
+      </div>
       <div class="mdims ffull">
         <h3>Passung-Profil (0 = linker Pol, 5 = rechter Pol)</h3>
         <div id="modal-dim-rows"></div>
@@ -535,7 +563,7 @@ const DEFAULT_DIMS=[
   {key:'team',     aktiv:true, le:'🎧',lt:'Ich arbeite lieber alleine, in meinem Tempo.',   re:'🤝',rt:'Ich mag Teamarbeit und gemeinsame Projekte.',dl:'🎧 Einzeln',dr:'🤝 Team'},
   {key:'draussen', aktiv:true, le:'🏫',lt:'Ich bleibe lieber drinnen.',                     re:'🌿',rt:'Ich bin am liebsten draussen.',              dl:'🏫 Drinnen',dr:'🌿 Draussen'},
   {key:'digital',  aktiv:true, le:'🔨',lt:'Ich arbeite gerne mit Händen und Materialien.',  re:'💻',rt:'Ich mag Computer und digitale Technik.',     dl:'🔨 Analog', dr:'💻 Digital'},
-  {key:'logisch',  aktiv:true, le:'🎨',lt:'Ich folge meiner Kreativität – kein Plan muss her.',re:'🔬',rt:'Ich denke systematisch und systematisch.',  dl:'🎨 Kreativ',dr:'🔬 Systematisch'},
+  {key:'logisch',  aktiv:true, le:'🎨',lt:'Ich folge meiner Kreativität – kein Plan muss her.',re:'🔬',rt:'Ich gehe Dinge strukturiert und planmässig an.',  dl:'🎨 Kreativ',dr:'🔬 Systematisch'},
   {key:'auftreten',aktiv:true, le:'📖',lt:'Ich arbeite lieber still – kein Auftreten.',    re:'🎤',rt:'Ich trete gerne auf und zeige, was ich kann.',dl:'📖 Still',  dr:'🎤 Auftreten'},
 ];
 let DIMS=JSON.parse(JSON.stringify(DEFAULT_DIMS));
@@ -739,7 +767,7 @@ function renderKatSection(kat,withScores,freiTopNames,isPflicht){
   return html;
 }
 function renderCourses(){
-  const ak=kurse.filter(k=>k.aktiv);
+  const ak=kurse.filter(k=>k.aktiv&&(!k.klassen||k.klassen.length===0||k.klassen.includes(ss.klasse)));
   const kats=getSortedKats().filter(k=>k.aktiv!==false);
   const freiRules=(cfg.freiRules||DEFAULT_CFG.freiRules)[ss.klasse]||{haupt:3,ersatz:3};
   const withScores=ak.map(k=>({...k,match:Math.round(matchScore(k)*100)}));
@@ -892,19 +920,41 @@ function renderTable(){
   let rows=[...kurse.entries()].map(([i,k])=>({...k,_i:i}));
   if(aFilter!=='alle')rows=rows.filter(k=>k.katId===aFilter);
   if(aSort.col){rows.sort((a,b)=>{let av=a[aSort.col],bv=b[aSort.col];if(typeof av==='string'){av=av.toLowerCase();bv=bv.toLowerCase();}return aSort.dir==='asc'?(av>bv?1:av<bv?-1:0):(av<bv?1:av>bv?-1:0);});}
+  // Desktop table
   document.getElementById('kurs-tbody').innerHTML=rows.map(k=>{
     const kat=getKat(k.katId);
     return `<tr class="${k.aktiv?'':'inactive'}">
       <td><label class="tog" style="width:34px"><input type="checkbox" ${k.aktiv?'checked':''} onchange="toggleA(${k._i},this.checked)"><div class="tog-sl"></div></label></td>
       <td style="font-weight:600">${k.name}</td>
       <td><span class="cat-badge" style="background:${kat.color};color:${getContrastColor(kat.color)}">${kat.label}</span></td>
-      <td><input class="lekt-inp" type="number" min="1" max="10" value="${k.lekt||2}" onchange="updF(${k._i},'lekt',+this.value)"></td>
+      <td style="font-size:.74rem;color:var(--muted);white-space:nowrap">${(()=>{const allNr=(cfg.klassen||DEFAULT_CFG.klassen).filter(kl=>kl.aktiv!==false).map(kl=>kl.nr);const kl=k.klassen||[];return kl.length===0||kl.length===allNr.length?'Alle':'Kl. '+kl.join(', ');})()}</td>
+      <td><input class="lekt-inp" type="number" min="1" max="10" value="${k.lekt||1}" onchange="updF(${k._i},'lekt',+this.value)"></td>
       <td style="font-size:.74rem;color:var(--muted);max-width:140px">${k.voraus||'–'}</td>
       <td style="font-size:.74rem;color:var(--muted);max-width:160px">${k.desc||'–'}</td>
       <td style="font-size:.74rem;color:var(--muted);max-width:200px">${k.descLang||'–'}</td>
       <td><div class="dim-cell">${DIMS.map(d=>`<div class="dim-row"><span class="dkey-l">${d.dl.split(' ').slice(1).join(' ')}</span><input type="range" min="0" max="5" step="1" value="${k.s[d.key]}" onchange="updDim(${k._i},'${d.key}',+this.value)" style="background:linear-gradient(to right,var(--accent) ${k.s[d.key]*20}%,var(--border) ${k.s[d.key]*20}%)"><span class="dkey-r">${d.dr.split(' ').slice(1).join(' ')}</span><span class="dim-val">${k.s[d.key]}</span></div>`).join('')}</div></td>
       <td style="white-space:nowrap"><button class="act-btn" onclick="openModal(${k._i})">✏️</button><button class="act-btn" onclick="confirmDelete(${k._i},'kurs')">🗑</button></td>
     </tr>`;
+  }).join('');
+  // Mobile cards
+  document.getElementById('kurs-cards').innerHTML=rows.map(k=>{
+    const kat=getKat(k.katId);
+    return `<div class="kurs-card-item ${k.aktiv?'':'inactive'}">
+      <div class="kurs-card-top">
+        <label class="tog" style="width:34px;flex-shrink:0"><input type="checkbox" ${k.aktiv?'checked':''} onchange="toggleA(${k._i},this.checked)"><div class="tog-sl"></div></label>
+        <span class="kurs-card-name">${k.name}</span>
+        <div class="kurs-card-actions">
+          <button class="act-btn" onclick="openModal(${k._i})">✏️</button>
+          <button class="act-btn" onclick="confirmDelete(${k._i},'kurs')">🗑</button>
+        </div>
+      </div>
+      <div class="kurs-card-meta">
+        <span class="cat-badge" style="background:${kat.color};color:${getContrastColor(kat.color)}">${kat.label}</span>
+        <span>${k.lekt||1} Lekt.</span>
+        <span style="color:var(--muted)">${(()=>{const allNr=(cfg.klassen||DEFAULT_CFG.klassen).map(kl=>kl.nr);const kl=k.klassen||[];return kl.length===0||kl.length===allNr.length?'Alle Klassen':'Kl. '+kl.join(', ');})()}</span>
+      </div>
+      ${k.desc?`<div style="font-size:.78rem;color:var(--muted)">${k.desc}</div>`:''}
+    </div>`;
   }).join('');
 }
 function toggleA(i,v){kurse[i].aktiv=v;saveData();renderTable();}
@@ -925,9 +975,9 @@ function renderDimsTable(){
   tbody.innerHTML=DIMS.map((d,i)=>`<tr class="${d.aktiv?'':'inactive'}">
     <td><label class="tog" style="width:34px;flex-shrink:0"><input type="checkbox" ${d.aktiv?'checked':''} onchange="updDimCfg(${i},'aktiv',this.checked)"><div class="tog-sl"></div></label></td>
     <td><input class="kat-inp" style="width:100%" type="text" value="${d.dl}" oninput="updDimCfg(${i},'dl',this.value)" placeholder="🧘 Ruhig"></td>
-    <td><input class="kat-inp" style="width:100%" type="text" value="${d.lt}" oninput="updDimCfg(${i},'lt',this.value)" placeholder="Ich sitze lieber..."></td>
+    <td class="dim-txt-col"><input class="kat-inp" style="width:100%" type="text" value="${d.lt}" oninput="updDimCfg(${i},'lt',this.value)" placeholder="Ich sitze lieber..."></td>
     <td><input class="kat-inp" style="width:100%" type="text" value="${d.dr}" oninput="updDimCfg(${i},'dr',this.value)" placeholder="🏃 Aktiv"></td>
-    <td><input class="kat-inp" style="width:100%" type="text" value="${d.rt}" oninput="updDimCfg(${i},'rt',this.value)" placeholder="Ich will mich bewegen..."></td>
+    <td class="dim-txt-col"><input class="kat-inp" style="width:100%" type="text" value="${d.rt}" oninput="updDimCfg(${i},'rt',this.value)" placeholder="Ich will mich bewegen..."></td>
     <td><button class="act-btn" onclick="confirmDelete(${i},'dim')">🗑</button></td>
   </tr>`).join('');
 }
@@ -1035,7 +1085,18 @@ function openModal(i){
   document.getElementById('modal-title').textContent=i!==null?'Kurs bearbeiten':'Neuer Kurs';
   ['name','voraus','desc'].forEach(f=>document.getElementById('f-'+f).value=k[f]||'');
   document.getElementById('f-desc-lang').value=k.descLang||'';
-  document.getElementById('f-lekt').value=k.lekt||2;
+  document.getElementById('f-lekt').value=k.lekt||1;
+  // klassen checkboxes
+  const alleKlassen=(cfg.klassen||DEFAULT_CFG.klassen);
+  const kKlassen=k.klassen&&k.klassen.length>0?k.klassen:alleKlassen.map(kl=>kl.nr);
+  document.getElementById('f-klassen').innerHTML=alleKlassen.map(kl=>{
+    const aktiv=kl.aktiv!==false;
+    const checked=kKlassen.includes(kl.nr);
+    return `<label style="display:flex;align-items:center;gap:6px;font-size:.84rem;cursor:${aktiv?'pointer':'default'};opacity:${aktiv?1:0.45}">
+      <input type="checkbox" style="width:15px;height:15px;accent-color:var(--accent);cursor:${aktiv?'pointer':'not-allowed'}" value="${kl.nr}" ${checked?'checked':''} ${aktiv?'':'disabled'}>
+      ${kl.label}
+    </label>`;
+  }).join('');
   // populate category dropdown
   const sel=document.getElementById('f-kat');
   sel.innerHTML=getSortedKats().map(kat=>`<option value="${kat.id}" ${k.katId===kat.id?'selected':''}>${kat.label}</option>`).join('');
@@ -1064,7 +1125,8 @@ function closeModal(){document.getElementById('modal-bg').classList.remove('open
 function saveKurs(){
   const name=document.getElementById('f-name').value.trim();
   if(!name){alert('Kursname ist Pflicht.');return;}
-  const k={name,katId:document.getElementById('f-kat').value,lekt:parseInt(document.getElementById('f-lekt').value)||2,voraus:document.getElementById('f-voraus').value.trim(),desc:document.getElementById('f-desc').value.trim(),descLang:document.getElementById('f-desc-lang').value.trim(),aktiv:true,s:{}};
+  const checkedKlassen=[...document.querySelectorAll('#f-klassen input:checked')].map(cb=>parseInt(cb.value));
+  const k={name,katId:document.getElementById('f-kat').value,lekt:parseInt(document.getElementById('f-lekt').value)||1,voraus:document.getElementById('f-voraus').value.trim(),desc:document.getElementById('f-desc').value.trim(),descLang:document.getElementById('f-desc-lang').value.trim(),klassen:checkedKlassen,aktiv:true,s:{}};
   DIMS.forEach(d=>k.s[d.key]=parseInt(document.getElementById('md-'+d.key).value));
   if(editIdx!==null)kurse[editIdx]=k;else kurse.push(k);
   saveData();closeModal();renderAAll();toast(editIdx!==null?'Aktualisiert.':'Hinzugefügt.');
