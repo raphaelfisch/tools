@@ -254,6 +254,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
   <header>
     <div class="header-inner">
       <h1 id="s-title">Kurswahl 2026/27</h1>
+      <button id="btn-restart" class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem;display:none" onclick="window.location.href=window.location.href.split('#')[0]" title="Neu starten">↺</button>
       <button class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem" onclick="showView('login')" title="Administration">⚙</button>
     </div>
   </header>
@@ -1532,6 +1533,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 
   showView('student');
+
+  // Show restart button if hash present
+  if(window.location.hash){
+    const btn=document.getElementById('btn-restart');
+    if(btn) btn.style.display='';
+  }
 
   if(loadedFromHash){
     const state=JSON.parse(decodeURIComponent(escape(atob(window.location.hash.slice(1)))));
