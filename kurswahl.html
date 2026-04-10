@@ -254,7 +254,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
   <header>
     <div class="header-inner">
       <h1 id="s-title">Kurswahl 2026/27</h1>
-      <button id="btn-restart" class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem;display:none" onclick="window.location.href=window.location.href.split('#')[0]" title="Neu starten">↺</button>
+      <button id="btn-restart" class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem;display:none" onclick="if(confirm('Möchtest du wirklich neu starten? Die aktuelle Kurswahl geht verloren.'))window.location.href=window.location.href.split('#')[0]" title="Neu starten">↺</button>
       <button class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem" onclick="showView('login')" title="Administration">⚙</button>
     </div>
   </header>
@@ -416,6 +416,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <div class="srow"><label>Schulname</label><input type="text" id="set-sn" oninput="saveSetting('schulname',this.value)"></div>
         <div class="srow"><label>URL der Datei</label><input type="text" id="set-url" placeholder="z.B. https://schule.ch/tools/kurswahl.html" oninput="saveSetting('baseUrl',this.value)"></div>
         <div class="srow"><label>Abgabetext</label><input type="text" id="set-abgabe-text" placeholder="Abgabetext..." oninput="saveSetting('abgabeText',this.value)"></div>
+        <div class="srow"><label>Hinweistext (rot)</label><input type="text" id="set-hinweis-text" placeholder="Hinweistext..." oninput="saveSetting('hinweisText',this.value)"></div>
       </div>
       <div class="settings-card">
         <h2>Klassenauswahl</h2>
@@ -506,6 +507,7 @@ const DEFAULT_KATEGORIEN = [
 const DEFAULT_CFG = {
   titel:'Kursprogramm 2026/27', schuljahr:'2026/27', schulname:'Sekundarschulzentrum Ägelsee', password:'admin', baseUrl:'https://raphaelfisch.github.io/tools/kurswahl.html',
   abgabeText:'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.',
+  hinweisText:'Die Kurswahl ist verbindlich. Abwahlen oder Umteilungen während des Schuljahres werden grundsätzlich nicht bewilligt.',
   klassen:[
     {nr:1,label:'1. Klasse',aktiv:false},
     {nr:2,label:'2. Klasse',aktiv:true},
@@ -590,6 +592,7 @@ function loadData(){
   if(!cfg.baseUrl) cfg.baseUrl='https://raphaelfisch.github.io/tools/kurswahl.html';
   if(cfg.schulname==='Sekundarschulzentrum') cfg.schulname='Sekundarschulzentrum Ägelsee';
   if(!cfg.abgabeText) cfg.abgabeText='Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
+  if(!cfg.hinweisText) cfg.hinweisText='Die Kurswahl ist verbindlich. Abwahlen oder Umteilungen während des Schuljahres werden grundsätzlich nicht bewilligt.';
   // init sliders state from active dims
   ss.sliders={};
   DIMS.filter(d=>d.aktiv).forEach(d=>ss.sliders[d.key]=50);
@@ -1074,7 +1077,20 @@ async function generatePDF(){
   doc.setTextColor(46,125,50);
   const abgabeText=cfg.abgabeText||'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
   doc.text(`Alle Pflichtbedingungen erfüllt. ${abgabeText}`,ml+4,y+boxH/2,{baseline:'middle',maxWidth:pw-8});
-  y+=boxH+6;
+  y+=boxH+4;
+  // Red warning box
+  if(cfg.hinweisText){
+    const warnH=11;
+    doc.setFillColor(255,243,243);
+    doc.setDrawColor(229,115,115);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(ml,y,pw,warnH,2,2,'FD');
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    doc.setTextColor(183,28,28);
+    doc.text(cfg.hinweisText,ml+4,y+warnH/2,{baseline:'middle',maxWidth:pw-8});
+    y+=warnH+6;
+  }
 
   y+=16;
   const sigY=y;
@@ -1336,6 +1352,7 @@ function renderSettings(){
   document.getElementById('set-sn').value=cfg.schulname||'';
   if(document.getElementById('set-url')) document.getElementById('set-url').value=cfg.baseUrl||'';
   if(document.getElementById('set-abgabe-text')) document.getElementById('set-abgabe-text').value=cfg.abgabeText||'';
+  if(document.getElementById('set-hinweis-text')) document.getElementById('set-hinweis-text').value=cfg.hinweisText||'';
   // Frei rules
   const klassen=cfg.klassen||DEFAULT_CFG.klassen;
   const fr=cfg.freiRules||DEFAULT_CFG.freiRules;
