@@ -254,7 +254,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
   <header>
     <div class="header-inner">
       <h1 id="s-title">Kurswahl 2026/27</h1>
-      <button id="btn-restart" class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem;display:none" onclick="if(confirm('Möchtest du wirklich neu starten? Die aktuelle Kurswahl geht verloren.'))window.location.href=window.location.href.split('#')[0]" title="Neu starten">↺</button>
+      <button id="btn-restart" class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem;display:none" onclick="if(confirm('Möchtest du wirklich neu starten? Die aktuelle Kurswahl geht verloren.')){window.onbeforeunload=null;window.location.href=window.location.href.split('#')[0];}" title="Neu starten">↺</button>
       <button class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem" onclick="showView('login')" title="Administration">⚙</button>
     </div>
   </header>
@@ -298,7 +298,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <div class="student-form no-print">
           <div class="sfield"><label>Vorname *</label><input id="inp-vn" placeholder="Vorname" oninput="updateMeta();updatePdfBtn()"></div>
           <div class="sfield"><label>Nachname *</label><input id="inp-nn" placeholder="Nachname" oninput="updateMeta();updatePdfBtn()"></div>
-          <div class="sfield"><label>momentane Klasse *</label><input id="inp-kl" placeholder="z.B. 2d" oninput="updateMeta();updatePdfBtn()"></div>
+          <div class="sfield"><label>Momentane Klasse *</label><input id="inp-kl" placeholder="z.B. 2d" oninput="updateMeta();updatePdfBtn()"></div>
         </div>
         <table class="summary-table" id="sum-table"></table>
         <div id="confirm-box" style="background:#f0f7f4;border-radius:10px;padding:13px 15px;font-size:.81rem;color:#2e7d32;border:1px solid #c8e6c9"></div>
@@ -530,9 +530,9 @@ const DEFAULT_KURSE = [
   {name:"Spielsport",katId:"sport",lekt:1,voraus:"Du hast Freude an Bewegung und am Sport im Team.",desc:"Ballsport, Teamspiele, Fairplay",descLang:"Magst du es, dich mit einem Ball, egal ob an der Hand oder am Fuss, zu bewegen? Spielst du auch gerne andere Sportspiele in Teams? Dann bist du in diesem Kurs am richtigen Ort. Du wirst deine Kenntnisse in bekannten Ballsportarten vertiefen und andere Sportspiele (BurnerGames) kennenlernen, die dir wahrscheinlich noch nicht so geläufig sind. Dabei stehen Fairplay, Teamplay und Bewegung immer an erster Stelle.",aktiv:true,s:{aktiv:5,team:5,draussen:1,digital:0,logisch:1,auftreten:1,ausfuehren:2,tempo:4}},
   {name:"Tanzen / Bewegung an Geräten",katId:"sport",lekt:1,voraus:"Du hast Freude an Bewegung, insbesondere am Tanzen und an der Akrobatik.",desc:"Tanzen, Akrobatik, Gerätechoreos",descLang:"Wenn du zu fetziger Musik nicht stillsitzen kannst, bist du hier genau am richtigen Ort. Wir tanzen zu aktueller Musik coole Choreos. Bei Interesse bewegen wir uns auch an beliebten Geräten und studieren attraktive Gerätechoreos zu Musik ein.",aktiv:true,s:{aktiv:5,team:3,draussen:0,digital:0,logisch:0,auftreten:4,ausfuehren:3,tempo:3}},
   // NMG
-  {name:"NT Vertiefung",katId:"nmg",lekt:1,voraus:"Du hast Freude an naturwissenschaftlichen Themen.",desc:"Experimente & naturwissenschaftliche Projekte",descLang:"Wir werden verschiedene Experimente quer durch die naturwissenschaftlichen Themen planen, durchführen und auswerten. Du wirst ein naturwissenschaftliches Projekt auf die Beine stellen.",aktiv:true,s:{aktiv:2,team:2,draussen:1,digital:2,logisch:5,auftreten:1,ausfuehren:3,tempo:2}},
-  {name:"RZG Vertiefung",katId:"nmg",lekt:1,voraus:"Du hast Interesse an Geschichte und Aktualitäten.",desc:"Zeitgeschichte, Analyse & Diskussion",descLang:"Geschichte wird laufend geschrieben und ist nicht nur etwas, was schon lange vorbei ist. In diesem Kurs betrachten wir Ereignisse der jüngeren Geschichte (nach dem 2. Weltkrieg bis heute). Wir analysieren und diskutieren aktuelle Geschehnisse und versuchen, sie anhand verschiedener Perspektiven und ihrer Vergangenheit besser zu verstehen. Wo genau unsere Schwerpunkte liegen, kann die Gruppe mitbestimmen.",aktiv:true,s:{aktiv:0,team:3,draussen:0,digital:1,logisch:4,auftreten:2,ausfuehren:2,tempo:2}},
-  {name:"WAH Vertiefung",katId:"nmg",lekt:1,voraus:"Du interessierst dich dafür, in der Küche zu experimentieren.",desc:"Kochen & Experimentieren in der Küche",descLang:"Wir werden in der «Labor»-Küche für den AHA-Effekt sorgen. Z.B. wie entsteht Caramel oder eine Mayonnaise.",aktiv:true,s:{aktiv:3,team:3,draussen:0,digital:0,logisch:2,auftreten:0,ausfuehren:3,tempo:3}},
+  {name:"NT Vertiefung",katId:"nmg",lekt:1,voraus:"Du hast Freude an naturwissenschaftlichen Themen.",desc:"Experimente & naturwissenschaftliche Projekte",descLang:"Wir werden verschiedene Experimente quer durch die naturwissenschaftlichen Themen planen, durchführen und auswerten. Du wirst ein naturwissenschaftliches Projekt auf die Beine stellen.",aktiv:true,klassen:[3],s:{aktiv:2,team:2,draussen:1,digital:2,logisch:5,auftreten:1,ausfuehren:3,tempo:2}},
+  {name:"RZG Vertiefung",katId:"nmg",lekt:1,voraus:"Du hast Interesse an Geschichte und Aktualitäten.",desc:"Zeitgeschichte, Analyse & Diskussion",descLang:"Geschichte wird laufend geschrieben und ist nicht nur etwas, was schon lange vorbei ist. In diesem Kurs betrachten wir Ereignisse der jüngeren Geschichte (nach dem 2. Weltkrieg bis heute). Wir analysieren und diskutieren aktuelle Geschehnisse und versuchen, sie anhand verschiedener Perspektiven und ihrer Vergangenheit besser zu verstehen. Wo genau unsere Schwerpunkte liegen, kann die Gruppe mitbestimmen.",aktiv:true,klassen:[3],s:{aktiv:0,team:3,draussen:0,digital:1,logisch:4,auftreten:2,ausfuehren:2,tempo:2}},
+  {name:"WAH Vertiefung",katId:"nmg",lekt:1,voraus:"Du interessierst dich dafür, in der Küche zu experimentieren.",desc:"Kochen & Experimentieren in der Küche",descLang:"Wir werden in der «Labor»-Küche für den AHA-Effekt sorgen. Z.B. wie entsteht Caramel oder eine Mayonnaise.",aktiv:true,klassen:[3],s:{aktiv:3,team:3,draussen:0,digital:0,logisch:2,auftreten:0,ausfuehren:3,tempo:3}},
   // SPRACHEN
   {name:"Cambridge Exam Preparation",katId:"sprachen",lekt:1,voraus:"Du hast Englisch auf Niveau m oder e.",desc:"PET/First Prüfungsvorbereitung Englisch",descLang:"Willst du dich einer neuen Herausforderung stellen und dein Englisch aufs nächste Level heben? Dann melde dich für den PET- oder First-Vorbereitungskurs an! Beide Prüfungen sind nicht nur international anerkannt, die Vorbereitung auf diese hilft dir auch, Bücher, Filme, Songs und sonstige Medien auf Englisch besser zu verstehen. Der Test findet im Juni 2026 statt und ist freiwillig. Die Schule beteiligt sich an den Prüfungsgebühren.",aktiv:true,s:{aktiv:0,team:1,draussen:0,digital:1,logisch:4,auftreten:1,ausfuehren:1,tempo:2}},
   {name:"Deutsch Vertiefung",katId:"sprachen",lekt:1,voraus:"Du hast Freude an der deutschen Sprache.",desc:"Grammatik, Schreiben, Sprechen",descLang:"Du möchtest deine Deutsch-Kenntnisse für die Berufsschule, für eine weiterführende Schule oder aus persönlichem Interesse verbessern? Wir konzentrieren uns auf die Repetition und Vertiefung der bereits erlernten Grammatik-Themen und wenden diese in verschiedenen Sprech- und Schreibanlässen an.",aktiv:true,s:{aktiv:0,team:2,draussen:0,digital:1,logisch:3,auftreten:2,ausfuehren:1,tempo:2}},
@@ -645,6 +645,7 @@ function applyConfig(){
 // ═══════════════════════════════════
 function showView(v){
   ['student','admin','login'].forEach(x=>document.getElementById('view-'+x).classList.toggle('active',x===v));
+  sessionStorage.setItem('kw_view',v);
   if(v==='student'){
     maxStep=1;sGoTo(1);
   }
@@ -694,6 +695,15 @@ function sGoTo(n){
   document.getElementById(['screen-class','screen-slider','screen-select','screen-summary'][n-1]).classList.add('active');
   if(n===3)renderCourses();
   if(n===4){renderSummary();updatePdfBtn();}
+  // Show/hide restart button
+  const btnR=document.getElementById('btn-restart');
+  if(btnR) btnR.style.display=n>=2?'':'none';
+  // Warn on F5/close when on step 2+
+  if(n>=2){
+    window.onbeforeunload=e=>{e.preventDefault();e.returnValue='';};
+  } else {
+    window.onbeforeunload=null;
+  }
   window.scrollTo(0,0);
 }
 function renderClassButtons(){
@@ -1194,6 +1204,7 @@ function renderFilterBar(){
 }
 function setFilter(f,btn){
   aFilter=f;
+  sessionStorage.setItem('kw_filter',f);
   document.querySelectorAll('.filter-btn').forEach(b=>{
     b.classList.remove('active');
     b.style.background='';b.style.borderColor='';b.style.color='';
@@ -1230,7 +1241,7 @@ function renderTable(){
       <td><label class="tog" style="width:34px"><input type="checkbox" ${k.aktiv?'checked':''} onchange="toggleA(${k._i},this.checked)"><div class="tog-sl"></div></label></td>
       <td style="font-weight:600">${k.name}</td>
       <td><span class="cat-badge" style="background:${kat.color};color:${getContrastColor(kat.color)}">${kat.label}</span></td>
-      <td style="font-size:.74rem;color:var(--muted);white-space:nowrap">${(()=>{const allNr=(cfg.klassen||DEFAULT_CFG.klassen).filter(kl=>kl.aktiv!==false).map(kl=>kl.nr);const kl=k.klassen||[];return kl.length===0||kl.length===allNr.length?'Alle':'Kl. '+kl.join(', ');})()}</td>
+      <td style="font-size:.74rem;color:var(--muted);white-space:nowrap">${(()=>{const allNr=(cfg.klassen||DEFAULT_CFG.klassen).filter(kl=>kl.aktiv!==false).map(kl=>kl.nr);const kl=k.klassen&&k.klassen.length>0?k.klassen.filter(nr=>allNr.includes(nr)):allNr;return kl.join(', ');})()}</td>
       <td><input class="lekt-inp" type="number" min="1" max="10" value="${k.lekt||1}" onchange="updF(${k._i},'lekt',+this.value)"></td>
       <td style="font-size:.74rem;color:var(--muted);max-width:140px">${k.voraus||'–'}</td>
       <td style="font-size:.74rem;color:var(--muted);max-width:160px">${k.desc||'–'}</td>
@@ -1394,10 +1405,10 @@ function openModal(i){
   document.getElementById('f-lekt').value=k.lekt||1;
   // klassen checkboxes
   const alleKlassen=(cfg.klassen||DEFAULT_CFG.klassen);
-  const kKlassen=k.klassen&&k.klassen.length>0?k.klassen:alleKlassen.map(kl=>kl.nr);
+  const kKlassen=k.klassen&&k.klassen.length>0?k.klassen:alleKlassen.filter(kl=>kl.aktiv!==false).map(kl=>kl.nr);
   document.getElementById('f-klassen').innerHTML=alleKlassen.map(kl=>{
     const aktiv=kl.aktiv!==false;
-    const checked=kKlassen.includes(kl.nr);
+    const checked=aktiv&&kKlassen.includes(kl.nr);
     return `<label style="display:flex;align-items:center;gap:6px;font-size:.84rem;cursor:${aktiv?'pointer':'default'};opacity:${aktiv?1:0.45}">
       <input type="checkbox" style="width:15px;height:15px;accent-color:var(--accent);cursor:${aktiv?'pointer':'not-allowed'}" value="${kl.nr}" ${checked?'checked':''} ${aktiv?'':'disabled'}>
       ${kl.label}
@@ -1450,6 +1461,7 @@ function showATab(tab,btn){
   document.getElementById('btn-import').style.display=isKurse?'':'none';
   document.getElementById('btn-export').style.display=isKurse?'':'none';
   if(tab==='kategorien'){renderKatTable();renderDimsTable();}
+  sessionStorage.setItem('kw_tab',tab);
 }
 
 // ═══════════════════════════════════
@@ -1549,9 +1561,21 @@ document.addEventListener('DOMContentLoaded',()=>{
     }catch(e){console.log('No valid state in URL');}
   }
 
-  showView('student');
+  const savedView=sessionStorage.getItem('kw_view');
+  if(savedView==='admin'){
+    const savedFilter=sessionStorage.getItem('kw_filter');
+    if(savedFilter) aFilter=savedFilter;
+    // Skip student view init, go directly to admin
+    ['student','admin','login'].forEach(x=>document.getElementById('view-'+x).classList.toggle('active',x==='admin'));
+    renderAAll();renderSettings();
+    const savedTab=sessionStorage.getItem('kw_tab')||'settings';
+    const tabBtn=document.querySelector(`.tab-btn[onclick*="'${savedTab}'"]`);
+    if(tabBtn) showATab(savedTab,tabBtn);
+  } else {
+    showView('student');
+  }
 
-  // Show restart button if hash present
+  // Show restart button from step 2 onwards
   if(window.location.hash){
     const btn=document.getElementById('btn-restart');
     if(btn) btn.style.display='';
