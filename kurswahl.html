@@ -713,6 +713,10 @@ function renderClassButtons(){
 }
 function selectClass(k,btn){
   const klassChanged=ss.klasse!==k;
+  // Warn if class changes and student has already progressed
+  if(klassChanged&&maxStep>=2){
+    if(!confirm('Möchtest du wirklich die Klasse wechseln? Die aktuelle Kurswahl geht verloren.'))return;
+  }
   ss.klasse=k;
   document.querySelectorAll('.class-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
