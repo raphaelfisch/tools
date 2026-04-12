@@ -1081,20 +1081,24 @@ async function generatePDF(){
 
   y=doc.lastAutoTable.finalY+8;
   // Green confirmation box
+  const abgabeText=cfg.abgabeText||'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
+  const fullGreenText=`Alle Pflichtbedingungen erfüllt. ${abgabeText}`;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  const splitGreen=doc.splitTextToSize(fullGreenText,pw-8);
+  const boxH=Math.max(11,splitGreen.length*4.5+5);
   doc.setFillColor(240,247,244);
   doc.setDrawColor(200,230,201);
   doc.setLineWidth(0.3);
-  const boxH=11;
   doc.roundedRect(ml,y,pw,boxH,2,2,'FD');
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(8);
   doc.setTextColor(46,125,50);
-  const abgabeText=cfg.abgabeText||'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
-  doc.text(`Alle Pflichtbedingungen erfüllt. ${abgabeText}`,ml+4,y+boxH/2,{baseline:'middle',maxWidth:pw-8});
+  const greenStartY=splitGreen.length===1?y+boxH/2:y+4;
+  doc.text(splitGreen,ml+4,greenStartY,{baseline:splitGreen.length===1?'middle':'top',lineHeightFactor:1.4});
   y+=boxH+4;
   // Red warning box
   if(cfg.hinweisText){
-    const warnH=11;
+    const splitRed=doc.splitTextToSize(cfg.hinweisText,pw-8);
+    const warnH=Math.max(11,splitRed.length*4.5+5);
     doc.setFillColor(255,243,243);
     doc.setDrawColor(229,115,115);
     doc.setLineWidth(0.3);
@@ -1102,7 +1106,8 @@ async function generatePDF(){
     doc.setFont('helvetica','normal');
     doc.setFontSize(8);
     doc.setTextColor(183,28,28);
-    doc.text(cfg.hinweisText,ml+4,y+warnH/2,{baseline:'middle',maxWidth:pw-8});
+    const redStartY=splitRed.length===1?y+warnH/2:y+4;
+    doc.text(splitRed,ml+4,redStartY,{baseline:splitRed.length===1?'middle':'top',lineHeightFactor:1.4});
     y+=warnH+6;
   }
 
