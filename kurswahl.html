@@ -1181,7 +1181,11 @@ function buildStateURL(){
     else if(ev){const i=toIdx(ev);if(i>=0)e[sk]=i;}
   });
 
-  const state={k:ss.klasse,h,e,sl:ss.sliders,vn:document.getElementById('inp-vn')?.value||'',nn:document.getElementById('inp-nn')?.value||'',kl:document.getElementById('inp-kl')?.value||''};
+  // Compact sliders: each value 0-100 as single base64 char
+  const dimKeys=DIMS.map(d=>d.key);
+  const slCompact=btoa(String.fromCharCode(...dimKeys.map(k=>ss.sliders[k]??50)));
+
+  const state={k:ss.klasse,h,e,sl:slCompact,vn:document.getElementById('inp-vn')?.value||'',nn:document.getElementById('inp-nn')?.value||'',kl:document.getElementById('inp-kl')?.value||''};
   const b64=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
   const base=cfg.baseUrl||window.location.href.split('#')[0];
   return base+'#'+b64;
@@ -1564,7 +1568,16 @@ document.addEventListener('DOMContentLoaded',()=>{
           }
         });
         loadedFromHash=true;
-        if(state.sl) ss.sliders=state.sl;
+        if(state.sl){
+          if(typeof state.sl==='string'){
+            // Compact format: base64 encoded chars
+            const dimKeys=DIMS.map(d=>d.key);
+            const bytes=atob(state.sl).split('').map(c=>c.charCodeAt(0));
+            dimKeys.forEach((k,i)=>{if(bytes[i]!==undefined)ss.sliders[k]=bytes[i];});
+          } else {
+            ss.sliders=state.sl;
+          }
+        }
       }
     }catch(e){console.log('No valid state in URL');}
   }
