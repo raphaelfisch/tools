@@ -308,6 +308,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <table class="summary-table" id="sum-table"></table>
         <table class="summary-table" id="sum-table-frei" style="display:none;margin-top:16px"></table>
         <div id="confirm-box" style="background:#f0f7f4;border-radius:10px;padding:13px 15px;font-size:.81rem;color:#2e7d32;border:1px solid #c8e6c9"></div>
+        <div id="hinweis-box" style="background:#fff3f3;border-radius:10px;padding:13px 15px;font-size:.81rem;color:#b71c1c;border:1px solid #ffcdd2;margin-top:8px;display:none"></div>
         <div class="sign-row no-print" style="display:none"></div>
       </div>
       <div class="btn-row no-print"><button class="btn btn-ghost" onclick="sGoTo(3)">Zurück</button><button class="btn btn-primary" id="btn-pdf" onclick="generatePDF()" disabled>PDF speichern</button></div>
@@ -964,7 +965,12 @@ function renderSummary(){
     freiTable.style.display='none';
   }
   const text=cfg.abgabeText||'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
-  document.getElementById('confirm-box').innerHTML=`✅ Alle Pflichtbedingungen erfüllt. ${text}`;
+  document.getElementById('confirm-box').innerHTML=`Alle Pflichtbedingungen erfüllt. ${text}`;
+  const hinweisBox=document.getElementById('hinweis-box');
+  if(hinweisBox){
+    if(cfg.hinweisText){hinweisBox.style.display='';hinweisBox.textContent=cfg.hinweisText;}
+    else hinweisBox.style.display='none';
+  }
   updateMeta();
 }
 async function generatePDF(){
