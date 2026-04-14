@@ -259,7 +259,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
   <header>
     <div class="header-inner">
       <h1 id="s-title">Kurswahl 2026/27</h1>
-      <button id="btn-restart" class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem;display:none" onclick="if(confirm('Möchtest du wirklich neu starten? Die aktuelle Kurswahl geht verloren.')){window.onbeforeunload=null;window.location.href=window.location.href.split('#')[0];}" title="Neu starten">↺</button>
+      <button id="btn-restart" class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem;display:none" onclick="if(confirm('Möchtest du wirklich neu starten? Die aktuelle Kurswahl geht verloren.')){window.onbeforeunload=null;sessionStorage.removeItem('kw_welcomed');window.location.href=window.location.href.split('#')[0];}" title="Neu starten">↺</button>
       <button class="btn btn-ghost btn-sm" style="color:#888;border-color:#555;font-size:.72rem" onclick="if(currentStep>=2&&!confirm('Möchtest du wirklich zum Admin-Bereich? Die aktuelle Kurswahl geht verloren.'))return;window.onbeforeunload=null;showView('login')" title="Administration">⚙</button>
     </div>
   </header>
