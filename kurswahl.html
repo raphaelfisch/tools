@@ -316,7 +316,14 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
   </main>
 </div>
 
-<!-- ADMIN -->
+<!-- WELCOME MODAL -->
+<div id="welcome-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:150;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s">
+  <div style="background:#fff;border-radius:16px;padding:30px;width:460px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.2)">
+    <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:8px" id="welcome-titel">Kursprogramm 2026/27</div>
+    <div id="welcome-text" style="font-size:.88rem;color:#555;line-height:1.6;margin-bottom:22px"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="closeWelcome()">Los geht's</button>
+  </div>
+</div>
 <div id="view-admin">
   <header>
     <div class="header-inner">
@@ -424,6 +431,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <div class="srow"><label>URL der Datei</label><input type="text" id="set-url" placeholder="z.B. https://schule.ch/tools/kurswahl.html" oninput="saveSetting('baseUrl',this.value)"></div>
         <div class="srow"><label>Abgabetext</label><input type="text" id="set-abgabe-text" placeholder="Abgabetext..." oninput="saveSetting('abgabeText',this.value)"></div>
         <div class="srow"><label>Hinweistext (rot)</label><input type="text" id="set-hinweis-text" placeholder="Hinweistext..." oninput="saveSetting('hinweisText',this.value)"></div>
+        <div class="srow"><label>Willkommenstext</label><textarea id="set-welcome-text" rows="4" style="width:100%;font-family:'DM Sans',sans-serif;font-size:.83rem;border:1.5px solid var(--border);border-radius:8px;padding:8px;resize:vertical" oninput="saveSetting('welcomeText',this.value)" placeholder="Willkommenstext..."></textarea></div>
       </div>
       <div class="settings-card">
         <h2>Klassenauswahl</h2>
@@ -515,6 +523,7 @@ const DEFAULT_CFG = {
   titel:'Kursprogramm 2026/27', schuljahr:'2026/27', schulname:'Sekundarschulzentrum Ägelsee', password:'admin', baseUrl:'https://raphaelfisch.github.io/tools/kurswahl.html',
   abgabeText:'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.',
   hinweisText:'Die Kurswahl ist verbindlich. Abwahlen oder Umteilungen während des Schuljahres werden grundsätzlich nicht bewilligt.',
+  welcomeText:'Hier findest du heraus, welche Kurse zu dir passen könnten. Die Prozent-Anzeige zeigt dir, wie gut ein Kurs zu deinen Antworten passt – aber verlasse dich nicht nur darauf!\n\nLies die Kursbeschreibungen genau durch, sprich mit deinen Eltern darüber und frag deine Lehrperson wenn du unsicher bist.\n\nViel Spass beim Entdecken! 🎉',
   klassen:[
     {nr:1,label:'1. Klasse',aktiv:false},
     {nr:2,label:'2. Klasse',aktiv:true},
@@ -600,7 +609,7 @@ function loadData(){
   if(cfg.schulname==='Sekundarschulzentrum') cfg.schulname='Sekundarschulzentrum Ägelsee';
   if(!cfg.abgabeText) cfg.abgabeText='Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
   if(!cfg.hinweisText) cfg.hinweisText='Die Kurswahl ist verbindlich. Abwahlen oder Umteilungen während des Schuljahres werden grundsätzlich nicht bewilligt.';
-  // Migrate freiRules for klasse 2 to 0/0
+  if(!cfg.welcomeText) cfg.welcomeText='Hier findest du heraus, welche Kurse zu dir passen könnten. Die Prozent-Anzeige zeigt dir, wie gut ein Kurs zu deinen Antworten passt – aber verlasse dich nicht nur darauf!\n\nLies die Kursbeschreibungen genau durch, sprich mit deinen Eltern darüber und frag deine Lehrperson wenn du unsicher bist.\n\nViel Spass beim Entdecken! 🎉';
   if(cfg.freiRules&&cfg.freiRules[2]&&cfg.freiRules[2].haupt===3) cfg.freiRules[2]={haupt:0,ersatz:0};
   // init sliders state from active dims
   ss.sliders={};
@@ -1244,6 +1253,17 @@ function buildStateURL(){
   const base=cfg.baseUrl||window.location.href.split('#')[0];
   return base+'#'+b64;
 }
+function closeWelcome(){
+  const bg=document.getElementById('welcome-bg');
+  bg.style.opacity='0';bg.style.pointerEvents='none';
+  sessionStorage.setItem('kw_welcomed','1');
+}
+function showWelcome(){
+  const bg=document.getElementById('welcome-bg');
+  document.getElementById('welcome-titel').textContent=cfg.titel||'Kursprogramm 2026/27';
+  document.getElementById('welcome-text').innerHTML=(cfg.welcomeText||'').replace(/\n/g,'<br>');
+  bg.style.opacity='1';bg.style.pointerEvents='all';
+}
 function updateMeta(){
   const v=document.getElementById('inp-vn')?.value||'';
   const n=document.getElementById('inp-nn')?.value||'';
@@ -1430,6 +1450,7 @@ function renderSettings(){
   if(document.getElementById('set-url')) document.getElementById('set-url').value=cfg.baseUrl||'';
   if(document.getElementById('set-abgabe-text')) document.getElementById('set-abgabe-text').value=cfg.abgabeText||'';
   if(document.getElementById('set-hinweis-text')) document.getElementById('set-hinweis-text').value=cfg.hinweisText||'';
+  if(document.getElementById('set-welcome-text')) document.getElementById('set-welcome-text').value=cfg.welcomeText||'';
   // Frei rules
   const klassen=cfg.klassen||DEFAULT_CFG.klassen;
   const fr=cfg.freiRules||DEFAULT_CFG.freiRules;
@@ -1650,7 +1671,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     showView('student');
   }
 
-  // Show restart button from step 2 onwards
+  // Show welcome on first visit
+  if(!window.location.hash&&!sessionStorage.getItem('kw_welcomed')&&savedView!=='admin'){
+    showWelcome();
+  }
   if(window.location.hash){
     const btn=document.getElementById('btn-restart');
     if(btn) btn.style.display='';
