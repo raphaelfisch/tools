@@ -75,8 +75,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 .course-info{flex:1;min-width:0;}
 .course-name{font-weight:600;font-size:.87rem;margin-bottom:2px;}
 .course-desc{font-size:.73rem;color:var(--muted);line-height:1.35;}
-.course-checks{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.course-checks{display:flex;flex-direction:row;gap:5px;flex-shrink:0;align-items:center;}
 .cbox-wrap{display:flex;align-items:center;gap:5px;cursor:pointer;padding:3px 6px;border-radius:6px;white-space:nowrap;}
+@media(max-width:480px){
+  .course-card{flex-wrap:wrap;}
+  .course-info{min-width:0;flex:1 1 60%;}
+  .course-checks{flex-shrink:0;flex-basis:auto;}
+}
 .cbox-wrap input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;}
 .cbox-wrap input[type=checkbox].ersatz-cb{accent-color:var(--ersatz-c);}
 .cbox-label{font-size:.65rem;font-weight:600;letter-spacing:.3px;color:var(--muted);}
@@ -301,6 +306,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
           <div class="sfield"><label>Momentane Klasse *</label><input id="inp-kl" placeholder="z.B. 2d" oninput="updateMeta();updatePdfBtn()"></div>
         </div>
         <table class="summary-table" id="sum-table"></table>
+        <table class="summary-table" id="sum-table-frei" style="display:none;margin-top:16px"></table>
         <div id="confirm-box" style="background:#f0f7f4;border-radius:10px;padding:13px 15px;font-size:.81rem;color:#2e7d32;border:1px solid #c8e6c9"></div>
         <div class="sign-row no-print" style="display:none"></div>
       </div>
@@ -593,6 +599,8 @@ function loadData(){
   if(cfg.schulname==='Sekundarschulzentrum') cfg.schulname='Sekundarschulzentrum Ägelsee';
   if(!cfg.abgabeText) cfg.abgabeText='Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
   if(!cfg.hinweisText) cfg.hinweisText='Die Kurswahl ist verbindlich. Abwahlen oder Umteilungen während des Schuljahres werden grundsätzlich nicht bewilligt.';
+  // Migrate freiRules for klasse 2 to 0/0
+  if(cfg.freiRules&&cfg.freiRules[2]&&cfg.freiRules[2].haupt===3) cfg.freiRules[2]={haupt:0,ersatz:0};
   // init sliders state from active dims
   ss.sliders={};
   DIMS.filter(d=>d.aktiv).forEach(d=>ss.sliders[d.key]=50);
@@ -725,6 +733,8 @@ function selectClass(k,btn){
     ss.sliders={};
     DIMS.filter(d=>d.aktiv).forEach(d=>ss.sliders[d.key]=50);
     initSelectionState();
+    // Clear name fields
+    ['inp-vn','inp-nn','inp-kl'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   }
   setTimeout(()=>{buildSliders();sGoTo(2);},180);
 }
@@ -764,7 +774,7 @@ function darkenColor(hex){
   const b=Math.max(0,parseInt(hex.slice(5,7),16)-60);
   return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 }
-function renderKatSection(kat,withScores,freiTopNames,freiMidNames,isPflicht){
+function renderKatSection(kat,withScores,freiTopNames,freiMidNames,isPflicht,fr){
   const katKurse=withScores.filter(k=>k.katId===kat.id);
   if(!katKurse.length)return'';
   const labelColor=getContrastColor(kat.color)==='#ffffff'?kat.color:darkenColor(kat.color);
@@ -789,8 +799,8 @@ function renderKatSection(kat,withScores,freiTopNames,freiMidNames,isPflicht){
         <div class="course-desc">${k.desc}</div>
       </div>
       <div class="course-checks" onclick="event.stopPropagation()">
-        <label class="cbox-wrap"><input type="checkbox" ${isPri?'checked':''} onchange="selH('${kat.id}','${esc}',this.checked,${isPflicht})"><span class="cbox-label">Hauptwahl</span></label>
-        <label class="cbox-wrap"><input type="checkbox" class="ersatz-cb" ${isErs?'checked':''} onchange="selE('${kat.id}','${esc}',this.checked,${isPflicht})"><span class="cbox-label">Ersatzwahl</span></label>
+        <label class="cbox-wrap"><input type="checkbox" ${isPri?'checked':''} onchange="selH('${kat.id}','${esc}',this.checked,${isPflicht})"><span class="cbox-label">${isPflicht?'Hauptwahl':fr.haupt===0&&fr.ersatz===0?'Ich möchte diesen Kurs':'Hauptwahl'}</span></label>
+        <label class="cbox-wrap" style="${isPflicht||fr.haupt>0||fr.ersatz>0?'':'display:none'}"><input type="checkbox" class="ersatz-cb" ${isErs?'checked':''} onchange="selE('${kat.id}','${esc}',this.checked,${isPflicht})"><span class="cbox-label">Ersatzwahl</span></label>
       </div>
     </div>`;
   });
@@ -812,7 +822,7 @@ function renderCourses(){
     html+=`<div style="background:#f8f7f4;border-radius:12px;padding:16px 18px;margin-bottom:16px;border:1px solid var(--border);border-left:4px solid var(--accent)">
       <div style="font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:4px">✅ Pflichtkategorien – je 1 Kurs wählen</div>
       <div style="font-size:.78rem;color:var(--muted);margin-bottom:14px">Wähle je 1 Hauptwahl und 1 Ersatzwahl pro Kategorie.</div>`;
-    pflichtKats.forEach(kat=>{html+=renderKatSection(kat,withScores,freiTopNames,freiMidNames,true);});
+    pflichtKats.forEach(kat=>{html+=renderKatSection(kat,withScores,freiTopNames,freiMidNames,true,freiRules);});
     html+=`</div>`;
   }
   if(freiKats.length){
@@ -828,7 +838,7 @@ function renderCourses(){
     html+=`<div style="${freiStyle}">
       <div style="font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${titleColor};margin-bottom:4px">${titleIcon} ${freiBlockTitle}</div>
       <div style="font-size:.78rem;color:var(--muted);margin-bottom:14px">Die Kurse können aus beliebigen Kategorien gewählt werden.</div>`;
-    freiKats.forEach(kat=>{html+=renderKatSection(kat,withScores,freiTopNames,freiMidNames,false);});
+    freiKats.forEach(kat=>{html+=renderKatSection(kat,withScores,freiTopNames,freiMidNames,false,freiRules);});
     html+=`</div>`;
   }
   document.getElementById('course-sections').innerHTML=html;
@@ -901,7 +911,7 @@ function updateReqs(){
   const freiKats=kats.filter(k=>k.aktiv!==false&&!isPflichtForKlasse(k.id,ss.klasse));
   const totalH=freiKats.reduce((s,k)=>s+(ss.haupt[k.id]||[]).length,0);
   const totalE=freiKats.reduce((s,k)=>s+(ss.ersatz[k.id]||[]).length,0);
-  if(freiKats.length>0){
+  if(freiKats.length>0&&(fr.haupt>0||fr.ersatz>0)){
     reqs.push({l:`Freie Kurse Hauptwahl`,done:totalH>=fr.haupt,ers:false});
     reqs.push({l:`Freie Kurse Ersatzwahl`,done:totalE>=fr.ersatz,ers:true});
   }
@@ -917,24 +927,42 @@ function updateReqs(){
 // ═══════════════════════════════════
 function renderSummary(){
   const kats=getSortedKats();
-  let rows='';
+  const fr=(cfg.freiRules||DEFAULT_CFG.freiRules)[ss.klasse]||{haupt:3,ersatz:3};
+  const isFreiwillig=fr.haupt===0&&fr.ersatz===0;
+  let pflichtRows='', freiRows='';
   kats.forEach(kat=>{
     const isPflicht=isPflichtForKlasse(kat.id,ss.klasse);
-    const h=isPflicht?ss.haupt[kat.id]:null;
-    const e=isPflicht?ss.ersatz[kat.id]:null;
-    const hArr=isPflicht?null:(ss.haupt[kat.id]||[]);
-    const eArr=isPflicht?null:(ss.ersatz[kat.id]||[]);
+    const badge=`<span class="cat-badge" style="background:${kat.color};color:${getContrastColor(kat.color)}">${kat.label}</span>`;
     if(isPflicht){
-      rows+=`<tr class="cat-first"><td><span class="cat-badge" style="background:${kat.color};color:${getContrastColor(kat.color)}">${kat.label}</span></td><td>${h||'–'}</td><td>${e||'–'}</td></tr>`;
+      const h=ss.haupt[kat.id];
+      const e=ss.ersatz[kat.id];
+      pflichtRows+=`<tr class="cat-first"><td>${badge}</td><td>${h||'–'}</td><td>${e||'–'}</td></tr>`;
     } else {
-      const mx=Math.max(hArr.length,eArr.length);
-      for(let i=0;i<mx;i++){
-        rows+=`<tr class="${i===0?'cat-first':''}"><td>${i===0?`<span class="cat-badge" style="background:${kat.color};color:${getContrastColor(kat.color)}">${kat.label}</span>`:''}</td><td>${hArr[i]||''}</td><td>${eArr[i]||''}</td></tr>`;
+      const hArr=ss.haupt[kat.id]||[];
+      const eArr=ss.ersatz[kat.id]||[];
+      if(isFreiwillig){
+        const allItems=[...hArr];
+        if(allItems.length===0)return;
+        allItems.forEach((item,i)=>{
+          freiRows+=`<tr class="${i===0?'cat-first':''}"><td>${i===0?badge:''}</td><td>${item}</td></tr>`;
+        });
+      } else {
+        const mx=Math.max(hArr.length,eArr.length);
+        if(mx===0)return;
+        for(let i=0;i<mx;i++){
+          pflichtRows+=`<tr class="${i===0?'cat-first':''}"><td>${i===0?badge:''}</td><td>${hArr[i]||''}</td><td>${eArr[i]||''}</td></tr>`;
+        }
       }
     }
   });
-  document.getElementById('sum-table').innerHTML=`<thead><tr><th>Kategorie</th><th>Hauptwahl</th><th>Ersatzwahl</th></tr></thead><tbody>${rows}</tbody>`;
-  // Confirmation box
+  document.getElementById('sum-table').innerHTML=`<thead><tr><th>Kategorie</th><th>Hauptwahl</th><th>Ersatzwahl</th></tr></thead><tbody>${pflichtRows}</tbody>`;
+  const freiTable=document.getElementById('sum-table-frei');
+  if(isFreiwillig&&freiRows){
+    freiTable.style.display='';
+    freiTable.innerHTML=`<thead><tr><th>Zusätzliche Kurse</th><th>Meine Wahl</th></tr></thead><tbody>${freiRows}</tbody>`;
+  } else {
+    freiTable.style.display='none';
+  }
   const text=cfg.abgabeText||'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
   document.getElementById('confirm-box').innerHTML=`✅ Alle Pflichtbedingungen erfüllt. ${text}`;
   updateMeta();
@@ -972,8 +1000,10 @@ async function generatePDF(){
   y+=12;
 
   // Build table data
+  const fr=(cfg.freiRules||DEFAULT_CFG.freiRules)[ss.klasse]||{haupt:3,ersatz:3};
+  const isFreiwillig=fr.haupt===0&&fr.ersatz===0;
   const kats=getSortedKats().filter(k=>k.aktiv!==false);
-  const body=[];
+  const body=[], bodyFrei=[];
   kats.forEach(kat=>{
     const isPflicht=isPflichtForKlasse(kat.id,ss.klasse);
     const h=isPflicht?[ss.haupt[kat.id]].filter(Boolean):(ss.haupt[kat.id]||[]);
@@ -982,55 +1012,33 @@ async function generatePDF(){
     const hex=kat.color.replace('#','');
     const cr=parseInt(hex.slice(0,2),16),cg=parseInt(hex.slice(2,4),16),cb=parseInt(hex.slice(4,6),16);
     const tc=getContrastColor(kat.color)==='#ffffff'?[255,255,255]:[26,24,20];
-    const mx=Math.max(h.length,e.length);
-    for(let i=0;i<mx;i++){
-      body.push([
-    i===0?{
-          content:kat.label,
-          rowSpan:mx,
-          styles:{
-            fillColor:[cr,cg,cb],
-            textColor:tc,
-            fontStyle:'bold',
-            fontSize:8,
-            valign:'middle',
-            halign:'center',
-            cellPadding:{top:4,bottom:4,left:6,right:6},
-          }
-        }:null,
-        {content:h[i]||'',styles:{valign:'middle'}},
-        {content:e[i]||'',styles:{valign:'middle'}},
-      ].filter(c=>c!==null));
+    const pillCell=(mx)=>({content:kat.label,rowSpan:mx,styles:{fillColor:[cr,cg,cb],textColor:tc,fontStyle:'bold',fontSize:8,valign:'middle',halign:'center',cellPadding:{top:4,bottom:4,left:6,right:6}}});
+    if(isPflicht){
+      const mx=Math.max(h.length,e.length);
+      for(let i=0;i<mx;i++){
+        body.push([i===0?pillCell(mx):null,{content:h[i]||'',styles:{valign:'middle'}},{content:e[i]||'',styles:{valign:'middle'}}].filter(c=>c!==null));
+      }
+    } else if(isFreiwillig){
+      h.forEach((item,i)=>{
+        bodyFrei.push([i===0?pillCell(h.length):null,{content:item,styles:{valign:'middle'}}].filter(c=>c!==null));
+      });
+    } else {
+      const mx=Math.max(h.length,e.length);
+      for(let i=0;i<mx;i++){
+        body.push([i===0?pillCell(mx):null,{content:h[i]||'',styles:{valign:'middle'}},{content:e[i]||'',styles:{valign:'middle'}}].filter(c=>c!==null));
+      }
     }
   });
 
   doc.autoTable({
     startY:y,
-    head:[[
-      {content:'Kategorie',styles:{halign:'center'}},
-      'Hauptwahl',
-      'Ersatzwahl'
-    ]],
+    head:[[{content:'Kategorie',styles:{halign:'center'}},'Hauptwahl','Ersatzwahl']],
     body,
-    styles:{
-      font:'helvetica',
-      fontSize:9,
-      cellPadding:{top:4,bottom:4,left:4,right:4},
+    styles:{font:'helvetica',fontSize:9,cellPadding:{top:4,bottom:4,left:4,right:4},lineWidth:0},
+    headStyles:{fillColor:[245,242,235],textColor:[122,115,105],fontStyle:'bold',fontSize:7,cellPadding:{top:3,bottom:3,left:4,right:4},
       lineWidth:0,
     },
-    headStyles:{
-      fillColor:[245,242,235],
-      textColor:[122,115,105],
-      fontStyle:'bold',
-      fontSize:7,
-      cellPadding:{top:3,bottom:3,left:4,right:4},
-      lineWidth:0,
-    },
-    columnStyles:{
-      0:{cellWidth:50},
-      1:{cellWidth:66},
-      2:{cellWidth:66},
-    },
+    columnStyles:{0:{cellWidth:50},1:{cellWidth:66},2:{cellWidth:66}},
     margin:{left:ml,right:mr},
     theme:'plain',
     willDrawCell:(data)=>{},
@@ -1080,6 +1088,46 @@ async function generatePDF(){
   });
 
   y=doc.lastAutoTable.finalY+8;
+
+  // Second table for freiwillig courses
+  if(isFreiwillig&&bodyFrei.length>0){
+    doc.autoTable({
+      startY:y,
+      head:[[{content:'Zusätzliche Kurse',styles:{halign:'center'}},'Meine Wahl']],
+      body:bodyFrei,
+      styles:{font:'helvetica',fontSize:9,cellPadding:{top:4,bottom:4,left:4,right:4},lineWidth:0},
+      headStyles:{fillColor:[245,242,235],textColor:[122,115,105],fontStyle:'bold',fontSize:7,cellPadding:{top:3,bottom:3,left:4,right:4}},
+      columnStyles:{0:{cellWidth:50},1:{cellWidth:132}},
+      margin:{left:ml,right:mr},
+      theme:'plain',
+      willDrawCell:(data)=>{
+        if(data.section==='body'&&data.column.index===0&&data.cell.raw&&typeof data.cell.raw==='object'&&data.cell.raw.rowSpan){
+          doc.setDrawColor(220,216,206);doc.setLineWidth(0.3);doc.line(ml,data.cell.y,ml+182,data.cell.y);
+        }
+        if(data.section==='head'&&data.column.index===1){
+          doc.setDrawColor(180,175,165);doc.setLineWidth(0.4);doc.line(ml,data.cell.y+data.cell.height,ml+182,data.cell.y+data.cell.height);
+        }
+      },
+      didDrawCell:(data)=>{
+        if(data.section==='body'&&data.column.index===0&&data.cell.raw&&typeof data.cell.raw==='object'&&data.cell.raw.rowSpan){
+          const hex=data.cell.raw.styles.fillColor;
+          const ph=5.5,pr=2.5,pw2=data.cell.width-6,px=data.cell.x+3,cy=data.cell.y+data.cell.height/2;
+          doc.setFillColor(hex[0],hex[1],hex[2]);
+          doc.roundedRect(px,cy-ph/2,pw2,ph,pr,pr,'F');
+          doc.setFont('helvetica','bold');doc.setFontSize(7.5);
+          doc.setTextColor(data.cell.raw.styles.textColor[0],data.cell.raw.styles.textColor[1],data.cell.raw.styles.textColor[2]);
+          doc.text(data.cell.raw.content,px+pw2/2,cy+1,{align:'center'});
+        }
+      },
+      didParseCell:(data)=>{
+        if(data.section==='body'&&data.column.index===0&&data.cell.raw&&typeof data.cell.raw==='object'&&data.cell.raw.rowSpan){
+          data.cell.styles.fillColor=[255,255,255];data.cell.styles.textColor=[255,255,255];data.cell.styles.fontStyle='normal';
+        }
+        if(data.section==='body'&&data.column.index!==0) data.cell.styles.fillColor=[255,255,255];
+      },
+    });
+    y=doc.lastAutoTable.finalY+8;
+  }
   const abgabeText=cfg.abgabeText||'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.';
   const fullGreenText=`Alle Pflichtbedingungen erfüllt. ${abgabeText}`;
   doc.setFont('helvetica','normal');
