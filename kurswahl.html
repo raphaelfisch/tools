@@ -75,12 +75,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 .course-info{flex:1;min-width:0;}
 .course-name{font-weight:600;font-size:.87rem;margin-bottom:2px;}
 .course-desc{font-size:.73rem;color:var(--muted);line-height:1.35;}
-.course-checks{display:flex;flex-direction:row;gap:5px;flex-shrink:0;align-items:center;}
+.course-checks{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
 .cbox-wrap{display:flex;align-items:center;gap:5px;cursor:pointer;padding:3px 6px;border-radius:6px;white-space:nowrap;}
 @media(max-width:480px){
   .course-card{flex-wrap:wrap;}
   .course-info{min-width:0;flex:1 1 60%;}
-  .course-checks{flex-shrink:0;flex-basis:auto;}
+  .course-checks{flex-direction:row;flex-wrap:wrap;}
 }
 .cbox-wrap input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;}
 .cbox-wrap input[type=checkbox].ersatz-cb{accent-color:var(--ersatz-c);}
