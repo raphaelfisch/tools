@@ -1666,8 +1666,20 @@ async function exportKursePDF(){
 
       const labelW=24;
       const barAreaW=pw-labelW*2-6;
+      const barH=4;
+      const stepW=barAreaW/5;
 
-      activeDims.forEach(dim=>{
+      // Scale numbers top
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(122,115,105);
+      for(let i=0;i<=5;i++){
+        const x=ml+labelW+1+i*stepW;
+        doc.text(String(i),x,y,{align:'center'});
+      }
+      y+=3.5;
+
+      activeDims.forEach((dim,dimIdx)=>{
         const val=kurs.s[dim.key]??2;
         const filledW=val/5*barAreaW;
         const leftLabel=dim.dl.replace(/^\S+\s/,'');
@@ -1675,14 +1687,33 @@ async function exportKursePDF(){
         doc.setFont('helvetica','normal');
         doc.setFontSize(8);
         doc.setTextColor(26,24,20);
-        doc.text(leftLabel,ml+labelW-1,y+2.5,{align:'right'});
+        doc.text(leftLabel,ml+labelW-1,y+barH/2+1,{align:'right'});
+        // Bar background
         doc.setFillColor(220,216,206);
-        doc.roundedRect(ml+labelW+1,y-0.5,barAreaW,4,1,1,'F');
+        doc.roundedRect(ml+labelW+1,y,barAreaW,barH,1,1,'F');
+        // Bar fill
         doc.setFillColor(cr,cg,cb);
-        if(filledW>0) doc.roundedRect(ml+labelW+1,y-0.5,filledW,4,1,1,'F');
-        doc.text(rightLabel,ml+labelW+barAreaW+3,y+2.5);
-        y+=7;
+        if(filledW>0) doc.roundedRect(ml+labelW+1,y,filledW,barH,1,1,'F');
+        // Vertical step lines
+        doc.setDrawColor(255,255,255);
+        doc.setLineWidth(0.4);
+        for(let i=1;i<=4;i++){
+          const x=ml+labelW+1+i*stepW;
+          doc.line(x,y,x,y+barH);
+        }
+        doc.text(rightLabel,ml+labelW+barAreaW+3,y+barH/2+1);
+        y+=barH+4;
       });
+
+      // Scale numbers bottom
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(122,115,105);
+      for(let i=0;i<=5;i++){
+        const x=ml+labelW+1+i*stepW;
+        doc.text(String(i),x,y,{align:'center'});
+      }
+      y+=5;
 
       // Legend - each dim on its own line, no emojis
       y+=4;
