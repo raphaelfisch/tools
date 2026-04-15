@@ -429,6 +429,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <div class="srow"><label>Schuljahr</label><input type="text" id="set-sj" oninput="saveSetting('schuljahr',this.value)"></div>
         <div class="srow"><label>Schulname</label><input type="text" id="set-sn" oninput="saveSetting('schulname',this.value)"></div>
         <div class="srow"><label>URL der Datei</label><input type="text" id="set-url" placeholder="z.B. https://schule.ch/tools/kurswahl.html" oninput="saveSetting('baseUrl',this.value)"></div>
+        <div class="srow"><label>Konfigurations-URL</label><input type="text" id="set-config-url" placeholder="z.B. https://schule.ch/tools/kurswahl-config.json" oninput="saveSetting('configUrl',this.value)"></div>
         <div class="srow"><label>Abgabetext</label><input type="text" id="set-abgabe-text" placeholder="Abgabetext..." oninput="saveSetting('abgabeText',this.value)"></div>
         <div class="srow"><label>Hinweistext (rot)</label><input type="text" id="set-hinweis-text" placeholder="Hinweistext..." oninput="saveSetting('hinweisText',this.value)"></div>
         <div class="srow"><label>Willkommenstext</label><textarea id="set-welcome-text" rows="4" style="width:100%;font-family:'DM Sans',sans-serif;font-size:.83rem;border:1.5px solid var(--border);border-radius:8px;padding:8px;resize:vertical" oninput="saveSetting('welcomeText',this.value)" placeholder="Willkommenstext..."></textarea></div>
@@ -520,7 +521,7 @@ const DEFAULT_KATEGORIEN = [
 ];
 
 const DEFAULT_CFG = {
-  titel:'Kursprogramm 2026/27', schuljahr:'2026/27', schulname:'Sekundarschulzentrum Ägelsee', password:'admin', baseUrl:'https://raphaelfisch.github.io/tools/kurswahl.html',
+  titel:'Kursprogramm 2026/27', schuljahr:'2026/27', schulname:'Sekundarschulzentrum Ägelsee', password:'admin', baseUrl:'https://raphaelfisch.github.io/tools/kurswahl.html', configUrl:'',
   abgabeText:'Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.',
   hinweisText:'Die Kurswahl ist verbindlich. Abwahlen oder Umteilungen während des Schuljahres werden grundsätzlich nicht bewilligt.',
   welcomeText:'Hier findest du heraus, welche Kurse zu dir passen könnten. Die Prozent-Anzeige zeigt dir, wie gut ein Kurs zu deinen Antworten passt – aber verlasse dich nicht nur darauf!\n\nLies die Kursbeschreibungen genau durch, sprich mit deinen Eltern darüber und frag deine Lehrperson wenn du unsicher bist.\n\nViel Spass beim Entdecken! 🎉',
@@ -1448,6 +1449,7 @@ function renderSettings(){
   document.getElementById('set-sj').value=cfg.schuljahr||'';
   document.getElementById('set-sn').value=cfg.schulname||'';
   if(document.getElementById('set-url')) document.getElementById('set-url').value=cfg.baseUrl||'';
+  if(document.getElementById('set-config-url')) document.getElementById('set-config-url').value=cfg.configUrl||'';
   if(document.getElementById('set-abgabe-text')) document.getElementById('set-abgabe-text').value=cfg.abgabeText||'';
   if(document.getElementById('set-hinweis-text')) document.getElementById('set-hinweis-text').value=cfg.hinweisText||'';
   if(document.getElementById('set-welcome-text')) document.getElementById('set-welcome-text').value=cfg.welcomeText||'';
@@ -1605,8 +1607,28 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 // ═══════════════════════════════════
 // INIT
 // ═══════════════════════════════════
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded',async()=>{
   loadData();applyConfig();
+
+  // Load config from remote URL if set
+  if(cfg.configUrl){
+    try{
+      const res=await fetch(cfg.configUrl);
+      if(res.ok){
+        const d=await res.json();
+        if(d.kurse) kurse=d.kurse;
+        if(d.cfg){
+          // Keep local configUrl so it keeps working
+          const savedConfigUrl=cfg.configUrl;
+          cfg=d.cfg;
+          cfg.configUrl=savedConfigUrl;
+        }
+        if(d.kategorien) kategorien=d.kategorien;
+        if(d.dims) DIMS=d.dims;
+        saveData();applyConfig();
+      }
+    }catch(e){console.log('Config URL konnte nicht geladen werden:',e);}
+  }
 
   // Load state from URL hash if present (QR code scan)
   let loadedFromHash=false;
