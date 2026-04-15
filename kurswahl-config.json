@@ -59,7 +59,7 @@
       "voraus": "Zeichnen ist deine Stärke, du hast Interesse an verschiedenen gestalterischen Techniken, arbeitest selbständig und hast kreative Ideen.",
       "desc": "Zeichnen, Malen, dreidimensionales Arbeiten",
       "descLang": "Bist du gerne kreativ? Im Bildnerischen Gestalten behandeln wir verschiedene Themen mit unterschiedlichen Materialien. Dieser Kurs bietet dir Gelegenheit, deine gestalterischen Fähigkeiten auszubauen. Es wird gezeichnet, gemalt und auch dreidimensional gearbeitet.",
-      "aktiv": false,
+      "aktiv": true,
       "s": {
         "aktiv": 1,
         "team": 1,
