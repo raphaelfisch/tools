@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{--bg:#f5f2eb;--card:#fff;--ink:#1a1814;--muted:#7a7369;--accent:#2d6a4f;--accent2:#e07a3a;--danger:#c0392b;--ersatz-c:#888;--border:#ddd8ce;--shadow:0 2px 16px rgba(0,0,0,.07);}
@@ -341,8 +342,7 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <button class="tab-btn" onclick="showATab('kurse',this)"><span class="btn-label">Kurse</span><span class="btn-icon">Kurse</span></button>
       </div>
       <div class="atoolbar-right">
-        <button class="btn btn-ghost btn-sm" id="btn-import" style="display:none" onclick="document.getElementById('imp-file').click()">⬆ <span class="btn-label">Import</span></button>
-        <button class="btn btn-ghost btn-sm" id="btn-export" style="display:none" onclick="exportJSON()">⬇ <span class="btn-label">Export</span></button>
+        <button class="btn btn-ghost btn-sm" id="btn-word" style="display:none" onclick="exportWord()">📄 <span class="btn-label">Word</span></button>
         <button class="btn btn-accent btn-sm" id="btn-new-kurs" style="display:none" onclick="openModal(null)">+ <span class="btn-label">Neuer Kurs</span></button>
         <input type="file" id="imp-file" accept=".json" onchange="handleImport(event)">
       </div>
@@ -438,6 +438,14 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <h2>Klassenauswahl</h2>
         <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Lege fest welche Klassen aktiv sind und wie ihre Bezeichnung lautet.</p>
         <div id="klassen-config"></div>
+      </div>
+      <div class="settings-card">
+        <h2>Konfiguration exportieren / importieren</h2>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Exportiere alle Einstellungen als JSON-Datei und importiere sie auf anderen Geräten – so sehen alle Schülerinnen und Schüler dieselbe Konfiguration.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('imp-file').click()">⬆ Import</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportJSON()">⬇ Export</button>
+        </div>
       </div>
       <div class="settings-card">
         <h2>Passwort ändern</h2>
@@ -674,8 +682,7 @@ function showView(v){
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.querySelector('.tab-btn').classList.add('active');
     document.getElementById('btn-new-kurs').style.display='none';
-    document.getElementById('btn-import').style.display='none';
-    document.getElementById('btn-export').style.display='none';
+    document.getElementById('btn-word').style.display='none';
     renderAAll();
     renderSettings();
   }
@@ -1547,8 +1554,7 @@ function showATab(tab,btn){
   btn.classList.add('active');
   const isKurse=tab==='kurse';
   document.getElementById('btn-new-kurs').style.display=isKurse?'':'none';
-  document.getElementById('btn-import').style.display=isKurse?'':'none';
-  document.getElementById('btn-export').style.display=isKurse?'':'none';
+  document.getElementById('btn-word').style.display=isKurse?'':'none';
   if(tab==='kategorien'){renderKatTable();renderDimsTable();}
   sessionStorage.setItem('kw_tab',tab);
 }
@@ -1580,6 +1586,110 @@ function resetToDefault(){
 // ═══════════════════════════════════
 // EXPORT / IMPORT
 // ═══════════════════════════════════
+async function exportWord(){
+  const {Document,Packer,Paragraph,TextRun,PageBreak,ShadingType,AlignmentType,BorderStyle,WidthType,HeadingLevel}=window.docx;
+
+  const sections=[];
+  const sortedKurse=[...kurse].filter(k=>k.aktiv).sort((a,b)=>{
+    const ai=getSortedKats().findIndex(k=>k.id===a.katId);
+    const bi=getSortedKats().findIndex(k=>k.id===b.katId);
+    return ai-bi||a.name.localeCompare(b.name);
+  });
+
+  sortedKurse.forEach((kurs,idx)=>{
+    const kat=getKat(kurs.katId);
+    const hex=kat.color.replace('#','');
+    const cr=parseInt(hex.slice(0,2),16),cg=parseInt(hex.slice(2,4),16),cb=parseInt(hex.slice(4,6),16);
+    // Luminance to decide text color
+    const lum=0.299*cr+0.587*cg+0.114*cb;
+    const textColor=lum>160?'000000':'FFFFFF';
+    const bgHex=hex.toUpperCase();
+
+    const children=[];
+
+    // Page break for all but first
+    if(idx>0) children.push(new Paragraph({children:[new PageBreak()]}));
+
+    // Category label
+    children.push(new Paragraph({
+      children:[new TextRun({text:kat.label,bold:true,color:textColor,font:'Arial',size:18})],
+      shading:{fill:bgHex,type:ShadingType.CLEAR},
+      spacing:{before:0,after:120},
+    }));
+
+    // Course title
+    children.push(new Paragraph({
+      children:[new TextRun({text:kurs.name,bold:true,font:'Arial',size:36})],
+      spacing:{before:120,after:80},
+    }));
+
+    // Meta
+    const meta=[];
+    if(kurs.lekt) meta.push(`${kurs.lekt} Lekt./Woche`);
+    if(kurs.klassen&&kurs.klassen.length>0) meta.push(`Klasse: ${kurs.klassen.join(', ')}`);
+    if(meta.length) children.push(new Paragraph({
+      children:[new TextRun({text:meta.join(' · '),color:'777777',font:'Arial',size:20})],
+      spacing:{before:0,after:200},
+    }));
+
+    // Voraussetzung
+    if(kurs.voraus){
+      children.push(new Paragraph({children:[new TextRun({text:'Voraussetzung',bold:true,font:'Arial',size:22})],spacing:{before:160,after:60}}));
+      children.push(new Paragraph({children:[new TextRun({text:kurs.voraus,font:'Arial',size:22})],spacing:{before:0,after:160}}));
+    }
+
+    // Kurzbeschreibung
+    if(kurs.desc){
+      children.push(new Paragraph({children:[new TextRun({text:'Kurzbeschreibung',bold:true,font:'Arial',size:22})],spacing:{before:160,after:60}}));
+      children.push(new Paragraph({children:[new TextRun({text:kurs.desc,font:'Arial',size:22})],spacing:{before:0,after:160}}));
+    }
+
+    // Vollständige Beschreibung
+    if(kurs.descLang){
+      children.push(new Paragraph({children:[new TextRun({text:'Vollständige Beschreibung',bold:true,font:'Arial',size:22})],spacing:{before:160,after:60}}));
+      kurs.descLang.split('\n').forEach(line=>{
+        children.push(new Paragraph({children:[new TextRun({text:line,font:'Arial',size:22})],spacing:{before:0,after:80}}));
+      });
+    }
+
+    // Passung-Profil (Schieberegler)
+    const activeDims=DIMS.filter(d=>d.aktiv);
+    if(activeDims.length>0){
+      children.push(new Paragraph({children:[new TextRun({text:'Passung-Profil',bold:true,font:'Arial',size:22})],spacing:{before:160,after:100}}));
+      activeDims.forEach(dim=>{
+        const val=kurs.s[dim.key]??2;
+        const pct=Math.round(val/5*100);
+        // Bar: 20 chars wide
+        const filled=Math.round(val/5*20);
+        const bar='█'.repeat(filled)+'░'.repeat(20-filled);
+        children.push(new Paragraph({
+          children:[
+            new TextRun({text:dim.dl.replace(/\S+\s/,''),font:'Arial',size:18,color:'555555'}),
+            new TextRun({text:`  ${bar}  `,font:'Courier New',size:16,color:'336633'}),
+            new TextRun({text:dim.dr.replace(/\S+\s/,''),font:'Arial',size:18,color:'555555'}),
+          ],
+          spacing:{before:40,after:40},
+        }));
+      });
+    }
+    sections.push(...children);
+  });
+
+  const doc=new Document({
+    sections:[{
+      properties:{page:{size:{width:11906,height:16838},margin:{top:1134,right:1134,bottom:1134,left:1134}}},
+      children:sections,
+    }]
+  });
+
+  const buffer=await Packer.toBuffer(doc);
+  const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Kurse_${cfg.schuljahr||'2026_27'}.docx`;
+  a.click();
+  toast('Word-Export erstellt.');
+}
 function exportJSON(){
   const blob=new Blob([JSON.stringify({cfg,kurse,kategorien,dims:DIMS},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -1610,24 +1720,21 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 document.addEventListener('DOMContentLoaded',async()=>{
   loadData();applyConfig();
 
-  // Load config from remote URL if set
-  if(cfg.configUrl){
+  // Load config from remote URL if set (always, unless admin is active)
+  const isAdminSession=sessionStorage.getItem('kw_view')==='admin';
+  if(cfg.configUrl&&!isAdminSession){
     try{
-      const res=await fetch(cfg.configUrl);
+      const res=await fetch(cfg.configUrl+'?v='+Date.now());
       if(res.ok){
         const d=await res.json();
+        const savedConfigUrl=cfg.configUrl;
         if(d.kurse) kurse=d.kurse;
-        if(d.cfg){
-          // Keep local configUrl so it keeps working
-          const savedConfigUrl=cfg.configUrl;
-          cfg=d.cfg;
-          cfg.configUrl=savedConfigUrl;
-        }
+        if(d.cfg){cfg=d.cfg;cfg.configUrl=savedConfigUrl;}
         if(d.kategorien) kategorien=d.kategorien;
         if(d.dims) DIMS=d.dims;
         saveData();applyConfig();
       }
-    }catch(e){console.log('Config URL konnte nicht geladen werden:',e);}
+    }catch(e){console.log('Config URL nicht erreichbar, verwende LocalStorage.');}
   }
 
   // Load state from URL hash if present (QR code scan)
