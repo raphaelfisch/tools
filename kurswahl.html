@@ -1602,27 +1602,24 @@ async function exportKursePDF(){
     const tc=lum>160?[26,24,20]:[255,255,255];
     let y=14;
 
-    // Category bar
+    // Title bar: Kategorie – Kursname
+    const titleText=`${kat.label} – ${kurs.name}`;
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12);
+    const titleLines=doc.splitTextToSize(titleText,pw-8);
+    const barH=titleLines.length*6+6;
     doc.setFillColor(cr,cg,cb);
-    doc.rect(ml,y,pw,8,'F');
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(9);
+    doc.rect(ml,y,pw,barH,'F');
     doc.setTextColor(tc[0],tc[1],tc[2]);
-    doc.text(kat.label,ml+4,y+5.5);
-    y+=12;
-
-    // Course title
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(18);
-    doc.setTextColor(26,24,20);
-    const titleLines=doc.splitTextToSize(kurs.name,pw);
-    doc.text(titleLines,ml,y);
-    y+=titleLines.length*8+4;
+    doc.text(titleLines,ml+4,y+5);
+    y+=barH+8;
 
     // Meta
+    const allNr=(cfg.klassen||DEFAULT_CFG.klassen).filter(kl=>kl.aktiv!==false).map(kl=>kl.nr);
+    const klassen=kurs.klassen&&kurs.klassen.length>0?kurs.klassen.filter(n=>allNr.includes(n)):allNr;
     const meta=[];
     if(kurs.lekt) meta.push(`${kurs.lekt} Lekt./Woche`);
-    if(kurs.klassen&&kurs.klassen.length>0) meta.push(`Klasse: ${kurs.klassen.join(', ')}`);
+    meta.push(`Klasse: ${klassen.join(', ')}`);
     if(meta.length){
       doc.setFont('helvetica','normal');
       doc.setFontSize(9);
@@ -1630,7 +1627,7 @@ async function exportKursePDF(){
       doc.text(meta.join(' · '),ml,y);
       y+=6;
     }
-    y+=4;
+    y+=2;
     doc.setDrawColor(220,216,206);
     doc.setLineWidth(0.3);
     doc.line(ml,y,210-mr,y);
@@ -1665,25 +1662,45 @@ async function exportKursePDF(){
       doc.setFontSize(9);
       doc.setTextColor(122,115,105);
       doc.text('PASSUNG-PROFIL',ml,y);
-      y+=5;
+      y+=6;
+
+      const labelW=28;
+      const barW=pw-labelW*2-6;
+
       activeDims.forEach(dim=>{
         const val=kurs.s[dim.key]??2;
-        const barW=pw-60;
         const filledW=val/5*barW;
         // Left label
         doc.setFont('helvetica','normal');
         doc.setFontSize(8);
         doc.setTextColor(26,24,20);
-        doc.text(dim.dl.replace(/^\S+\s/,''),ml,y+2.5);
+        doc.text(dim.dl.replace(/^\S+\s/,''),ml+labelW-2,y+2.5,{align:'right'});
         // Bar background
         doc.setFillColor(220,216,206);
-        doc.roundedRect(ml+28,y-1,barW,4,1,1,'F');
+        doc.roundedRect(ml+labelW,y-0.5,barW,4,1,1,'F');
         // Bar fill
         doc.setFillColor(cr,cg,cb);
-        if(filledW>0) doc.roundedRect(ml+28,y-1,filledW,4,1,1,'F');
+        if(filledW>0) doc.roundedRect(ml+labelW,y-0.5,filledW,4,1,1,'F');
         // Right label
-        doc.text(dim.dr.replace(/^\S+\s/,''),ml+28+barW+2,y+2.5);
+        doc.text(dim.dr.replace(/^\S+\s/,''),ml+labelW+barW+3,y+2.5);
         y+=7;
+      });
+
+      // Legend
+      y+=4;
+      doc.setDrawColor(220,216,206);
+      doc.line(ml,y,210-mr,y);
+      y+=5;
+      doc.setFont('helvetica','italic');
+      doc.setFontSize(7.5);
+      doc.setTextColor(122,115,105);
+      doc.text('Legende Passung-Profil:',ml,y);
+      y+=4.5;
+      activeDims.forEach(dim=>{
+        const legendLine=`${dim.dl} = ${dim.lt}   ${dim.dr} = ${dim.rt}`;
+        const lines=doc.splitTextToSize(legendLine,pw);
+        doc.text(lines,ml,y);
+        y+=lines.length*4;
       });
     }
   });
