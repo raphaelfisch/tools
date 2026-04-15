@@ -454,9 +454,13 @@ table.atable td{padding:9px 11px;font-size:.83rem;vertical-align:middle;}
         <div id="pw-msg" style="font-size:.79rem;margin-top:4px"></div>
       </div>
       <div class="settings-card" style="border-color:#fcc;background:#fff8f8">
-        <h2>Daten zurücksetzen</h2>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Setzt alle Daten auf die Standardwerte zurück.</p>
-        <button class="btn btn-danger btn-sm" onclick="resetToDefault()">⚠ Auf Standarddaten zurücksetzen</button>
+        <h2>Zurücksetzen</h2>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Lade die Konfiguration von der Config-URL neu, oder setze alles auf die Standardwerte zurück.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="resetToConfigUrl()">↺ Auf Config-URL zurücksetzen</button>
+          <button class="btn btn-danger btn-sm" onclick="resetToDefault()">⚠ Alles zurücksetzen</button>
+        </div>
+        <div id="reset-msg" style="font-size:.79rem;margin-top:8px;color:var(--muted)"></div>
       </div>
     </div>
   </main>
@@ -1570,6 +1574,31 @@ function closeConfirm(){document.getElementById('confirm-bg').classList.remove('
 function doDelete(){
   if(_pendingDeleteType==='kurs'){kurse.splice(_pendingDelete,1);saveData();renderAAll();toast('Kurs gelöscht.');}
   else if(_pendingDeleteType==='dim'){DIMS.splice(_pendingDelete,1);saveData();renderDimsTable();toast('Schieberegler gelöscht.');}
+}
+async function resetToConfigUrl(){
+  if(!cfg.configUrl){
+    document.getElementById('reset-msg').textContent='Keine Config-URL konfiguriert.';
+    return;
+  }
+  if(!confirm('Konfiguration von Config-URL neu laden? Lokale Änderungen gehen verloren.')) return;
+  try{
+    const res=await fetch(cfg.configUrl+'?v='+Date.now());
+    if(res.ok){
+      const d=await res.json();
+      const savedConfigUrl=cfg.configUrl;
+      const savedPassword=cfg.password;
+      if(d.kurse) kurse=d.kurse;
+      if(d.cfg){cfg=d.cfg;cfg.configUrl=savedConfigUrl;cfg.password=savedPassword;}
+      if(d.kategorien) kategorien=d.kategorien;
+      if(d.dims) DIMS=d.dims;
+      saveData();renderAAll();renderKatTable();renderDimsTable();renderSettings();applyConfig();
+      toast('Konfiguration neu geladen.');
+    } else {
+      document.getElementById('reset-msg').textContent='Config-URL nicht erreichbar.';
+    }
+  }catch(e){
+    document.getElementById('reset-msg').textContent='Fehler beim Laden der Config-URL.';
+  }
 }
 function resetToDefault(){
   if(!confirm('Wirklich zurücksetzen?'))return;
