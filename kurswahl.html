@@ -1770,7 +1770,7 @@ async function exportKursePDF(){
     }
   });
 
-  doc.save(`Kurse_${(cfg.schuljahr||'2026_27').replace('/','_')}.pdf`);
+  doc.save(`Passung-Profile_${(cfg.schuljahr||'2026_27').replace('/','_')}.pdf`);
   toast('PDF-Export erstellt.');
 }
 
