@@ -46,7 +46,7 @@
       }
     },
     "baseUrl": "https://raphaelfisch.github.io/tools/kurswahl.html",
-    "abgabeText": "Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.",
+    "abgabeText": "Speichere dieses PDF auf deiner OneDrive ab und besprich es mit deiner Klassenlehrperson.",
     "hinweisText": "Die Kurswahl ist verbindlich. Abwahlen oder Umteilungen während des Schuljahres werden grundsätzlich nicht bewilligt.",
     "welcomeText": "Hier findest du heraus, welche Kurse zu dir passen könnten. Die Prozent-Anzeige zeigt dir, wie gut ein Kurs zu deinen Antworten passt – aber verlasse dich nicht nur darauf!\n\nLies die Kursbeschreibungen genau durch, sprich mit deinen Eltern darüber und frag deine Lehrperson wenn du unsicher bist.\n\nViel Spass beim Entdecken! 🎉",
     "configUrl": "https://raphaelfisch.github.io/tools/kurswahl-config.json"
