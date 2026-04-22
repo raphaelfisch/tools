@@ -3,7 +3,6 @@
     "titel": "Kursprogramm 2026/27",
     "schuljahr": "2026/27",
     "schulname": "Sekundarschulzentrum Ägelsee",
-    "password": "admin",
     "klassen": [
       {
         "nr": 1,
@@ -46,7 +45,7 @@
       }
     },
     "baseUrl": "https://raphaelfisch.github.io/tools/kurswahl.html",
-    "abgabeText": "Speichere dieses PDF auf deiner OneDrive ab und besprich es mit deiner Klassenlehrperson.",
+    "abgabeText": "Speichere dieses PDF auf deiner OneDrive ab und sende es per Mail deiner Klassenlehrperson.",
     "hinweisText": "Die Kurswahl ist verbindlich. Abwahlen oder Umteilungen während des Schuljahres werden grundsätzlich nicht bewilligt.",
     "welcomeText": "Hier findest du heraus, welche Kurse zu dir passen könnten. Die Prozent-Anzeige zeigt dir, wie gut ein Kurs zu deinen Antworten passt – aber verlasse dich nicht nur darauf!\n\nLies die Kursbeschreibungen genau durch, sprich mit deinen Eltern darüber und frag deine Lehrperson wenn du unsicher bist.\n\nViel Spass beim Entdecken! 🎉",
     "configUrl": "https://raphaelfisch.github.io/tools/kurswahl-config.json"
@@ -154,13 +153,17 @@
       "voraus": "Du hast Freude an Bewegung, insbesondere am Tanzen und an der Akrobatik.",
       "desc": "Tanzen, Akrobatik, Gerätechoreos",
       "descLang": "Wenn du zu fetziger Musik nicht stillsitzen kannst, bist du hier genau am richtigen Ort. Wir tanzen zu aktueller Musik coole Choreos. Bei Interesse bewegen wir uns auch an beliebten Geräten und studieren attraktive Gerätechoreos zu Musik ein.",
+      "klassen": [
+        2,
+        3
+      ],
       "aktiv": true,
       "s": {
         "aktiv": 5,
         "team": 3,
         "draussen": 0,
         "digital": 0,
-        "logisch": 0,
+        "logisch": 1,
         "auftreten": 4,
         "ausfuehren": 3,
         "tempo": 3
@@ -195,15 +198,15 @@
       "voraus": "Du hast Interesse an Geschichte und Aktualitäten.",
       "desc": "Zeitgeschichte, Analyse & Diskussion",
       "descLang": "Geschichte wird laufend geschrieben und ist nicht nur etwas, was schon lange vorbei ist. In diesem Kurs betrachten wir Ereignisse der jüngeren Geschichte (nach dem 2. Weltkrieg bis heute). Wir analysieren und diskutieren aktuelle Geschehnisse und versuchen, sie anhand verschiedener Perspektiven und ihrer Vergangenheit besser zu verstehen. Wo genau unsere Schwerpunkte liegen, kann die Gruppe mitbestimmen.",
-      "aktiv": true,
       "klassen": [
         3
       ],
+      "aktiv": true,
       "s": {
-        "aktiv": 0,
-        "team": 3,
+        "aktiv": 1,
+        "team": 2,
         "draussen": 0,
-        "digital": 1,
+        "digital": 2,
         "logisch": 4,
         "auftreten": 2,
         "ausfuehren": 2,
@@ -217,17 +220,17 @@
       "voraus": "Du interessierst dich dafür, in der Küche zu experimentieren.",
       "desc": "Kochen & Experimentieren in der Küche",
       "descLang": "Wir werden in der «Labor»-Küche für den AHA-Effekt sorgen. Z.B. wie entsteht Caramel oder eine Mayonnaise.",
-      "aktiv": true,
       "klassen": [
         3
       ],
+      "aktiv": true,
       "s": {
-        "aktiv": 3,
-        "team": 3,
+        "aktiv": 4,
+        "team": 4,
         "draussen": 0,
-        "digital": 0,
+        "digital": 1,
         "logisch": 2,
-        "auftreten": 0,
+        "auftreten": 2,
         "ausfuehren": 3,
         "tempo": 3
       }
@@ -277,9 +280,13 @@
       "voraus": "Du bist ein guter G-SuS bis E-SuS.",
       "desc": "Lesen, Sprechen, Vokabular auf Englisch",
       "descLang": "Are you looking for an opportunity to practice your English skills? We read and chat about English stories and movies, have a look at new vocabulary and just enjoy using English a little more often than just in our English lessons.",
+      "klassen": [
+        2,
+        3
+      ],
       "aktiv": true,
       "s": {
-        "aktiv": 0,
+        "aktiv": 1,
         "team": 3,
         "draussen": 0,
         "digital": 1,
@@ -353,12 +360,16 @@
       "voraus": "Du spielst bereits ein Instrument oder kannst gut singen.",
       "desc": "Gemeinsam Musik machen & auftreten",
       "descLang": "Wir üben gemeinsam Lieder und zeigen unser Können bei Auftritten.",
+      "klassen": [
+        2,
+        3
+      ],
       "aktiv": true,
       "s": {
         "aktiv": 2,
         "team": 5,
         "draussen": 0,
-        "digital": 0,
+        "digital": 1,
         "logisch": 0,
         "auftreten": 5,
         "ausfuehren": 3,
@@ -448,16 +459,20 @@
       "voraus": "Du interessierst dich für die Herkunft von Lebensmitteln und das Herstellen von nachhaltigen Verpackungen.",
       "desc": "Lebensmittel anbauen, Kochen, Verpackungen",
       "descLang": "Wir werden Lebensmittel anbauen, ernten und verarbeiten. Ebenso werden wir verschiedene kleine Mitbringsel aus der Küche kreieren und im Textilen Gestalten passende Verpackungen herstellen.",
+      "klassen": [
+        2,
+        3
+      ],
       "aktiv": true,
       "s": {
         "aktiv": 3,
         "team": 4,
         "draussen": 3,
-        "digital": 0,
+        "digital": 3,
         "logisch": 1,
-        "auftreten": 0,
+        "auftreten": 2,
         "ausfuehren": 3,
-        "tempo": 2
+        "tempo": 3
       }
     },
     {
