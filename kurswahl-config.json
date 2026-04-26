@@ -440,7 +440,7 @@
       "voraus": "Du hast Interesse an Velos, möchtest lernen, was du alles selber reparieren kannst und fährst gerne mit dem Bike.",
       "desc": "Velos reparieren, Biketouren, Werkstatt",
       "descLang": "Wir reparieren in der neuen Werkstatt das eigene Bike, Velo oder Fahrrad und halten es in Schwung. Bei schönem Wetter lernen wir auf einfachen Trails das ABC des Bikens oder machen eine kleine Velotour. Für andere Schülerinnen und Schüler bieten wir einen Reparaturservice an, wobei wir Aufträge annehmen und lernen, diese in Rechnung zu stellen. Weiter restaurieren und gestalten wir alte Fahrräder und «pimpen» sie «up».",
-      "aktiv": true,
+      "aktiv": false,
       "s": {
         "aktiv": 4,
         "team": 2,
@@ -573,11 +573,11 @@
     {
       "name": "Theater",
       "katId": "weitere",
-      "lekt": 1,
+      "lekt": 2,
       "voraus": "Du möchtest dich gerne fordern und bist bereit, in unbekannte Rollen zu schlüpfen.",
       "desc": "Improvisieren, Rollen spielen, auftreten",
       "descLang": "In der Theatergruppe üben wir unser eigenes Auftreten, gehen spielerisch an verschiedene Situationen ran und lernen, zu improvisieren. Dabei unterstützen wir einander mit Respekt und Anerkennung. Kleinere Theaterstücke können je nach Gruppengrösse und Ideenreichtum geschrieben, eingeübt und aufgeführt werden.",
-      "aktiv": true,
+      "aktiv": false,
       "s": {
         "aktiv": 3,
         "team": 5,
@@ -596,7 +596,7 @@
       "voraus": "Du hast Interesse an Volleyball, schon ein paar Mal gespielt und möchtest dich technisch und spielerisch weiter verbessern.",
       "desc": "Technik & Spielpraxis Volleyball",
       "descLang": "Im Volleyball schauen wir mit verschiedenen Übungen deine technischen Fähigkeiten beim Anschlag, Passen aber auch im Angriff an und versuchen diese zu verbessern, zudem werden wir auch einige taktische Aufstellungen anschauen. Der Hauptfokus liegt aber natürlich auf dem Spielen, um uns auch spielerisch weiterzuentwickeln.",
-      "aktiv": true,
+      "aktiv": false,
       "s": {
         "aktiv": 5,
         "team": 5,
