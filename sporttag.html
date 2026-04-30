@@ -390,7 +390,7 @@ function renderT(){
       zrow.className='zrow';
       const im=document.createElement('input');
       im.className='zi'+(r.L?' f':'');
-      im.type='number';im.inputMode='numeric';im.min=0;im.max=99;im.placeholder='mm';im.value=mv;
+      im.type='number';im.inputMode='numeric';im.pattern='[0-9]*';im.min=0;im.max=99;im.placeholder='mm';im.value=mv;
       im.style.textAlign='center';
       im.dataset.i=i;im.dataset.p='m';
       im.oninput=function(){onZ(this)};
@@ -399,7 +399,7 @@ function renderT(){
       sep.className='zsep';sep.textContent=':';
       const is=document.createElement('input');
       is.className='zi'+(r.L?' f':'');
-      is.type='number';is.inputMode='numeric';is.min=0;is.max=59;is.placeholder='ss';is.value=sv;
+      is.type='number';is.inputMode='numeric';is.pattern='[0-9]*';is.min=0;is.max=59;is.placeholder='ss';is.value=sv;
       is.style.textAlign='center';
       is.dataset.i=i;is.dataset.p='s';
       is.oninput=function(){onZ(this)};
@@ -409,7 +409,7 @@ function renderT(){
     } else {
       const inp=document.createElement('input');
       inp.className='li'+(r.L?' f':'');
-      inp.type='number';inp.inputMode='numeric';inp.step='any';inp.min=0;inp.value=r.L||'';inp.placeholder=d.ph;
+      inp.type='number';inp.inputMode='numeric';inp.pattern='[0-9]*';inp.step='any';inp.min=0;inp.value=r.L||'';inp.placeholder=d.ph;
       inp.style.textAlign='center';
       inp.dataset.i=i;
       inp.oninput=function(){onL(this)};
