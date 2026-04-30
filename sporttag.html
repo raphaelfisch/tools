@@ -350,10 +350,8 @@ function start(){
 }
 
 function fSch(){
-  const m=S.sch.filter(s=>s.grp);
-  if(!m.length)return S.sch;
-  const f=S.sch.filter(s=>s.grp===S.g);
-  return f.length?f:S.sch;
+  if(!S.g) return S.sch;
+  return S.sch.filter(s=>s.grp===S.g);
 }
 
 function renderT(){
