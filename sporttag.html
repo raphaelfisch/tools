@@ -69,6 +69,8 @@
   .dns-btn:hover{background:#ffe0e0;color:#c00;border-color:#fbb}
   .dns-active{background:#ffcccc!important;color:#c00!important;border-color:#f88!important;font-weight:700}
   .li{width:140px;padding:7px 10px;font-family:var(--mono);font-size:14px;border:1px solid var(--border);border-radius:6px;background:#fff;text-align:center}
+  .li::-webkit-inner-spin-button,.li::-webkit-outer-spin-button{-webkit-appearance:none}
+  .zi::-webkit-inner-spin-button,.zi::-webkit-outer-spin-button{-webkit-appearance:none}
   .li:focus{outline:none;border-color:var(--accent)}.li.f{border-color:var(--accent);background:var(--alight)}
   .zi{width:52px;padding:7px 8px;font-family:var(--mono);font-size:14px;border:1px solid var(--border);border-radius:6px;background:#fff;text-align:center}
   .zi::placeholder{text-align:center}
@@ -388,8 +390,7 @@ function renderT(){
       zrow.className='zrow';
       const im=document.createElement('input');
       im.className='zi'+(r.L?' f':'');
-      im.type='text';im.inputMode='numeric';im.pattern='[0-9]*';
-      im.placeholder='mm';im.value=mv;
+      im.type='number';im.inputMode='numeric';im.min=0;im.max=99;im.placeholder='mm';im.value=mv;
       im.style.textAlign='center';
       im.dataset.i=i;im.dataset.p='m';
       im.oninput=function(){onZ(this)};
@@ -398,8 +399,7 @@ function renderT(){
       sep.className='zsep';sep.textContent=':';
       const is=document.createElement('input');
       is.className='zi'+(r.L?' f':'');
-      is.type='text';is.inputMode='numeric';is.pattern='[0-9]*';
-      is.placeholder='ss';is.value=sv;
+      is.type='number';is.inputMode='numeric';is.min=0;is.max=59;is.placeholder='ss';is.value=sv;
       is.style.textAlign='center';
       is.dataset.i=i;is.dataset.p='s';
       is.oninput=function(){onZ(this)};
@@ -409,8 +409,7 @@ function renderT(){
     } else {
       const inp=document.createElement('input');
       inp.className='li'+(r.L?' f':'');
-      inp.type='text';inp.inputMode='numeric';inp.pattern='[0-9]*';
-      inp.value=r.L||'';inp.placeholder=d.ph;
+      inp.type='number';inp.inputMode='numeric';inp.step='any';inp.min=0;inp.value=r.L||'';inp.placeholder=d.ph;
       inp.style.textAlign='center';
       inp.dataset.i=i;
       inp.oninput=function(){onL(this)};
@@ -441,13 +440,13 @@ function renderT(){
 
 // ── INPUT ────────────────────────────────────────────
 function onK(e,inp){if(e.key!=='Enter')return;e.preventDefault();const ni=+inp.dataset.i+1;commit(parseFloat(inp.value),+inp.dataset.i);[...document.querySelectorAll('.li')].find(el=>+el.dataset.i===ni)?.focus()}
-function onL(inp){const v=parseFloat(inp.value.replace(/[^0-9.]/g,''));commit(v,+inp.dataset.i)}
+function onL(inp){commit(parseFloat(inp.value),+inp.dataset.i)}
 function onZK(e,inp){if(e.key!=='Enter')return;e.preventDefault();const ni=+inp.dataset.i+1;pZ(+inp.dataset.i);[...document.querySelectorAll('.zi')].find(el=>+el.dataset.i===ni&&el.dataset.p==='m')?.focus()}
 function onZ(inp){pZ(+inp.dataset.i)}
 function pZ(i){
   const m=[...document.querySelectorAll('.zi')].find(el=>+el.dataset.i===i&&el.dataset.p==='m');
   const s=[...document.querySelectorAll('.zi')].find(el=>+el.dataset.i===i&&el.dataset.p==='s');
-  const mv=parseInt(m?.value.replace(/[^0-9]/g,'')),sv=parseInt(s?.value.replace(/[^0-9]/g,''));
+  const mv=parseInt(m?.value),sv=parseInt(s?.value);
   if(isNaN(mv)||isNaN(sv)||mv<0||sv<0||sv>=60)return;
   commit(mv*60+sv,i);
   m.classList.add('f'); s.classList.add('f');
