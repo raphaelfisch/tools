@@ -176,6 +176,7 @@
           <div class="pt" id="ptxt">0 von 0 erfasst</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0">
+          <button class="btn bo bsm" onclick="window.open('https://sekaegelsee.sharepoint.com/:f:/s/AlleLehrpersonen3/IgD9GvN2vwuzQ5mgQhCo49viAXDVGOkLDEYHRW9PqTDJdlc?e=aGZyLK','_blank')">📁 Sporttag-Ordner</button>
           <button class="btn bo bsm" onclick="doExport()">💾 Exportieren</button>
           <button class="btn bo bsm" onclick="neueSess()">↩ Neue Erfassung</button>
         </div>
@@ -195,8 +196,11 @@
     <div id="expsec" style="display:none;max-width:900px;margin:20px auto 0">
       <div class="eb">
         <h3>✅ Alle erfasst!</h3>
-        <p>Bitte jetzt exportieren und die Datei sichern.</p>
-        <button class="btn bo" onclick="doExport()">💾 CSV exportieren</button>
+        <p>Die Datei wird in deinen Download-Ordner gespeichert. Bitte danach in den Sporttag-Ordner auf Teams verschieben.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn" style="background:#fff;color:var(--accent);border:2px solid #fff;font-weight:700;padding:10px 24px;border-radius:8px;font-size:15px;cursor:pointer" onclick="doExport()">💾 CSV exportieren</button>
+          <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff;border:2px solid #fff;font-weight:700;padding:10px 24px;border-radius:8px;font-size:15px;cursor:pointer" onclick="window.open('https://sekaegelsee.sharepoint.com/:f:/s/AlleLehrpersonen3/IgD9GvN2vwuzQ5mgQhCo49viAXDVGOkLDEYHRW9PqTDJdlc?e=aGZyLK','_blank')">📁 Sporttag-Ordner öffnen</button>
+        </div>
       </div>
     </div>
   </div>
@@ -525,9 +529,12 @@ function updProg(){
   const pct=tot?Math.round(done/tot*100):0;
   document.getElementById('pfill').style.width=pct+'%';
   document.getElementById('ptxt').textContent=`${done} von ${tot} erfasst`;
+  const expsec=document.getElementById('expsec');
   if(done===tot&&tot>0){
-    document.getElementById('expsec').style.display='block';
-    setTimeout(()=>document.getElementById('expsec').scrollIntoView({behavior:'smooth'}),100);
+    expsec.style.display='block';
+    setTimeout(()=>expsec.scrollIntoView({behavior:'smooth'}),100);
+  } else {
+    expsec.style.display='none';
   }
 }
 
@@ -565,6 +572,8 @@ function _doExport(){
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+rows.map(r=>r.join(';')).join('\n')],{type:'text/csv;charset=utf-8'}));
   a.download=`sporttag-erfassung-${S.d}-${S.g}-${dt}.csv`;
   a.click();
+  // Ordner nach Download öffnen
+  setTimeout(()=>window.open('https://sekaegelsee.sharepoint.com/:f:/s/AlleLehrpersonen3/IgD9GvN2vwuzQ5mgQhCo49viAXDVGOkLDEYHRW9PqTDJdlc?e=aGZyLK','_blank'), 500);
 }
 
 // ── LOCALSTORAGE ─────────────────────────────────────
@@ -631,6 +640,14 @@ function _doNeueSess(){
   document.getElementById('hbadge').textContent='–';
   showS('s1'); chkReady();
 }
+
+// ── FENSTER-SCHUTZ ───────────────────────────────────
+window.addEventListener('beforeunload', function(e){
+  if(S.sch.length && S.d && S.g && Object.keys(S.res).length > 0){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 init();
 </script>
