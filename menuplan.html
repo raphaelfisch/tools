@@ -34,37 +34,45 @@
   nav {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 0 24px;
+    padding: 0 12px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    height: 60px;
+    gap: 4px;
+    height: 52px;
     position: sticky;
     top: 0;
     z-index: 100;
     box-shadow: var(--shadow);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
   }
+  nav::-webkit-scrollbar { display: none; }
 
   .nav-logo {
     font-family: 'Playfair Display', serif;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--accent);
-    margin-right: 16px;
+    margin-right: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .nav-btn {
-    padding: 8px 16px;
+    padding: 6px 10px;
     border: none;
     background: transparent;
     border-radius: 8px;
     cursor: pointer;
     font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text2);
     transition: all 0.15s;
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .nav-btn:hover { background: var(--surface2); color: var(--text); }
   .nav-btn.active { background: var(--accent); color: white; }
@@ -96,7 +104,8 @@
   }
 
   /* MAIN */
-  main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+  main { max-width: 1200px; margin: 0 auto; padding: 16px 12px; }
+  @media (min-width: 600px) { main { padding: 32px 24px; } }
 
   /* VIEWS */
   .view { display: none; }
@@ -115,8 +124,8 @@
   .plan-toolbar {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 8px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
   }
 
@@ -819,21 +828,28 @@
     </div>
 
     <div class="aktionen-box">
-      <h3>Migros Aktionen diese Woche</h3>
-      <textarea class="aktionen-input" id="aktionen-input" placeholder="Aktuelle Aktionen einfügen (z.B. aus migros.ch kopieren) oder einzelne Zutaten: Lachs, Poulet, Peperoni..."></textarea>
-      <div class="aktionen-hint">Diese Zutaten werden beim Generieren bevorzugt berücksichtigt.</div>
+      <h3 onclick="toggleAktionen()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        Migros Aktionen diese Woche
+        <span id="aktionen-toggle" style="font-size:12px;color:var(--text3);">▼</span>
+      </h3>
+      <div id="aktionen-body">
+        <textarea class="aktionen-input" id="aktionen-input" placeholder="Aktuelle Aktionen einfügen (z.B. aus migros.ch kopieren) oder einzelne Zutaten: Lachs, Poulet, Peperoni..."></textarea>
+        <div class="aktionen-hint">Diese Zutaten werden beim Generieren bevorzugt berücksichtigt.</div>
+      </div>
     </div>
 
     <div class="plan-grid" id="plan-grid"></div>
 
     <div class="einkauf-section" id="einkauf-section" style="display:block">
       <h3>🛒 Einkaufsliste</h3>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <input class="form-input" id="einkauf-input" placeholder="Zutat hinzufügen..." 
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input class="form-input" id="einkauf-input" placeholder="Zutat hinzufügen..."
           onkeydown="if(event.key==='Enter')addEinkaufItem()"
-          style="flex:1;">
-        <button class="btn-primary" onclick="addEinkaufItem()" style="padding:10px 16px;">+</button>
-        <button class="btn-secondary" onclick="clearCheckedItems()" style="font-size:12px;">Erledigte löschen</button>
+          style="flex:1;min-width:0;">
+        <button class="btn-primary" onclick="addEinkaufItem()" style="padding:10px 14px;flex-shrink:0;">+</button>
+      </div>
+      <div style="margin-bottom:12px;">
+        <button class="btn-secondary" onclick="clearCheckedItems()" style="font-size:12px;width:100%;">Erledigte löschen</button>
       </div>
       <ul class="einkauf-list" id="einkauf-list"></ul>
     </div>
@@ -2181,6 +2197,24 @@ function quickChangeKat(rezeptId, badgeEl) {
       document.removeEventListener('click', close);
     }, { once: true });
   }, 0);
+}
+
+
+function toggleAktionen() {
+  const body = document.getElementById('aktionen-body');
+  const icon = document.getElementById('aktionen-toggle');
+  const hidden = body.style.display === 'none';
+  body.style.display = hidden ? '' : 'none';
+  icon.textContent = hidden ? '▼' : '▶';
+}
+
+// Auto-collapse on mobile
+if (window.innerWidth < 600) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const body = document.getElementById('aktionen-body');
+    const icon = document.getElementById('aktionen-toggle');
+    if (body) { body.style.display = 'none'; icon.textContent = '▶'; }
+  });
 }
 
 // ===== START =====
