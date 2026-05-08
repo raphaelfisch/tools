@@ -800,7 +800,7 @@
         <button onclick="changeKW(1)" title="Nächste Woche">›</button>
       </div>
       <button class="btn-secondary" onclick="goToToday()" id="btn-heute" style="display:none;">Heute</button>
-      <button class="btn-secondary" onclick="toggleLayout()" id="btn-layout" title="Ansicht wechseln">☰</button>
+      <button class="btn-secondary" onclick="toggleLayout()" id="btn-layout" title="Ansicht wechseln" style="display:none;">☰</button>
       <button class="btn-primary" onclick="generatePlan()" id="btn-generieren">✨ Plan generieren</button>
     </div>
 
@@ -841,7 +841,10 @@
     <div class="plan-grid" id="plan-grid"></div>
 
     <div class="einkauf-section" id="einkauf-section" style="display:block">
-      <h3>🛒 Einkaufsliste</h3>
+      <h3 style="display:flex;align-items:center;justify-content:space-between;">
+        🛒 Einkaufsliste
+        <button onclick="toggleAllEinkauf()" id="btn-alle" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--text2);">Alle auswählen</button>
+      </h3>
       <div style="display:flex;gap:8px;margin-bottom:8px;">
         <input class="form-input" id="einkauf-input" placeholder="Zutat hinzufügen..."
           onkeydown="if(event.key==='Enter')addEinkaufItem()"
@@ -1243,6 +1246,15 @@ async function setPlanEntryNoSync(tag, rezeptId, notiz = '') {
   } catch(e) {}
 }
 
+function confirmRemovePlan(tag) {
+  const entry = currentPlan[tag];
+  const rezept = entry ? rezepte.find(r => r.id === entry.rezept_id) : null;
+  const name = rezept ? rezept.name : 'diesen Eintrag';
+  if (confirm(`"${name}" löschen?`)) {
+    removePlanEntry(tag);
+  }
+}
+
 async function removePlanEntry(tag) {
   const existing = currentPlan[tag];
   if (!existing) return;
@@ -1285,7 +1297,7 @@ function renderPlanGrid() {
     const moEntry = currentPlan['Montag'];
     const isSyncedDay = (tag === 'Montag' || tag === 'Sonntag') && soEntry && moEntry && soEntry.rezept_id === moEntry.rezept_id;
     return `<div class="plan-day ${rezept ? 'has-recipe' : ''} ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''}" id="day-${tag}">
-      <div class="day-header">
+      <div class="day-header" ${rezept ? `onclick="openDetailModal('${rezept.id}')" style="cursor:pointer;" title="${rezept.name}"` : ''}>
         <div class="day-name">${tag.substring(0,2)}</div>
         <div class="day-date">${dateStr}</div>
       </div>
@@ -1293,9 +1305,8 @@ function renderPlanGrid() {
         ${rezept ? `
           <div class="day-recipe">${hyphenate(rezept.name)}</div>
           <div class="day-actions">
-            <button class="day-action-btn" onclick="openDetailModal('${rezept.id}')">ℹ️</button>
             <button class="day-action-btn" onclick="pickRezeptForDay('${tag}')">✏️</button>
-            <button class="day-action-btn" onclick="removePlanEntry('${tag}')">✕</button>
+            <button class="day-action-btn" onclick="confirmRemovePlan('${tag}')">✕</button>
           </div>
         ` : `
           <div class="day-recipe empty">Kein Eintrag</div>
@@ -1562,6 +1573,8 @@ function toggleLayout() {
 function applyLayout() {
   const grid = document.getElementById('plan-grid');
   const btn = document.getElementById('btn-layout');
+  const canToggle = window.innerWidth >= 1100;
+  btn.style.display = canToggle ? '' : 'none';
   if (planLayout === 'vertikal') {
     grid.classList.add('vertikal');
     btn.textContent = '⊞';
@@ -2216,6 +2229,31 @@ if (window.innerWidth < 600) {
     if (body) { body.style.display = 'none'; icon.textContent = '▶'; }
   });
 }
+
+
+async function toggleAllEinkauf() {
+  const allChecked = einkaufItems.every(i => i.checked);
+  const newState = !allChecked;
+  try {
+    for (const item of einkaufItems) {
+      if (item.checked !== newState) {
+        await sb('PATCH', 'einkaufsliste', { checked: newState }, `?id=eq.${item.id}`);
+        item.checked = newState;
+      }
+    }
+    einkaufItems.sort((a, b) => a.checked - b.checked);
+    document.getElementById('btn-alle').textContent = newState ? 'Alle abwählen' : 'Alle auswählen';
+    renderEinkaufList();
+  } catch(e) { showToast('Fehler', 'error'); }
+}
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth < 1100 && planLayout === 'horizontal') {
+    planLayout = 'vertikal';
+    applyLayout();
+  }
+  applyLayout();
+});
 
 // ===== START =====
 init();
