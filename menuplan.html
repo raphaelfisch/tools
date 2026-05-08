@@ -236,7 +236,6 @@
     height: 100%;
     min-width: 0;
     overflow: hidden;
-    justify-content: flex-start;
   }
 
   .plan-grid.vertikal .day-recipe {
@@ -248,6 +247,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
+    text-align: left;
   }
 
   .plan-grid.vertikal .day-recipe.empty {
@@ -274,8 +274,8 @@
     .plan-grid .day-header { width: 90px; min-width: 90px; height: 100%; padding: 0 12px; border-bottom: none; border-right: 1px solid rgba(255,255,255,0.25); display: flex; flex-direction: row; align-items: center; gap: 6px; flex-shrink: 0; }
     .plan-grid .day-name { font-size: 13px; font-weight: 700; }
     .plan-grid .day-date { font-size: 11px; opacity: 0.8; }
-    .plan-grid .day-content { flex: 1; display: flex; flex-direction: row; align-items: center; padding: 0 12px; gap: 10px; min-height: unset; height: 100%; min-width: 0; overflow: hidden; justify-content: flex-start; }
-    .plan-grid .day-recipe { flex: 1; font-size: 14px; font-weight: 500; margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .plan-grid .day-content { flex: 1; display: flex; flex-direction: row; align-items: center; padding: 0 12px; gap: 10px; min-height: unset; height: 100%; min-width: 0; overflow: hidden; }
+    .plan-grid .day-recipe { flex: 1; font-size: 14px; font-weight: 500; margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; text-align: left; }
     .plan-grid .day-recipe.empty { font-size: 13px; font-weight: 400; }
     .plan-grid .day-actions { margin-top: 0; flex-shrink: 0; gap: 4px; z-index: 1; }
     .plan-grid .day-action-btn { width: 28px; height: 28px; font-size: 13px; }
@@ -1057,6 +1057,9 @@ async function init() {
   applyLayout();
   document.getElementById('kw-label').textContent = getWeekLabel(currentKW, currentYear);
   document.querySelector('.person-toggle').style.display = 'none';
+  // Restore last active view
+  const savedView = localStorage.getItem('activeView') || 'plan';
+  showView(savedView);
   updateHeutButton();
   await loadRezepte();
   await loadBewertungen();
@@ -1540,6 +1543,9 @@ function goToToday() {
   currentYear = t.year;
   document.getElementById('kw-label').textContent = getWeekLabel(currentKW, currentYear);
   document.querySelector('.person-toggle').style.display = 'none';
+  // Restore last active view
+  const savedView = localStorage.getItem('activeView') || 'plan';
+  showView(savedView);
   updateHeutButton();
   currentPlan = {};
   renderPlanGrid();
@@ -1596,6 +1602,9 @@ function changeKW(delta) {
   if (currentKW < 1) { currentKW = 52; currentYear--; }
   document.getElementById('kw-label').textContent = getWeekLabel(currentKW, currentYear);
   document.querySelector('.person-toggle').style.display = 'none';
+  // Restore last active view
+  const savedView = localStorage.getItem('activeView') || 'plan';
+  showView(savedView);
   updateHeutButton();
   currentPlan = {};
   renderPlanGrid();
@@ -2038,9 +2047,9 @@ function showView(name) {
   if (name === 'bewertung') renderBewertungen();
   if (name === 'rezepte') renderRezepteGrid();
   if (name === 'einstellungen') renderEinstellungen();
-  // Show person toggle only where it makes sense
   const showToggle = name === 'bewertung' || name === 'rezepte';
   document.querySelector('.person-toggle').style.display = showToggle ? '' : 'none';
+  localStorage.setItem('activeView', name);
 }
 
 // ===== TOAST =====
