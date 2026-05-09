@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -21,760 +22,764 @@
     --radius: 12px;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* NAV */
-  nav {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 12px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    height: 52px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: var(--shadow);
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
-  nav::-webkit-scrollbar { display: none; }
-
-  .nav-logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-right: 8px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .nav-btn {
-    padding: 6px 10px;
-    border: none;
-    background: transparent;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text2);
-    transition: all 0.15s;
-    display: flex; align-items: center; gap: 4px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .nav-btn:hover { background: var(--surface2); color: var(--text); }
-  .nav-btn.active { background: var(--accent); color: white; }
-
-  .spacer { flex: 1; }
-
-  .person-toggle {
-    display: flex;
-    background: var(--surface2);
-    border-radius: 20px;
-    padding: 3px;
-    gap: 2px;
-  }
-  .person-btn {
-    padding: 5px 14px;
-    border: none;
-    background: transparent;
-    border-radius: 16px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text2);
-    transition: all 0.2s;
-  }
-  .person-btn.active {
-    background: white;
-    color: var(--text);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-  }
-
-  /* MAIN */
-  main { max-width: 1200px; margin: 0 auto; padding: 16px 12px; }
-  @media (min-width: 600px) { main { padding: 32px 24px; } }
-
-  /* VIEWS */
-  .view { display: none; }
-  .view.active { display: block; }
-
-  /* SECTION TITLE */
-  .section-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-  .section-sub { color: var(--text2); font-size: 15px; margin-bottom: 28px; }
-
-  /* ============ MENUPLAN VIEW ============ */
-  .plan-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-
-  .kw-nav {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface);
-    border-radius: 10px;
-    padding: 6px 12px;
-    border: 1px solid var(--border);
-  }
-  .kw-nav button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    color: var(--text2);
-    padding: 2px 6px;
-    border-radius: 6px;
-    transition: all 0.15s;
-  }
-  .kw-nav button:hover { background: var(--surface2); color: var(--text); }
-  .kw-label { font-weight: 600; font-size: 15px; min-width: 60px; text-align: center; }
-
-  .btn-primary {
-    padding: 10px 20px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.2s;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .btn-primary:hover { background: #b0561f; transform: translateY(-1px); box-shadow: var(--shadow); }
-
-  .btn-secondary {
-    padding: 10px 18px;
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.15s;
-  }
-  .btn-secondary:hover { background: var(--surface2); }
-
-  .plan-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-
-  .plan-grid.vertikal {
-    grid-template-columns: 1fr;
-    gap: 3px;
-  }
-
-  .plan-grid.vertikal .plan-day {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    min-height: unset;
-    height: 44px;
-  }
-
-  .plan-grid.vertikal .day-header {
-    width: 90px;
-    min-width: 90px;
-    height: 100%;
-    padding: 0 10px;
-    border-bottom: none;
-    border-right: 1px solid rgba(255,255,255,0.25);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 5px;
-    flex-shrink: 0;
-    overflow: hidden;
-  }
-
-  .plan-grid.vertikal .day-name {
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  .plan-grid.vertikal .day-date {
-    font-size: 11px;
-    opacity: 0.8;
-  }
-
-  .plan-grid.vertikal .day-content {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 0 12px;
-    gap: 10px;
-    min-height: unset;
-    height: 100%;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .plan-grid.vertikal .day-recipe {
-    flex: 1;
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-    text-align: left;
-  }
-
-  .plan-grid.vertikal .day-recipe.empty {
-    font-size: 13px;
-    font-weight: 400;
-  }
-
-  .plan-grid.vertikal .day-actions {
-    margin-top: 0;
-    flex-shrink: 0;
-    gap: 4px;
-    z-index: 1;
-  }
-
-  .plan-grid.vertikal .day-action-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 13px;
-  }
-
-  @media (max-width: 800px) {
-    .plan-grid { grid-template-columns: 1fr; gap: 3px; }
-    .plan-grid .plan-day { display: flex; flex-direction: row; align-items: center; height: 44px; }
-    .plan-grid .day-header { width: 90px; min-width: 90px; height: 100%; padding: 0 12px; border-bottom: none; border-right: 1px solid rgba(255,255,255,0.25); display: flex; flex-direction: row; align-items: center; gap: 6px; flex-shrink: 0; }
-    .plan-grid .day-name { font-size: 13px; font-weight: 700; }
-    .plan-grid .day-date { font-size: 11px; opacity: 0.8; }
-    .plan-grid .day-content { flex: 1; display: flex; flex-direction: row; align-items: center; padding: 0 12px; gap: 10px; min-height: unset; height: 100%; min-width: 0; overflow: hidden; }
-    .plan-grid .day-recipe { flex: 1; font-size: 14px; font-weight: 500; margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; text-align: left; }
-    .plan-grid .day-recipe.empty { font-size: 13px; font-weight: 400; }
-    .plan-grid .day-actions { margin-top: 0; flex-shrink: 0; gap: 4px; z-index: 1; }
-    .plan-grid .day-action-btn { width: 28px; height: 28px; font-size: 13px; }
-  }
-
-  .plan-day {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    overflow: hidden;
-    transition: box-shadow 0.2s;
-    display: flex;
-    flex-direction: column;
-  }
-  .plan-day:hover { box-shadow: var(--shadow); }
-
-  .day-header {
-    padding: 10px 12px 8px;
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .plan-day.weekend .day-header {
-    background: #2d6e4e;
-  }
-
-  .plan-day.weekend .day-name,
-  .plan-day.weekend .day-date {
-    color: white;
-  }
-
-  .plan-day.weekend {
-    border-color: #2d6e4e;
-    border-width: 2px;
-  }
-
-  .plan-day.today {
-    border-color: var(--accent) !important;
-    border-width: 2px !important;
-    background: #fdf0e8 !important;
-  }
-
-  .plan-day.today .day-header {
-    background: var(--accent) !important;
-  }
-
-  .plan-day.today .day-name,
-  .plan-day.today .day-date {
-    color: white !important;
-    font-weight: 700;
-  }
-
-  .plan-day.today .day-content {
-    background: #fdf0e8;
-  }
-
-  .plan-day.weekend.today .day-content {
-    background: #fdf0e8;
-  }
-  .day-name { font-weight: 600; font-size: 13px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
-  .day-date { font-size: 11px; color: var(--text3); margin-top: 1px; }
-
-  .day-content {
-    padding: 10px 12px;
-    min-height: 80px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .day-recipe {
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.4;
-    color: var(--text);
-    margin-bottom: 6px;
-
-  }
-  .day-recipe.empty { color: var(--text3); font-style: italic; font-weight: 400; }
-
-  .day-actions {
-    display: flex;
-    gap: 6px;
-    margin-top: 0;
-    justify-content: center;
-  }
-  .day-action-btn {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface2);
-    cursor: pointer;
-    font-size: 15px;
-    color: var(--text2);
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    padding: 0;
-  }
-  .day-action-btn:hover { background: var(--border); color: var(--text); }
-
-  .aktionstag-badge {
-    display: inline-block;
-    background: #fff3cd;
-    color: #856404;
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-size: 10px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  /* Aktionen box */
-  .aktionen-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    margin-bottom: 24px;
-  }
-  .aktionen-box h3 {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .aktionen-input {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    background: var(--surface2);
-    color: var(--text);
-    resize: vertical;
-    min-height: 60px;
-  }
-  .aktionen-input:focus { outline: 2px solid var(--accent); background: white; }
-  .aktionen-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
-
-  /* Einkaufsliste */
-  .einkauf-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-  }
-  .einkauf-section h3 { font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-  .einkauf-list { list-style: none; }
-  .einkauf-list li {
-    padding: 7px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .einkauf-list li:last-child { border-bottom: none; }
-  .einkauf-list li input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent2); }
-  .einkauf-list li.checked label { text-decoration: line-through; color: var(--text3); }
-
-  /* ============ REZEPTE VIEW ============ */
-  .rezepte-toolbar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .search-input {
-    flex: 1;
-    min-width: 200px;
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    background: var(--surface);
-  }
-  .search-input:focus { outline: 2px solid var(--accent); }
-
-  .filter-select {
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    background: var(--surface);
-    cursor: pointer;
-    color: var(--text);
-  }
-
-  .rezepte-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-  }
-
-  .rezept-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-  }
-  .rezept-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
-
-  .rezept-cat-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    background: var(--surface2);
-    color: var(--text2);
-    margin-bottom: 8px;
-  }
-
-  .rezept-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.3;
-    margin-bottom: 8px;
-  }
-
-  .rezept-meta {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .rezept-link {
-    font-size: 11px;
-    color: var(--accent);
-    text-decoration: none;
-  }
-  .rezept-link:hover { text-decoration: underline; }
-
-  .stars-display {
-    display: flex;
-    gap: 2px;
-  }
-  .star {
-    font-size: 14px;
-    cursor: pointer;
-    transition: transform 0.1s;
-    color: #ddd;
-  }
-  .star.filled { color: #f5a623; }
-  .star:hover { transform: scale(1.2); }
-
-  .rezept-card .card-actions {
-    display: flex;
-    gap: 6px;
-    margin-top: 10px;
-  }
-  .card-btn {
-    padding: 5px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--surface2);
-    cursor: pointer;
-    font-size: 12px;
-    color: var(--text2);
-    transition: all 0.15s;
-  }
-  .card-btn:hover { background: var(--border); }
-  .card-btn.danger:hover { background: #ffeaea; color: #c00; border-color: #fcc; }
-
-  /* ============ MODAL ============ */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 1000;
-    backdrop-filter: blur(2px);
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border-radius: 16px;
-    padding: 28px;
-    width: 100%;
-    max-width: 540px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-lg);
-    animation: slideUp 0.2s ease;
-  }
-
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
-  .modal h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    margin-bottom: 20px;
-  }
-
-  .form-group { margin-bottom: 16px; }
-  .form-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text2);
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-  .form-input, .form-select, .form-textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    background: var(--surface2);
-    color: var(--text);
-    transition: border 0.15s;
-  }
-  .form-input:focus, .form-select:focus, .form-textarea:focus {
-    outline: 2px solid var(--accent);
-    background: white;
-  }
-  .form-textarea { resize: vertical; min-height: 80px; }
-
-  .modal-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    margin-top: 20px;
-  }
-
-  /* Stars rating in modal */
-  .stars-rating { display: flex; gap: 6px; margin-top: 4px; }
-  .star-rate {
-    font-size: 24px;
-    cursor: pointer;
-    color: #ddd;
-    transition: all 0.1s;
-  }
-  .star-rate.filled { color: #f5a623; }
-  .star-rate:hover { transform: scale(1.15); }
-
-  /* ============ BEWERTUNG VIEW ============ */
-  .bewertung-list { display: flex; flex-direction: column; gap: 12px; }
-  .bewertung-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .bewertung-name { flex: 1; font-weight: 500; }
-  .bewertung-persons { display: flex; gap: 16px; }
-  .person-rating { text-align: center; }
-  .person-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--text);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    z-index: 9999;
-    transform: translateY(60px);
-    opacity: 0;
-    transition: all 0.3s;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.success { background: var(--accent2); }
-  .toast.error { background: #c0392b; }
-
-  /* Spinner */
-  .spinner {
-    display: inline-block;
-    width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Empty state */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text3);
-  }
-  .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
-  .empty-state p { font-size: 15px; }
-
-  /* Rezept detail in modal */
-  .rezept-detail-url {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    background: var(--surface2);
-    border-radius: 8px;
-    margin-bottom: 12px;
-  }
-  .rezept-detail-url a { color: var(--accent); font-size: 13px; text-decoration: none; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rezept-detail-url a:hover { text-decoration: underline; }
-
-  .stars-group { display: flex; gap: 32px; margin-top: 8px; }
-  .star-person { }
-  .star-person-name { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
-
-  /* Import section */
-  .import-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-  .import-section h3 { font-weight: 600; margin-bottom: 6px; }
-  .import-section p { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
-
-  /* Kalender popup cells */
-  .kal-cell {
-    padding: 5px 2px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    color: var(--text2);
-    transition: all 0.1s;
-    line-height: 1.2;
-  }
-  .kal-cell:hover { background: var(--surface2); color: var(--text); }
-  .kal-cell.active-kw { background: var(--accent); color: white; font-weight: 600; border-radius: 6px; }
-  .kal-cell.today { font-weight: 700; color: var(--accent); }
-  .kal-cell.today.active-kw { color: white; }
-  .kal-cell.other-month { color: var(--text3); }
-  .kal-week-num {
-    font-size: 10px;
-    color: var(--text3);
-    padding: 5px 2px;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-  .kal-week-num:hover { background: var(--surface2); color: var(--accent); }
-  .kal-week-num.active-kw { color: var(--accent); font-weight: 700; }
-
-  /* Plan day selected - Wochentag */
-  .plan-day.has-recipe {
-    border-color: var(--accent);
-    border-width: 2px;
-  }
-  .plan-day.has-recipe .day-header {
-    background: var(--accent);
-  }
-  .plan-day.has-recipe .day-name,
-  .plan-day.has-recipe .day-date {
-    color: white;
-  }
-
-  /* Wochenende hat immer grünen Header - auch wenn Rezept */
-  .plan-day.weekend .day-header {
-    background: #2d6e4e !important;
-  }
-  .plan-day.weekend .day-name,
-  .plan-day.weekend .day-date {
-    color: white !important;
-  }
-  /* Wochenende mit Rezept: grüner Rand bleibt */
-  .plan-day.weekend.has-recipe {
-    border-color: #2d6e4e;
-    border-width: 2px;
-  }
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: ‘DM Sans’, sans-serif;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+}
+
+/* NAV */
+nav {
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+padding: 0 12px;
+display: flex;
+align-items: center;
+gap: 4px;
+height: 52px;
+position: sticky;
+top: 0;
+z-index: 100;
+box-shadow: var(–shadow);
+overflow-x: auto;
+overflow-y: hidden;
+-webkit-overflow-scrolling: touch;
+}
+nav::-webkit-scrollbar { display: none; }
+
+.nav-logo {
+font-family: ‘Playfair Display’, serif;
+font-size: 18px;
+font-weight: 700;
+color: var(–accent);
+margin-right: 8px;
+white-space: nowrap;
+flex-shrink: 0;
+}
+
+.nav-btn {
+padding: 6px 10px;
+border: none;
+background: transparent;
+border-radius: 8px;
+cursor: pointer;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 13px;
+font-weight: 500;
+color: var(–text2);
+transition: all 0.15s;
+display: flex; align-items: center; gap: 4px;
+white-space: nowrap;
+flex-shrink: 0;
+}
+.nav-btn:hover { background: var(–surface2); color: var(–text); }
+.nav-btn.active { background: var(–accent); color: white; }
+
+.spacer { flex: 1; }
+
+.person-toggle {
+display: flex;
+background: var(–surface2);
+border-radius: 20px;
+padding: 3px;
+gap: 2px;
+}
+.person-btn {
+padding: 5px 14px;
+border: none;
+background: transparent;
+border-radius: 16px;
+cursor: pointer;
+font-size: 13px;
+font-weight: 500;
+color: var(–text2);
+transition: all 0.2s;
+}
+.person-btn.active {
+background: white;
+color: var(–text);
+box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+/* MAIN */
+main { max-width: 1200px; margin: 0 auto; padding: 16px 12px; }
+@media (min-width: 600px) { main { padding: 32px 24px; } }
+
+/* VIEWS */
+.view { display: none; }
+.view.active { display: block; }
+
+/* SECTION TITLE */
+.section-title {
+font-family: ‘Playfair Display’, serif;
+font-size: 28px;
+font-weight: 700;
+margin-bottom: 8px;
+}
+.section-sub { color: var(–text2); font-size: 15px; margin-bottom: 28px; }
+
+/* ============ MENUPLAN VIEW ============ */
+.plan-toolbar {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-bottom: 16px;
+flex-wrap: wrap;
+}
+
+.kw-nav {
+display: flex;
+align-items: center;
+gap: 8px;
+background: var(–surface);
+border-radius: 10px;
+padding: 6px 12px;
+border: 1px solid var(–border);
+}
+.kw-nav button {
+background: none;
+border: none;
+cursor: pointer;
+font-size: 18px;
+color: var(–text2);
+padding: 2px 6px;
+border-radius: 6px;
+transition: all 0.15s;
+}
+.kw-nav button:hover { background: var(–surface2); color: var(–text); }
+.kw-label { font-weight: 600; font-size: 15px; min-width: 60px; text-align: center; }
+
+.btn-primary {
+padding: 10px 20px;
+background: var(–accent);
+color: white;
+border: none;
+border-radius: 10px;
+cursor: pointer;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 14px;
+font-weight: 600;
+transition: all 0.2s;
+display: flex; align-items: center; gap: 6px;
+}
+.btn-primary:hover { background: #b0561f; transform: translateY(-1px); box-shadow: var(–shadow); }
+
+.btn-secondary {
+padding: 10px 18px;
+background: var(–surface);
+color: var(–text);
+border: 1px solid var(–border);
+border-radius: 10px;
+cursor: pointer;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 14px;
+font-weight: 500;
+transition: all 0.15s;
+}
+.btn-secondary:hover { background: var(–surface2); }
+
+.plan-grid {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 12px;
+margin-bottom: 24px;
+}
+
+.plan-grid.vertikal {
+grid-template-columns: 1fr;
+gap: 3px;
+}
+
+.plan-grid.vertikal .plan-day {
+display: flex;
+flex-direction: row;
+align-items: center;
+min-height: unset;
+height: 44px;
+}
+
+.plan-grid.vertikal .day-header {
+width: 90px;
+min-width: 90px;
+height: 100%;
+padding: 0 10px;
+border-bottom: none;
+border-right: 1px solid rgba(255,255,255,0.25);
+display: flex;
+flex-direction: row;
+align-items: center;
+gap: 5px;
+flex-shrink: 0;
+overflow: hidden;
+}
+
+.plan-grid.vertikal .day-name {
+font-size: 13px;
+font-weight: 700;
+}
+
+.plan-grid.vertikal .day-date {
+font-size: 11px;
+opacity: 0.8;
+}
+
+.plan-grid.vertikal .day-content {
+flex: 1;
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0 12px;
+gap: 10px;
+min-height: unset;
+height: 100%;
+min-width: 0;
+overflow: hidden;
+}
+
+.plan-grid.vertikal .day-recipe {
+flex: 1;
+font-size: 14px;
+font-weight: 500;
+margin-bottom: 0;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+min-width: 0;
+text-align: left;
+}
+
+.plan-grid.vertikal .day-recipe.empty {
+font-size: 13px;
+font-weight: 400;
+}
+
+.plan-grid.vertikal .day-actions {
+margin-top: 0;
+flex-shrink: 0;
+gap: 4px;
+z-index: 1;
+}
+
+.plan-grid.vertikal .day-action-btn {
+width: 28px;
+height: 28px;
+font-size: 13px;
+}
+
+@media (max-width: 800px) {
+.plan-grid { grid-template-columns: 1fr; gap: 3px; }
+.plan-grid .plan-day { display: flex; flex-direction: row; align-items: center; height: 44px; }
+.plan-grid .day-header { width: 90px; min-width: 90px; height: 100%; padding: 0 12px; border-bottom: none; border-right: 1px solid rgba(255,255,255,0.25); display: flex; flex-direction: row; align-items: center; gap: 6px; flex-shrink: 0; }
+.plan-grid .day-name { font-size: 13px; font-weight: 700; }
+.plan-grid .day-date { font-size: 11px; opacity: 0.8; }
+.plan-grid .day-content { flex: 1; display: flex; flex-direction: row; align-items: center; padding: 0 12px; gap: 10px; min-height: unset; height: 100%; min-width: 0; overflow: hidden; }
+.plan-grid .day-recipe { flex: 1; font-size: 14px; font-weight: 500; margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; text-align: left; }
+.plan-grid .day-recipe.empty { font-size: 13px; font-weight: 400; }
+.plan-grid .day-actions { margin-top: 0; flex-shrink: 0; gap: 4px; z-index: 1; }
+.plan-grid .day-action-btn { width: 28px; height: 28px; font-size: 13px; }
+}
+
+.plan-day {
+background: var(–surface);
+border-radius: var(–radius);
+border: 1px solid var(–border);
+overflow: hidden;
+transition: box-shadow 0.2s;
+display: flex;
+flex-direction: column;
+}
+.plan-day:hover { box-shadow: var(–shadow); }
+
+.day-header {
+padding: 10px 12px 8px;
+background: var(–surface2);
+border-bottom: 1px solid var(–border);
+}
+
+.plan-day.weekend .day-header {
+background: #2d6e4e;
+}
+
+.plan-day.weekend .day-name,
+.plan-day.weekend .day-date {
+color: white;
+}
+
+.plan-day.weekend {
+border-color: #2d6e4e;
+border-width: 2px;
+}
+
+.plan-day.today {
+border-color: var(–accent) !important;
+border-width: 2px !important;
+background: #fdf0e8 !important;
+}
+
+.plan-day.today .day-header {
+background: var(–accent) !important;
+}
+
+.plan-day.today .day-name,
+.plan-day.today .day-date {
+color: white !important;
+font-weight: 700;
+}
+
+.plan-day.today .day-content {
+background: #fdf0e8;
+}
+
+.plan-day.weekend.today .day-content {
+background: #fdf0e8;
+}
+.day-name { font-weight: 600; font-size: 13px; color: var(–text2); text-transform: uppercase; letter-spacing: 0.5px; }
+.day-date { font-size: 11px; color: var(–text3); margin-top: 1px; }
+
+.day-content {
+padding: 10px 12px;
+min-height: 80px;
+flex: 1;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+}
+
+.day-recipe {
+font-size: 13px;
+font-weight: 500;
+line-height: 1.4;
+color: var(–text);
+margin-bottom: 6px;
+
+}
+.day-recipe.empty { color: var(–text3); font-style: italic; font-weight: 400; }
+.day-recipe.event { color: var(–text2); font-style: italic; font-weight: 400; }
+.plan-day.is-event { opacity: 0.75; }
+.plan-day.is-event .day-content { background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.03) 4px, rgba(0,0,0,0.03) 8px); }
+
+.day-actions {
+display: flex;
+gap: 6px;
+margin-top: 0;
+justify-content: center;
+}
+.day-action-btn {
+width: 32px;
+height: 32px;
+border: 1px solid var(–border);
+border-radius: 8px;
+background: var(–surface2);
+cursor: pointer;
+font-size: 15px;
+color: var(–text2);
+transition: all 0.15s;
+display: flex;
+align-items: center;
+justify-content: center;
+line-height: 1;
+padding: 0;
+}
+.day-action-btn:hover { background: var(–border); color: var(–text); }
+
+.aktionstag-badge {
+display: inline-block;
+background: #fff3cd;
+color: #856404;
+border-radius: 4px;
+padding: 2px 6px;
+font-size: 10px;
+font-weight: 600;
+margin-bottom: 4px;
+}
+
+/* Aktionen box */
+.aktionen-box {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 16px 20px;
+margin-bottom: 24px;
+}
+.aktionen-box h3 {
+font-size: 14px;
+font-weight: 600;
+margin-bottom: 10px;
+display: flex;
+align-items: center;
+gap: 6px;
+}
+.aktionen-input {
+width: 100%;
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 8px 12px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 13px;
+background: var(–surface2);
+color: var(–text);
+resize: vertical;
+min-height: 60px;
+}
+.aktionen-input:focus { outline: 2px solid var(–accent); background: white; }
+.aktionen-hint { font-size: 11px; color: var(–text3); margin-top: 4px; }
+
+/* Einkaufsliste */
+.einkauf-section {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 20px;
+}
+.einkauf-section h3 { font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.einkauf-list { list-style: none; }
+.einkauf-list li {
+padding: 7px 0;
+border-bottom: 1px solid var(–border);
+font-size: 14px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.einkauf-list li:last-child { border-bottom: none; }
+.einkauf-list li input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(–accent2); }
+.einkauf-list li.checked label { text-decoration: line-through; color: var(–text3); }
+
+/* ============ REZEPTE VIEW ============ */
+.rezepte-toolbar {
+display: flex;
+gap: 10px;
+margin-bottom: 20px;
+flex-wrap: wrap;
+align-items: center;
+}
+
+.search-input {
+flex: 1;
+min-width: 200px;
+padding: 10px 14px;
+border: 1px solid var(–border);
+border-radius: 10px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 14px;
+background: var(–surface);
+}
+.search-input:focus { outline: 2px solid var(–accent); }
+
+.filter-select {
+padding: 10px 14px;
+border: 1px solid var(–border);
+border-radius: 10px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 14px;
+background: var(–surface);
+cursor: pointer;
+color: var(–text);
+}
+
+.rezepte-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+gap: 16px;
+}
+
+.rezept-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 16px;
+cursor: pointer;
+transition: all 0.2s;
+position: relative;
+}
+.rezept-card:hover { box-shadow: var(–shadow-lg); transform: translateY(-2px); }
+
+.rezept-cat-badge {
+display: inline-block;
+padding: 3px 8px;
+border-radius: 20px;
+font-size: 11px;
+font-weight: 600;
+background: var(–surface2);
+color: var(–text2);
+margin-bottom: 8px;
+}
+
+.rezept-name {
+font-family: ‘Playfair Display’, serif;
+font-size: 16px;
+font-weight: 600;
+line-height: 1.3;
+margin-bottom: 8px;
+}
+
+.rezept-meta {
+display: flex;
+gap: 8px;
+align-items: center;
+flex-wrap: wrap;
+}
+
+.rezept-link {
+font-size: 11px;
+color: var(–accent);
+text-decoration: none;
+}
+.rezept-link:hover { text-decoration: underline; }
+
+.stars-display {
+display: flex;
+gap: 2px;
+}
+.star {
+font-size: 14px;
+cursor: pointer;
+transition: transform 0.1s;
+color: #ddd;
+}
+.star.filled { color: #f5a623; }
+.star:hover { transform: scale(1.2); }
+
+.rezept-card .card-actions {
+display: flex;
+gap: 6px;
+margin-top: 10px;
+}
+.card-btn {
+padding: 5px 10px;
+border: 1px solid var(–border);
+border-radius: 6px;
+background: var(–surface2);
+cursor: pointer;
+font-size: 12px;
+color: var(–text2);
+transition: all 0.15s;
+}
+.card-btn:hover { background: var(–border); }
+.card-btn.danger:hover { background: #ffeaea; color: #c00; border-color: #fcc; }
+
+/* ============ MODAL ============ */
+.modal-overlay {
+display: none;
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.4);
+z-index: 1000;
+backdrop-filter: blur(2px);
+align-items: center;
+justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+background: var(–surface);
+border-radius: 16px;
+padding: 28px;
+width: 100%;
+max-width: 540px;
+max-height: 90vh;
+overflow-y: auto;
+box-shadow: var(–shadow-lg);
+animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+from { transform: translateY(20px); opacity: 0; }
+to { transform: translateY(0); opacity: 1; }
+}
+
+.modal h2 {
+font-family: ‘Playfair Display’, serif;
+font-size: 22px;
+margin-bottom: 20px;
+}
+
+.form-group { margin-bottom: 16px; }
+.form-label {
+display: block;
+font-size: 13px;
+font-weight: 600;
+color: var(–text2);
+margin-bottom: 5px;
+text-transform: uppercase;
+letter-spacing: 0.3px;
+}
+.form-input, .form-select, .form-textarea {
+width: 100%;
+padding: 10px 12px;
+border: 1px solid var(–border);
+border-radius: 8px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 14px;
+background: var(–surface2);
+color: var(–text);
+transition: border 0.15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+outline: 2px solid var(–accent);
+background: white;
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+
+.modal-actions {
+display: flex;
+gap: 8px;
+justify-content: flex-end;
+margin-top: 20px;
+}
+
+/* Stars rating in modal */
+.stars-rating { display: flex; gap: 6px; margin-top: 4px; }
+.star-rate {
+font-size: 24px;
+cursor: pointer;
+color: #ddd;
+transition: all 0.1s;
+}
+.star-rate.filled { color: #f5a623; }
+.star-rate:hover { transform: scale(1.15); }
+
+/* ============ BEWERTUNG VIEW ============ */
+.bewertung-list { display: flex; flex-direction: column; gap: 12px; }
+.bewertung-item {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 16px 20px;
+display: flex;
+align-items: center;
+gap: 16px;
+}
+.bewertung-name { flex: 1; font-weight: 500; }
+.bewertung-persons { display: flex; gap: 16px; }
+.person-rating { text-align: center; }
+.person-label { font-size: 11px; color: var(–text3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* TOAST */
+.toast {
+position: fixed;
+bottom: 24px;
+right: 24px;
+background: var(–text);
+color: white;
+padding: 12px 20px;
+border-radius: 10px;
+font-size: 14px;
+font-weight: 500;
+z-index: 9999;
+transform: translateY(60px);
+opacity: 0;
+transition: all 0.3s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(–accent2); }
+.toast.error { background: #c0392b; }
+
+/* Spinner */
+.spinner {
+display: inline-block;
+width: 16px; height: 16px;
+border: 2px solid rgba(255,255,255,0.3);
+border-top-color: white;
+border-radius: 50%;
+animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty state */
+.empty-state {
+text-align: center;
+padding: 60px 20px;
+color: var(–text3);
+}
+.empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 15px; }
+
+/* Rezept detail in modal */
+.rezept-detail-url {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 10px 14px;
+background: var(–surface2);
+border-radius: 8px;
+margin-bottom: 12px;
+}
+.rezept-detail-url a { color: var(–accent); font-size: 13px; text-decoration: none; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rezept-detail-url a:hover { text-decoration: underline; }
+
+.stars-group { display: flex; gap: 32px; margin-top: 8px; }
+.star-person { }
+.star-person-name { font-size: 12px; font-weight: 600; color: var(–text2); margin-bottom: 4px; }
+
+/* Import section */
+.import-section {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 20px;
+margin-bottom: 20px;
+}
+.import-section h3 { font-weight: 600; margin-bottom: 6px; }
+.import-section p { font-size: 13px; color: var(–text2); margin-bottom: 12px; }
+
+/* Kalender popup cells */
+.kal-cell {
+padding: 5px 2px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 12px;
+color: var(–text2);
+transition: all 0.1s;
+line-height: 1.2;
+}
+.kal-cell:hover { background: var(–surface2); color: var(–text); }
+.kal-cell.active-kw { background: var(–accent); color: white; font-weight: 600; border-radius: 6px; }
+.kal-cell.today { font-weight: 700; color: var(–accent); }
+.kal-cell.today.active-kw { color: white; }
+.kal-cell.other-month { color: var(–text3); }
+.kal-week-num {
+font-size: 10px;
+color: var(–text3);
+padding: 5px 2px;
+text-align: center;
+cursor: pointer;
+border-radius: 4px;
+}
+.kal-week-num:hover { background: var(–surface2); color: var(–accent); }
+.kal-week-num.active-kw { color: var(–accent); font-weight: 700; }
+
+/* Plan day selected - Wochentag */
+.plan-day.has-recipe {
+border-color: var(–accent);
+border-width: 2px;
+}
+.plan-day.has-recipe .day-header {
+background: var(–accent);
+}
+.plan-day.has-recipe .day-name,
+.plan-day.has-recipe .day-date {
+color: white;
+}
+
+/* Wochenende hat immer grünen Header - auch wenn Rezept */
+.plan-day.weekend .day-header {
+background: #2d6e4e !important;
+}
+.plan-day.weekend .day-name,
+.plan-day.weekend .day-date {
+color: white !important;
+}
+/* Wochenende mit Rezept: grüner Rand bleibt */
+.plan-day.weekend.has-recipe {
+border-color: #2d6e4e;
+border-width: 2px;
+}
 </style>
+
 </head>
 <body>
 
@@ -805,61 +810,65 @@
       <button class="btn-primary" onclick="generatePlan()" id="btn-generieren">✨ Plan generieren</button>
     </div>
 
-    <!-- KALENDER POPUP -->
-    <div id="kalender-popup" style="display:none;position:absolute;z-index:200;background:white;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);padding:16px;width:300px;margin-top:4px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <button onclick="kalenderChangeMonth(-1)" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 8px;border-radius:6px;color:var(--text2);">‹</button>
-        <span id="kalender-monat-label" style="font-weight:600;font-size:15px;"></span>
-        <button onclick="kalenderChangeMonth(1)" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 8px;border-radius:6px;color:var(--text2);">›</button>
-      </div>
-      <div style="display:grid;grid-template-columns:32px repeat(7,1fr);gap:2px;text-align:center;margin-bottom:6px;">
-        <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;"></div>
-        <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Mo</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Di</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Mi</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Do</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Fr</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Sa</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">So</div>
-      </div>
-      <div id="kalender-grid" style="display:grid;grid-template-columns:32px repeat(7,1fr);gap:2px;text-align:center;"></div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);text-align:center;">
-        <button onclick="goToToday();toggleKalender()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--accent);font-weight:600;">● Heute</button>
-      </div>
-    </div>
+```
+<!-- KALENDER POPUP -->
+<div id="kalender-popup" style="display:none;position:absolute;z-index:200;background:white;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);padding:16px;width:300px;margin-top:4px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <button onclick="kalenderChangeMonth(-1)" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 8px;border-radius:6px;color:var(--text2);">‹</button>
+    <span id="kalender-monat-label" style="font-weight:600;font-size:15px;"></span>
+    <button onclick="kalenderChangeMonth(1)" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 8px;border-radius:6px;color:var(--text2);">›</button>
+  </div>
+  <div style="display:grid;grid-template-columns:32px repeat(7,1fr);gap:2px;text-align:center;margin-bottom:6px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Mo</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Di</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Mi</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Do</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Fr</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">Sa</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px;">So</div>
+  </div>
+  <div id="kalender-grid" style="display:grid;grid-template-columns:32px repeat(7,1fr);gap:2px;text-align:center;"></div>
+  <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);text-align:center;">
+    <button onclick="goToToday();toggleKalender()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--accent);font-weight:600;">● Heute</button>
+  </div>
+</div>
 
-    <div class="aktionen-box">
-      <h3 onclick="toggleAktionen()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
-        Migros Aktionen diese Woche
-        <span id="aktionen-toggle" style="font-size:12px;color:var(--text3);">▼</span>
-      </h3>
-      <div id="aktionen-body">
-        <textarea class="aktionen-input" id="aktionen-input" placeholder="Aktuelle Aktionen einfügen (z.B. aus migros.ch kopieren) oder einzelne Zutaten: Lachs, Poulet, Peperoni..."></textarea>
-        <div class="aktionen-hint">Diese Zutaten werden beim Generieren bevorzugt berücksichtigt.</div>
-      </div>
-    </div>
+<div class="aktionen-box">
+  <h3 onclick="toggleAktionen()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+    Migros Aktionen diese Woche
+    <span id="aktionen-toggle" style="font-size:12px;color:var(--text3);">▼</span>
+  </h3>
+  <div id="aktionen-body">
+    <textarea class="aktionen-input" id="aktionen-input" placeholder="Aktuelle Aktionen einfügen (z.B. aus migros.ch kopieren) oder einzelne Zutaten: Lachs, Poulet, Peperoni..."></textarea>
+    <div class="aktionen-hint">Diese Zutaten werden beim Generieren bevorzugt berücksichtigt.</div>
+  </div>
+</div>
 
-    <div class="plan-grid" id="plan-grid"></div>
+<div class="plan-grid" id="plan-grid"></div>
 
-    <div class="einkauf-section" id="einkauf-section" style="display:block">
-      <h3 style="display:flex;align-items:center;justify-content:space-between;">
-        🛒 Einkaufsliste
-        <button onclick="toggleAllEinkauf()" id="btn-alle" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--text2);">Alle auswählen</button>
-      </h3>
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <input class="form-input" id="einkauf-input" placeholder="Zutat hinzufügen..."
-          onkeydown="if(event.key==='Enter')addEinkaufItem()"
-          style="flex:1;min-width:0;">
-        <button class="btn-primary" onclick="addEinkaufItem()" style="padding:10px 14px;flex-shrink:0;">+</button>
-      </div>
-      <div style="margin-bottom:12px;">
-        <button class="btn-secondary" onclick="clearCheckedItems()" style="font-size:12px;width:100%;">Erledigte löschen</button>
-      </div>
-      <ul class="einkauf-list" id="einkauf-list"></ul>
-    </div>
+<div class="einkauf-section" id="einkauf-section" style="display:block">
+  <h3 style="display:flex;align-items:center;justify-content:space-between;">
+    🛒 Einkaufsliste
+    <button onclick="toggleAllEinkauf()" id="btn-alle" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--text2);">Alle auswählen</button>
+  </h3>
+  <div style="display:flex;gap:8px;margin-bottom:8px;">
+    <input class="form-input" id="einkauf-input" placeholder="Zutat hinzufügen..."
+      onkeydown="if(event.key==='Enter')addEinkaufItem()"
+      style="flex:1;min-width:0;">
+    <button class="btn-primary" onclick="addEinkaufItem()" style="padding:10px 14px;flex-shrink:0;">+</button>
+  </div>
+  <div style="margin-bottom:12px;">
+    <button class="btn-secondary" onclick="clearCheckedItems()" style="font-size:12px;width:100%;">Erledigte löschen</button>
+  </div>
+  <ul class="einkauf-list" id="einkauf-list"></ul>
+</div>
+```
+
   </div>
 
   <!-- REZEPTE VIEW -->
+
   <div class="view" id="view-rezepte">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
       <div>
@@ -872,23 +881,26 @@
       </div>
     </div>
 
-    <div class="rezepte-toolbar">
-      <input class="search-input" type="text" id="search-input" placeholder="🔍 Rezept suchen..." oninput="filterRezepte()">
-      <select class="filter-select" id="filter-kat" onchange="filterRezepte()">
-        <option value="">Alle Kategorien</option>
-      </select>
-      <select class="filter-select" id="filter-sort" onchange="filterRezepte()">
-        <option value="name">A–Z</option>
-        <option value="bewertung">Beste zuerst</option>
-        <option value="neu">Neueste</option>
-      </select>
-    </div>
+```
+<div class="rezepte-toolbar">
+  <input class="search-input" type="text" id="search-input" placeholder="🔍 Rezept suchen..." oninput="filterRezepte()">
+  <select class="filter-select" id="filter-kat" onchange="filterRezepte()">
+    <option value="">Alle Kategorien</option>
+  </select>
+  <select class="filter-select" id="filter-sort" onchange="filterRezepte()">
+    <option value="name">A–Z</option>
+    <option value="bewertung">Beste zuerst</option>
+    <option value="neu">Neueste</option>
+  </select>
+</div>
 
-    <div class="rezepte-grid" id="rezepte-grid"></div>
+<div class="rezepte-grid" id="rezepte-grid"></div>
+```
+
   </div>
 
-
   <!-- EINSTELLUNGEN VIEW -->
+
   <div class="view" id="view-einstellungen">
     <div class="section-title">Einstellungen</div>
     <div class="section-sub">Kategorien verwalten und Rezepte umhängen</div>
@@ -938,6 +950,7 @@
   </div>
 
   <!-- BEWERTUNG VIEW -->
+
   <div class="view" id="view-bewertung">
     <div class="section-title">Bewertungen</div>
     <div class="section-sub">Übersicht aller bewerteten Rezepte</div>
@@ -946,6 +959,7 @@
 </main>
 
 <!-- MODALS -->
+
 <div class="modal-overlay" id="modal-rezept">
   <div class="modal">
     <h2 id="modal-title">Rezept hinzufügen</h2>
@@ -1301,13 +1315,16 @@ function renderPlanGrid() {
         const soEntry = currentPlan['Sonntag'];
     const moEntry = currentPlan['Montag'];
     const isSyncedDay = (tag === 'Montag' || tag === 'Sonntag') && soEntry && moEntry && soEntry.rezept_id === moEntry.rezept_id;
-    return `<div class="plan-day ${rezept ? 'has-recipe' : ''} ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''}" id="day-${tag}">
+    const isEvent = entry && !entry.rezept_id && entry.notiz;
+    return `<div class="plan-day ${rezept ? 'has-recipe' : ''} ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isEvent ? 'is-event' : ''}" id="day-${tag}">
       <div class="day-header" ${rezept ? `onclick="openDetailModal('${rezept.id}')" style="cursor:pointer;" title="${rezept.name}"` : ''}>
         <div class="day-name">${tag.substring(0,2)}</div>
         <div class="day-date">${dateStr}</div>
       </div>
       <div class="day-content">
-        ${rezept ? `
+        ${entry && !entry.rezept_id && entry.notiz ? `
+          <div class="day-recipe event">📅 ${entry.notiz}</div>
+        ` : rezept ? `
           <div class="day-recipe">${hyphenate(rezept.name)}</div>
           <div class="day-actions">
             <button class="day-action-btn" onclick="pickRezeptForDay('${tag}')">✏️</button>
@@ -1749,10 +1766,10 @@ function pickDayForRezept(rezeptId) {
   list.innerHTML = TAGE.map(tag => {
     const entry = currentPlan[tag];
     const existing = entry ? rezepte.find(r => r.id === entry.rezept_id) : null;
-    return `<button class="btn-secondary" style="text-align:left;justify-content:space-between;display:flex;align-items:center;"
+    return `<button class="btn-secondary" style="text-align:left;justify-content:space-between;display:flex;align-items:center;gap:8px;overflow:hidden;"
       onclick="setPlanEntry('${tag}','${rezeptId}');closeModal('modal-day-pick');showToast('✅ Hinzugefügt','success')">
-      <span style="font-weight:600;">${tag}</span>
-      <span style="font-size:12px;color:var(--text3);">${existing ? existing.name : 'frei'}</span>
+      <span style="font-weight:600;flex-shrink:0;">${tag}</span>
+      <span style="font-size:12px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;text-align:right;">${existing ? existing.name : 'frei'}</span>
     </button>`;
   }).join('');
   document.getElementById('modal-day-pick').classList.add('open');
@@ -1800,6 +1817,12 @@ function pickRezeptForDay(tag, showAll = false) {
             Alle ${rezepte.length} Rezepte anzeigen ›
           </button>
         </div>` : ''}
+      <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px;">
+        <button class="btn-secondary" style="width:100%;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);"
+          onclick="enterEvent('${tag}','${modalId}')">
+          📅 Event eintragen (auswärts, Ferien...)
+        </button>
+      </div>
     </div>
     <div class="modal-actions" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
       <button class="btn-secondary" onclick="document.getElementById('${modalId}').remove()">Abbrechen</button>
@@ -2271,8 +2294,37 @@ window.addEventListener('resize', () => {
   applyLayout();
 });
 
+
+function enterEvent(tag, modalId) {
+  document.getElementById(modalId)?.remove();
+  const name = prompt(`Event für ${tag} eintragen:`);
+  if (!name || !name.trim()) return;
+  saveEventEntry(tag, name.trim());
+}
+
+async function saveEventEntry(tag, notiz) {
+  const existing = currentPlan[tag];
+  try {
+    if (existing) {
+      await sb('PATCH', 'wochenplaene', { rezept_id: null, notiz }, `?id=eq.${existing.id}`);
+      existing.rezept_id = null;
+      existing.notiz = notiz;
+    } else {
+      const res = await sb('POST', 'wochenplaene', {
+        kw: currentKW, jahr: currentYear, wochentag: tag, rezept_id: null, notiz
+      });
+      if (res && res[0]) currentPlan[tag] = res[0];
+    }
+    renderPlanGrid();
+    showToast(`📅 Event gespeichert`, 'success');
+  } catch(e) {
+    showToast('Fehler beim Speichern', 'error');
+  }
+}
+
 // ===== START =====
 init();
 </script>
+
 </body>
 </html>
