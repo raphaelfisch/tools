@@ -1670,7 +1670,6 @@ function renderRezepteGrid() {
       <div class="rezept-name">${r.name}</div>
       <div class="rezept-meta">
         <div class="stars-display">${starsHtml}</div>
-        ${r.personen ? `<span style="font-size:11px;color:var(--text3);">👥 ${r.personen}</span>` : ''}
         ${r.url ? `<a class="rezept-link" href="${r.url}" target="_blank" onclick="event.stopPropagation()">🔗 Rezept</a>` : ''}
       </div>
       <div class="card-actions">
