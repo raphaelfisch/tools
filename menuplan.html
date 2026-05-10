@@ -1308,7 +1308,7 @@ function renderPlanGrid() {
         ` : rezept ? `
           <div style="flex:1;min-width:0;">
             <div class="day-recipe">${hyphenate(rezept.name)}</div>
-            ${entry.personen ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">👥 ${entry.personen} Pers.</div>` : ''}
+            <div style="font-size:10px;color:var(--text3);margin-top:2px;">👥 ${entry.personen || '-'} Pers.</div>
           </div>
           <div class="day-actions" onclick="event.stopPropagation()">
             <button class="day-action-btn" onclick="openPersonenPicker('${tag}')" title="Personen ändern">👥</button>
@@ -1706,7 +1706,7 @@ function openDetailModal(id) {
     <div style="margin-bottom:16px;">
       <span class="rezept-cat-badge">${r.kategorie || ''}</span>
       ${r.vegetarisch ? '<span class="rezept-cat-badge" style="background:#e8f4ee;color:#2d6e4e;">🌿 Vegetarisch</span>' : ''}
-    ${r.personen ? `<span class="rezept-cat-badge" style="background:#e8f0fd;color:#3d5a99;">👥 ${r.personen} Personen</span>` : ''}
+    <span class="rezept-cat-badge" style="background:#e8f0fd;color:#3d5a99;">👥 ${r.personen || '-'} Personen</span>
     </div>
     ${r.url ? `<div class="rezept-detail-url">🔗 <a href="${r.url}" target="_blank">${r.url}</a></div>` : ''}
     ${r.zutaten ? `<div style="margin-bottom:16px;"><div class="form-label" style="margin-bottom:6px;">Zutaten</div><div style="font-size:13px;line-height:1.7;color:var(--text2);white-space:pre-line;">${r.zutaten}</div></div>` : ''}
@@ -1768,7 +1768,7 @@ function pickDayForRezept(rezeptId) {
   list.innerHTML = TAGE.map(tag => {
     const entry = currentPlan[tag];
     const existing = entry ? rezepte.find(r => r.id === entry.rezept_id) : null;
-    const rezeptPers = rezepte.find(r => r.id === rezeptId)?.personen || 4;
+    const rezeptPers = rezepte.find(r => r.id === rezeptId)?.personen || '';
     return `<div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
       <button class="btn-secondary" style="text-align:left;justify-content:space-between;display:flex;align-items:center;gap:8px;overflow:hidden;flex:1;"
         onclick="setPlanEntryWithPersonen('${tag}','${rezeptId}',parseInt(document.getElementById('pers-${tag}').value)||${rezeptPers});closeModal('modal-day-pick');showToast('✅ Hinzugefügt','success')">
@@ -2329,7 +2329,7 @@ async function saveEventEntry(tag, notiz) {
 function openPersonenPicker(tag) {
   const entry = currentPlan[tag];
   if (!entry?.rezept_id) return;
-  const current = entry.personen || rezepte.find(r => r.id === entry.rezept_id)?.personen || 4;
+  const current = entry.personen || rezepte.find(r => r.id === entry.rezept_id)?.personen || '';
   const val = prompt(`Personen für ${tag}:`, current);
   if (val === null) return;
   const n = parseInt(val);
