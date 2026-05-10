@@ -1120,6 +1120,7 @@ async function saveRezept() {
     url: document.getElementById('f-url').value.trim(),
     zutaten: document.getElementById('f-zutaten').value.trim(),
     zubereitungszeit: parseInt(document.getElementById('f-zeit').value) || null,
+    personen: parseInt(document.getElementById('f-personen').value) || null,
     vegetarisch: document.getElementById('f-veg').value === 'true'
   };
 
