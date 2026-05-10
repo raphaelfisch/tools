@@ -2343,54 +2343,51 @@ function openPersonenPicker(tag) {
 }
 
 
+let _planZutaten = [];
+
 async function loadFromPlan() {
-  // Collect all zutaten from current week's recipes
-  const zutaten = [];
+  _planZutaten = [];
   Object.values(currentPlan).forEach(entry => {
     if (!entry?.rezept_id) return;
     const r = rezepte.find(x => x.id === entry.rezept_id);
     if (r?.zutaten) {
-      r.zutaten.split('\n').forEach(z => { if (z.trim()) zutaten.push(z.trim()); });
+      r.zutaten.split('\n').forEach(z => { if (z.trim()) _planZutaten.push(z.trim()); });
     }
   });
 
-  if (!zutaten.length) {
+  if (!_planZutaten.length) {
     showToast('Keine Zutaten in den eingeplanten Rezepten vorhanden.', 'error');
     return;
   }
 
-  // Show dialog
+  const rezeptCount = Object.values(currentPlan).filter(e => e?.rezept_id).length;
   const modal = document.createElement('div');
   modal.className = 'modal-overlay open';
   modal.innerHTML = `<div class="modal" style="max-width:380px;">
     <h2>Aus Wochenplan laden</h2>
-    <p style="margin:12px 0;color:var(--text2);font-size:14px;">${zutaten.length} Zutaten aus ${Object.values(currentPlan).filter(e=>e?.rezept_id).length} Rezepten gefunden.</p>
+    <p style="margin:12px 0;color:var(--text2);font-size:14px;">${_planZutaten.length} Zutaten aus ${rezeptCount} Rezepten gefunden.</p>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;">
-      <button class="btn-primary" onclick="doLoadFromPlan('replace',${JSON.stringify(zutaten)},this.closest('.modal-overlay'))">
-        🔄 Neu laden (bestehende ersetzen)
-      </button>
-      <button class="btn-secondary" onclick="doLoadFromPlan('merge',${JSON.stringify(zutaten)},this.closest('.modal-overlay'))">
-        ➕ Nur neue hinzufügen
-      </button>
-      <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">Abbrechen</button>
+      <button class="btn-primary" id="btn-replace">🔄 Neu laden (bestehende ersetzen)</button>
+      <button class="btn-secondary" id="btn-merge">➕ Nur neue hinzufügen</button>
+      <button class="btn-secondary" id="btn-cancel-load">Abbrechen</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
+  modal.querySelector('#btn-replace').onclick = () => { modal.remove(); doLoadFromPlan('replace'); };
+  modal.querySelector('#btn-merge').onclick = () => { modal.remove(); doLoadFromPlan('merge'); };
+  modal.querySelector('#btn-cancel-load').onclick = () => modal.remove();
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
-async function doLoadFromPlan(mode, zutaten, modal) {
-  modal.remove();
+async function doLoadFromPlan(mode) {
   try {
     if (mode === 'replace') {
-      // Delete all unchecked, then add new
       const unchecked = einkaufItems.filter(i => !i.checked);
       await Promise.all(unchecked.map(i => sb('DELETE', 'einkaufsliste', null, `?id=eq.${i.id}`)));
       einkaufItems = einkaufItems.filter(i => i.checked);
     }
-    // Add only items not already in list
     const existing = new Set(einkaufItems.map(i => i.text.toLowerCase()));
-    const toAdd = [...new Set(zutaten)].filter(z => !existing.has(z.toLowerCase()));
+    const toAdd = [...new Set(_planZutaten)].filter(z => !existing.has(z.toLowerCase()));
     for (const z of toAdd) {
       const res = await sb('POST', 'einkaufsliste', { text: z, checked: false });
       if (res && res[0]) einkaufItems.push(res[0]);
