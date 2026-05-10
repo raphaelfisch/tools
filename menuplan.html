@@ -2177,7 +2177,6 @@ function openEditRezept(id) {
   document.getElementById('modal-title').textContent = 'Rezept bearbeiten';
   document.getElementById('f-name').value = r.name || '';
   document.getElementById('f-url').value = r.url || '';
-  document.getElementById('f-zutaten').value = r.zutaten || '';
   document.getElementById('f-zeit').value = r.zubereitungszeit || '';
   document.getElementById('f-personen').value = r.personen || '';
   loadZutatenEditor(r.zutaten || '');
