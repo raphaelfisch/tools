@@ -1297,18 +1297,26 @@ function renderPlanGrid() {
         <div class="day-name">${tag.substring(0,2)}</div>
         <div class="day-date">${dateStr}</div>
       </div>
-      <div class="day-content">
+      <div class="day-content" ${rezept ? `onclick="openDetailModal('${rezept.id}')" style="cursor:pointer;"` : !entry?.notiz ? `onclick="pickRezeptForDay('${tag}')" style="cursor:pointer;"` : ''}>
         ${entry && !entry.rezept_id && entry.notiz ? `
-          <div class="day-recipe event">📅 ${entry.notiz}</div>
+          <div class="day-recipe event" style="flex:1;">📅 ${entry.notiz}</div>
+          <div class="day-actions" onclick="event.stopPropagation()">
+            <button class="day-action-btn" onclick="pickRezeptForDay('${tag}')">✏️</button>
+            <button class="day-action-btn" onclick="confirmRemovePlan('${tag}')">✕</button>
+          </div>
         ` : rezept ? `
-          <div class="day-recipe">${hyphenate(rezept.name)}</div>
-          <div class="day-actions">
+          <div style="flex:1;min-width:0;">
+            <div class="day-recipe">${hyphenate(rezept.name)}</div>
+            ${entry.personen ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">👥 ${entry.personen} Pers.</div>` : ''}
+          </div>
+          <div class="day-actions" onclick="event.stopPropagation()">
+            <button class="day-action-btn" onclick="openPersonenPicker('${tag}')" title="Personen ändern">👥</button>
             <button class="day-action-btn" onclick="pickRezeptForDay('${tag}')">✏️</button>
             <button class="day-action-btn" onclick="confirmRemovePlan('${tag}')">✕</button>
           </div>
         ` : `
-          <div class="day-recipe empty">Kein Eintrag</div>
-          <div class="day-actions">
+          <div class="day-recipe empty" style="flex:1;">Kein Eintrag</div>
+          <div class="day-actions" onclick="event.stopPropagation()">
             <button class="day-action-btn" onclick="pickRezeptForDay('${tag}')" style="width:auto;padding:0 10px;font-size:12px;font-weight:600;">+ Wählen</button>
           </div>
         `}
@@ -2314,6 +2322,23 @@ async function saveEventEntry(tag, notiz) {
   } catch(e) {
     showToast('Fehler beim Speichern', 'error');
   }
+}
+
+
+function openPersonenPicker(tag) {
+  const entry = currentPlan[tag];
+  if (!entry?.rezept_id) return;
+  const current = entry.personen || rezepte.find(r => r.id === entry.rezept_id)?.personen || 4;
+  const val = prompt(`Personen für ${tag}:`, current);
+  if (val === null) return;
+  const n = parseInt(val);
+  if (!n || n < 1) return;
+  sb('PATCH', 'wochenplaene', { personen: n }, `?id=eq.${entry.id}`)
+    .then(() => {
+      entry.personen = n;
+      renderPlanGrid();
+      showToast(`👥 ${n} Personen gespeichert`, 'success');
+    });
 }
 
 // ===== START =====
