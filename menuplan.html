@@ -1668,7 +1668,10 @@ function renderRezepteGrid() {
 
     return `<div class="rezept-card" onclick="openDetailModal('${r.id}')">
       <div class="rezept-cat-badge" onclick="event.stopPropagation();quickChangeKat('${r.id}',this)" title="Klick zum Ändern" style="cursor:pointer;">${r.kategorie || 'Diverses'} ▾</div>
-      <div class="rezept-name">${r.name}</div>
+      <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <div class="rezept-name" style="margin-bottom:0;">${r.name}</div>
+        ${r.personen ? `<span style="font-size:12px;color:var(--text3);white-space:nowrap;flex-shrink:0;">👥 ${r.personen} Pers.</span>` : ''}
+      </div>
       <div class="rezept-meta">
         <div class="stars-display">${starsHtml}</div>
         ${r.url ? `<a class="rezept-link" href="${r.url}" target="_blank" onclick="event.stopPropagation()">🔗 Rezept</a>` : ''}
