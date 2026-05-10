@@ -584,6 +584,37 @@
     text-transform: uppercase;
     letter-spacing: 0.3px;
   }
+  .zutat-row {
+    display: grid;
+    grid-template-columns: 64px 90px 1fr 28px;
+    gap: 4px;
+    align-items: center;
+  }
+  .zutat-row input, .zutat-row select {
+    padding: 7px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    background: var(--surface2);
+    color: var(--text);
+  }
+  .zutat-row input:focus, .zutat-row select:focus { outline: 2px solid var(--accent); background: white; }
+  .zutat-del {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zutat-del:hover { background: #ffeaea; color: #c00; border-color: #fcc; }
+
   .form-input, .form-select, .form-textarea {
     width: 100%;
     padding: 10px 12px;
@@ -954,8 +985,12 @@
       <input class="form-input" id="f-url" placeholder="https://fooby.ch/...">
     </div>
     <div class="form-group">
-      <label class="form-label">Zutaten</label>
-      <textarea class="form-textarea" id="f-zutaten" placeholder="Eine Zutat pro Zeile..."></textarea>
+      <label class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
+        Zutaten
+        <button type="button" onclick="addZutatRow()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:2px 10px;font-size:12px;cursor:pointer;color:var(--accent);font-weight:600;">+ Zutat</button>
+      </label>
+      <div id="zutaten-rows" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px;"></div>
+      <div style="font-size:11px;color:var(--text3);">Menge und Einheit optional – Zutat ist Pflicht</div>
     </div>
     <div class="form-group" style="display:flex;gap:12px;">
       <div style="flex:1;">
@@ -1118,7 +1153,7 @@ async function saveRezept() {
     name,
     kategorie: document.getElementById('f-kat').value,
     url: document.getElementById('f-url').value.trim(),
-    zutaten: document.getElementById('f-zutaten').value.trim(),
+    zutaten: JSON.stringify(getZutatenData()),
     zubereitungszeit: parseInt(document.getElementById('f-zeit').value) || null,
     personen: parseInt(document.getElementById('f-personen').value) || null,
     vegetarisch: document.getElementById('f-veg').value === 'true'
@@ -1714,7 +1749,7 @@ function openDetailModal(id) {
     <span class="rezept-cat-badge" style="background:#e8f0fd;color:#3d5a99;">👥 ${r.personen ? r.personen + ' Personen' : '-'}</span>
     </div>
     ${r.url ? `<div class="rezept-detail-url">🔗 <a href="${r.url}" target="_blank">${r.url}</a></div>` : ''}
-    ${r.zutaten ? `<div style="margin-bottom:16px;"><div class="form-label" style="margin-bottom:6px;">Zutaten</div><div style="font-size:13px;line-height:1.7;color:var(--text2);white-space:pre-line;">${r.zutaten}</div></div>` : ''}
+    ${r.zutaten ? `<div style="margin-bottom:16px;"><div class="form-label" style="margin-bottom:6px;">Zutaten</div><div style="font-size:13px;line-height:1.7;color:var(--text2);white-space:pre-line;">${zutatenForDisplay(r.zutaten)}</div></div>` : ''}
     <div style="margin-bottom:8px;"><div class="form-label" style="margin-bottom:10px;">Bewertung</div>
       <div class="stars-group">
         <div class="star-person">
@@ -2001,6 +2036,94 @@ function updateEinkaufsliste() {
   }
 }
 
+
+// ===== ZUTATEN EDITOR =====
+const EINHEITEN = ['', 'g', 'kg', 'ml', 'l', 'EL', 'TL', 'Stück', 'Dose', 'Prise', 'Bund', 'Scheibe', 'Paket', 'Becher', 'Pkt.', 'Msp.'];
+
+function addZutatRow(menge='', einheit='', zutat='') {
+  const rows = document.getElementById('zutaten-rows');
+  const idx = rows.children.length;
+  const div = document.createElement('div');
+  div.className = 'zutat-row';
+  div.innerHTML = `
+    <input type="number" min="0" step="0.1" placeholder="–" value="${menge}" class="zutat-menge" style="text-align:center;">
+    <select class="zutat-einheit">
+      <option value="">–</option>
+<option value="g">g</option>
+<option value="kg">kg</option>
+<option value="ml">ml</option>
+<option value="l">l</option>
+<option value="EL">EL</option>
+<option value="TL">TL</option>
+<option value="Stück">Stück</option>
+<option value="Dose">Dose</option>
+<option value="Prise">Prise</option>
+<option value="Bund">Bund</option>
+<option value="Scheibe">Scheibe</option>
+<option value="Paket">Paket</option>
+<option value="Becher">Becher</option>
+<option value="Pkt.">Pkt.</option>
+<option value="Msp.">Msp.</option>
+    </select>
+    <input type="text" placeholder="Zutat..." value="${zutat}" class="zutat-name">
+    <button type="button" class="zutat-del" onclick="this.closest('.zutat-row').remove()">×</button>
+  `;
+  div.querySelector('.zutat-einheit').value = einheit;
+  rows.appendChild(div);
+}
+
+function getZutatenData() {
+  const rows = document.getElementById('zutaten-rows');
+  const zutaten = [];
+  rows.querySelectorAll('.zutat-row').forEach(row => {
+    const zutat = row.querySelector('.zutat-name').value.trim();
+    if (!zutat) return;
+    const menge = parseFloat(row.querySelector('.zutat-menge').value) || null;
+    const einheit = row.querySelector('.zutat-einheit').value || null;
+    zutaten.push({ menge, einheit, zutat });
+  });
+  return zutaten;
+}
+
+function loadZutatenEditor(zutatenStr) {
+  const rows = document.getElementById('zutaten-rows');
+  rows.innerHTML = '';
+  if (!zutatenStr) return;
+  // Try JSON first, fallback to plain text
+  try {
+    const data = JSON.parse(zutatenStr);
+    if (Array.isArray(data)) {
+      data.forEach(z => addZutatRow(z.menge || '', z.einheit || '', z.zutat || z));
+      return;
+    }
+  } catch(e) {}
+  // Plain text fallback
+  zutatenStr.split('\n').forEach(line => {
+    if (line.trim()) addZutatRow('', '', line.trim());
+  });
+}
+
+function zutatenToString(zutaten) {
+  return JSON.stringify(zutaten);
+}
+
+function zutatenForDisplay(zutatenStr) {
+  if (!zutatenStr) return '';
+  try {
+    const data = JSON.parse(zutatenStr);
+    if (Array.isArray(data)) {
+      return data.map(z => {
+        let s = '';
+        if (z.menge) s += z.menge + ' ';
+        if (z.einheit) s += z.einheit + ' ';
+        s += z.zutat || z;
+        return s;
+      }).join('\n');
+    }
+  } catch(e) {}
+  return zutatenStr;
+}
+
 // ===== BEWERTUNGEN VIEW =====
 function renderBewertungen() {
   const list = document.getElementById('bewertung-list');
@@ -2039,7 +2162,9 @@ function renderBewertungen() {
 function openAddRezept() {
   editingId = null;
   document.getElementById('modal-title').textContent = 'Rezept hinzufügen';
-  ['f-name','f-url','f-zutaten','f-zeit','f-personen'].forEach(id => document.getElementById(id).value = '');
+  ['f-name','f-url','f-zeit','f-personen'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('zutaten-rows').innerHTML = '';
+  addZutatRow();
   document.getElementById('f-kat').value = 'Diverses';
   document.getElementById('f-veg').value = 'false';
   document.getElementById('modal-rezept').classList.add('open');
@@ -2055,6 +2180,7 @@ function openEditRezept(id) {
   document.getElementById('f-zutaten').value = r.zutaten || '';
   document.getElementById('f-zeit').value = r.zubereitungszeit || '';
   document.getElementById('f-personen').value = r.personen || '';
+  loadZutatenEditor(r.zutaten || '');
   document.getElementById('f-kat').value = r.kategorie || 'Diverses';
   document.getElementById('f-veg').value = r.vegetarisch ? 'true' : 'false';
   document.getElementById('modal-rezept').classList.add('open');
@@ -2360,7 +2486,13 @@ async function loadFromPlan() {
     }
   });
 
-  if (!_planZutaten.length) {
+  // Check if any recipe has zutaten
+  const hasZutaten = Object.values(currentPlan).some(entry => {
+    if (!entry?.rezept_id) return false;
+    const r = rezepte.find(x => x.id === entry.rezept_id);
+    return r?.zutaten;
+  });
+  if (!hasZutaten) {
     showToast('Keine Zutaten in den eingeplanten Rezepten vorhanden.', 'error');
     return;
   }
@@ -2391,15 +2523,71 @@ async function doLoadFromPlan(mode) {
       await Promise.all(unchecked.map(i => sb('DELETE', 'einkaufsliste', null, `?id=eq.${i.id}`)));
       einkaufItems = einkaufItems.filter(i => i.checked);
     }
+
+    // Build aggregated ingredient list
+    const aggregated = {}; // key: "einheit|zutat" -> { menge, einheit, zutat }
+
+    Object.values(currentPlan).forEach(entry => {
+      if (!entry?.rezept_id) return;
+      const r = rezepte.find(x => x.id === entry.rezept_id);
+      if (!r?.zutaten) return;
+
+      // Calculate factor based on personen
+      const rezeptPersonen = r.personen || 1;
+      const kochPersonen = entry.personen || rezeptPersonen;
+      const faktor = kochPersonen / rezeptPersonen;
+
+      let zutatenList = [];
+      try {
+        const parsed = JSON.parse(r.zutaten);
+        if (Array.isArray(parsed)) zutatenList = parsed;
+      } catch(e) {
+        // Plain text fallback
+        r.zutaten.split('\n').forEach(line => {
+          if (line.trim()) zutatenList.push({ zutat: line.trim(), menge: null, einheit: null });
+        });
+      }
+
+      zutatenList.forEach(z => {
+        const zutat = (z.zutat || z).trim();
+        const einheit = z.einheit || '';
+        const key = `${einheit}|${zutat.toLowerCase()}`;
+        if (aggregated[key]) {
+          if (z.menge && aggregated[key].menge !== null) {
+            aggregated[key].menge += z.menge * faktor;
+          }
+        } else {
+          aggregated[key] = {
+            menge: z.menge ? z.menge * faktor : null,
+            einheit,
+            zutat
+          };
+        }
+      });
+    });
+
+    // Format and add to list
     const existing = new Set(einkaufItems.map(i => i.text.toLowerCase()));
-    const toAdd = [...new Set(_planZutaten)].filter(z => !existing.has(z.toLowerCase()));
-    for (const z of toAdd) {
-      const res = await sb('POST', 'einkaufsliste', { text: z, checked: false });
-      if (res && res[0]) einkaufItems.push(res[0]);
+    let added = 0;
+    for (const item of Object.values(aggregated)) {
+      let text = '';
+      if (item.menge) {
+        const rounded = Math.round(item.menge * 10) / 10;
+        text += rounded + ' ';
+      }
+      if (item.einheit) text += item.einheit + ' ';
+      text += item.zutat;
+
+      if (!existing.has(text.toLowerCase())) {
+        const res = await sb('POST', 'einkaufsliste', { text, checked: false });
+        if (res && res[0]) einkaufItems.push(res[0]);
+        added++;
+      }
     }
+
     einkaufItems.sort((a, b) => a.checked - b.checked);
     renderEinkaufList();
-    showToast(`✅ ${toAdd.length} Zutaten hinzugefügt`, 'success');
+    showToast(`✅ ${added} Zutaten hinzugefügt`, 'success');
   } catch(e) {
     showToast('Fehler: ' + e.message, 'error');
   }
