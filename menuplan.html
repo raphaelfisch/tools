@@ -852,7 +852,7 @@
 
     <div class="einkauf-section" id="einkauf-section" style="display:block">
       <h3 style="display:flex;align-items:center;justify-content:space-between;">
-        🛒 Einkaufsliste
+        <span>🛒 Einkaufsliste <span id="einkauf-kw-label" style="font-size:12px;font-weight:400;color:var(--text3);"></span></span>
         <button onclick="toggleAllEinkauf()" id="btn-alle" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--text2);">Alle auswählen</button>
       </h3>
       <div style="display:flex;gap:8px;margin-bottom:8px;">
@@ -1948,7 +1948,7 @@ let einkaufItems = [];
 
 async function loadEinkauf() {
   try {
-    const data = await sb('GET', 'einkaufsliste', null, '?order=checked,position');
+    const data = await sb('GET', 'einkaufsliste', null, `?kw=eq.${currentKW}&jahr=eq.${currentYear}&order=checked`);
     einkaufItems = data || [];
     renderEinkaufList();
   } catch(e) { einkaufItems = []; }
@@ -1981,7 +1981,7 @@ async function addEinkaufItem() {
   const items = text.split(',').map(s => s.trim()).filter(Boolean);
   try {
     for (const t of items) {
-      const res = await sb('POST', 'einkaufsliste', { text: t, checked: false });
+      const res = await sb('POST', 'einkaufsliste', { text: t, checked: false, kw: currentKW, jahr: currentYear });
       if (res && res[0]) einkaufItems.push(res[0]);
     }
     renderEinkaufList();
@@ -2009,7 +2009,7 @@ async function deleteEinkaufItem(id) {
 
 async function clearCheckedItems() {
   try {
-    await sb('DELETE', 'einkaufsliste', null, '?checked=eq.true');
+    await sb('DELETE', 'einkaufsliste', null, `?checked=eq.true&kw=eq.${currentKW}&jahr=eq.${currentYear}`);
     einkaufItems = einkaufItems.filter(i => !i.checked);
     renderEinkaufList();
     showToast('Erledigte gelöscht', 'success');
@@ -2578,7 +2578,7 @@ async function doLoadFromPlan(mode) {
       text += item.zutat;
 
       if (!existing.has(text.toLowerCase())) {
-        const res = await sb('POST', 'einkaufsliste', { text, checked: false });
+        const res = await sb('POST', 'einkaufsliste', { text, checked: false, kw: currentKW, jahr: currentYear });
         if (res && res[0]) einkaufItems.push(res[0]);
         added++;
       }
