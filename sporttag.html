@@ -123,10 +123,16 @@
   <!-- SETUP -->
   <div class="step active" id="s1">
     <div class="card">
-      <div class="ct">1. Klassenliste importieren</div>
+      <div class="ct">1. Klassenliste herunterladen</div>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:14px">Lade zuerst die CSV-Klassenliste aus dem Sporttag-Ordner auf Teams herunter.</p>
+      <a href="https://sekaegelsee.sharepoint.com/:f:/s/AlleLehrpersonen3/IgCdIkkdf_RiQL5McI0aAfefAeYYvnKp5l9aTqpXwEp3qvY?e=bwKgVS" target="_blank" class="btn bp bsm" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">📁 Sporttag-Ordner öffnen</a>
+    </div>
+
+    <div class="card">
+      <div class="ct">2. Klassenliste importieren</div>
       <div class="drop" id="dropz" onclick="document.getElementById('csv-in').click()">
         <div class="ic">📋</div>
-        <p><strong>CSV aus Tool A hier ablegen</strong></p>
+        <p><strong>CSV aus dem Download-Ordner hier ablegen</strong></p>
         <p>oder klicken zum Auswählen</p>
       </div>
       <input type="file" id="csv-in" accept=".csv,.txt">
@@ -134,7 +140,7 @@
     </div>
 
     <div class="card">
-      <div class="ct">2. Disziplin wählen</div>
+      <div class="ct">3. Disziplin wählen</div>
       <div class="dg">
         <button class="btn bd" data-k="hochsprung"   onclick="selD('hochsprung',this)">Hochsprung</button>
         <button class="btn bd" data-k="weitsprung"   onclick="selD('weitsprung',this)">Weitsprung</button>
@@ -146,7 +152,7 @@
     </div>
 
     <div class="card">
-      <div class="ct">3. Gruppe wählen</div>
+      <div class="ct">4. Gruppe wählen</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <div class="gr" id="gr-knaben" style="display:flex;flex-wrap:wrap;gap:8px">
           <button class="btn bd grp-btn" data-g="K1"  onclick="selG('K1',this)">K1</button>
@@ -195,7 +201,7 @@
     <div id="expsec" style="display:none;max-width:900px;margin:20px auto 0">
       <div class="eb">
         <h3>✅ Alle erfasst!</h3>
-        <p>Du kannst nun das CSV exportieren. Die Datei wird in deinem Download-Ordner gespeichert. Bitte danach in den Sporttag-Ordner auf Teams verschieben.</p>
+        <p>Du kannst nun das CSV exportieren. Die Datei wird in deinen Download-Ordner gespeichert. Bitte danach in den Sporttag-Ordner auf Teams verschieben.</p>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <button class="btn" style="background:#fff;color:var(--accent);border:2px solid #fff;font-weight:700;padding:10px 24px;border-radius:8px;font-size:15px;cursor:pointer" onclick="doExport()">💾 CSV exportieren</button>
           <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff;border:2px solid #fff;font-weight:700;padding:10px 24px;border-radius:8px;font-size:15px;cursor:pointer" onclick="window.open('https://sekaegelsee.sharepoint.com/:f:/s/AlleLehrpersonen3/IgD9GvN2vwuzQ5mgQhCo49viAXDVGOkLDEYHRW9PqTDJdlc?e=aGZyLK','_blank')">📁 Sporttag-Ordner öffnen</button>
