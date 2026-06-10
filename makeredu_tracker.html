@@ -163,9 +163,8 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
 .dashboard-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
 @media(max-width:900px){.dashboard-grid{grid-template-columns:1fr;}}
 .comp-columns-grid { display:grid; grid-template-columns:repeat(var(--comp-cols, 1), 1fr); gap:16px; align-items:start; }
-.tab-header-card { height:56px; display:flex; align-items:center; gap:12px; padding:0 18px; margin-bottom:16px; flex-wrap:wrap; box-sizing:border-box; width:100%; overflow:visible; }
-.klasse-wrap { display:flex; align-items:center; gap:12px; }
-@media(max-width:600px){ .tab-header-card { height:auto !important; padding:12px 18px; overflow:visible; } .klasse-wrap { width:100%; } }
+.tab-header-card { display:flex; align-items:center; gap:12px; padding:12px 18px; min-height:56px; margin-bottom:16px; flex-wrap:wrap; box-sizing:border-box; width:100%; overflow:visible; }
+.klasse-wrap { display:flex; align-items:center; gap:12px; flex-shrink:0; }
 
 .boxplot-section { margin-bottom:4px; }
 .boxplot-comp-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; margin:16px 0 4px; display:flex; align-items:center; gap:6px; }
@@ -275,7 +274,7 @@ table.overview-table { width:100%; border-collapse:collapse; font-size:12px; }
     <!-- Projektname -->
     <div class="card tab-header-card">
       <label class="form-label" style="margin:0;white-space:nowrap;font-weight:600">Projektname</label>
-      <input type="text" class="form-input" id="projekt-name" placeholder="z.B. Brücken bauen" oninput="saveMeta()" style="flex:1;min-width:160px">
+      <input type="text" class="form-input" id="projekt-name" placeholder="z.B. Brücken bauen" oninput="saveMeta()" style="flex:1;min-width:120px">
       <div class="klasse-wrap">
         <label class="form-label" style="margin:0;white-space:nowrap;font-weight:600">Klasse</label>
         <input type="text" class="form-input" id="klasse-input" placeholder="z.B. 3d" oninput="saveMeta()" style="max-width:90px">
