@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:sans-serif; background:#F5F4F1; padding:16px; }
+.card { background:white; border:1px solid #E2E0DC; border-radius:8px; margin-bottom:16px; }
+
+/* VERSUCH 1: flex wrap */
+.v1 { display:flex; align-items:center; gap:12px; padding:12px 18px; flex-wrap:wrap; }
+
+/* VERSUCH 2: grid 1fr auto */
+.v2 { display:grid; grid-template-columns:1fr auto; gap:12px; padding:12px 18px; align-items:center; }
+@media(max-width:600px){ .v2 { grid-template-columns:1fr; } }
+
+/* VERSUCH 3: immer 2 Zeilen */
+.v3 { display:flex; flex-direction:column; gap:10px; padding:12px 18px; }
+.v3-row { display:flex; align-items:center; gap:12px; }
+
+label { font-size:11px; font-weight:600; color:#8A8680; text-transform:uppercase; white-space:nowrap; }
+input { padding:8px 12px; border:1px solid #E2E0DC; border-radius:5px; font-size:13px; background:#F5F4F1; width:100%; }
+.proj-input { flex:1; min-width:0; }
+.klasse-input { width:90px; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<p style="font-size:11px;color:#888;margin-bottom:8px">Versuch 1: flex wrap</p>
+<div class="card v1">
+  <label>Projektname</label>
+  <input class="proj-input" placeholder="z.B. Brücken bauen">
+  <label>Klasse</label>
+  <input class="klasse-input" placeholder="3d">
+</div>
+
+<p style="font-size:11px;color:#888;margin-bottom:8px">Versuch 2: grid</p>
+<div class="card v2">
+  <div style="display:flex;align-items:center;gap:12px">
+    <label>Projektname</label>
+    <input class="proj-input" placeholder="z.B. Brücken bauen">
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <label>Klasse</label>
+    <input class="klasse-input" placeholder="3d">
+  </div>
+</div>
+
+<p style="font-size:11px;color:#888;margin-bottom:8px">Versuch 3: immer 2 Zeilen</p>
+<div class="card v3">
+  <div class="v3-row">
+    <label>Projektname</label>
+    <input class="proj-input" placeholder="z.B. Brücken bauen">
+  </div>
+  <div class="v3-row">
+    <label>Klasse</label>
+    <input style="width:90px" placeholder="3d">
+  </div>
+</div>
+
+<p style="font-size:11px;color:#888">Breite: <span id="w"></span>px</p>
+<script>document.getElementById('w').textContent=window.innerWidth;</script>
+</body>
+</html>
