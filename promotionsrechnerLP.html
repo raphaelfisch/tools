@@ -375,7 +375,7 @@
             let matheSchnitt = null;
             if (mathe !== null && geo !== null) {
                 matheSchnitt = (mathe + geo) / 2;
-                matheBereich = Math.min(6, Math.max(1, matheSchnitt + bonus));
+                matheBereich = matheSchnitt + bonus;
             }
             setResult('result-mathe', matheBereich);
             document.getElementById('bd-mathe').textContent = matheBereich ? matheBereich.toFixed(2) : '–';
@@ -410,7 +410,8 @@
             }
 
             if (deutsch !== null && matheBereich !== null && ntBereich !== null) {
-                const schnitt = (deutsch + matheBereich + ntBereich) / 3;
+                const schnittRoh = (deutsch + matheBereich + ntBereich) / 3;
+                const schnitt = Math.round(schnittRoh * 100) / 100;
                 resultValue.textContent = schnitt.toFixed(2);
 
                 if (abteilung === 'E') {
