@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wortzähler</title>
+<style>
+  :root{
+    --bg:#EFF0F2;
+    --card:#FFFFFF;
+    --ink:#1B2430;
+    --line:#D3D7DE;
+    --muted:#69737F;
+    --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--sans);
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:840px;margin:0 auto;padding:18px 14px 40px}
+
+  header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  h1{margin:0;font-size:18px;font-weight:600}
+  header p{margin:0;font-size:14px;color:var(--muted)}
+
+  .add{display:flex;gap:8px;margin-bottom:18px}
+  .add input{
+    flex:1;min-width:0;padding:13px 14px;font:inherit;font-size:17px;
+    border:1px solid var(--line);border-radius:3px;background:#fff;color:var(--ink);
+  }
+  .add input:focus{outline:2px solid #2F6FBF;outline-offset:-1px;border-color:#2F6FBF}
+  .add button{
+    padding:13px 18px;font:inherit;font-size:16px;font-weight:600;
+    background:var(--ink);color:#fff;border:0;border-radius:3px;cursor:pointer;
+  }
+  .add button:active{transform:translateY(1px)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+
+  .tally{
+    position:relative;display:block;width:100%;text-align:left;
+    background:var(--card);border:1px solid var(--line);border-left:7px solid var(--c);
+    border-radius:4px;padding:16px 16px 14px;cursor:pointer;font:inherit;color:var(--ink);
+    transition:transform .06s ease, box-shadow .12s ease;
+  }
+  .tally:hover{box-shadow:0 2px 8px rgba(27,36,48,.10)}
+  .tally:active{transform:scale(.985)}
+  .tally:focus-visible{outline:3px solid var(--c);outline-offset:2px}
+  .tally.bump{animation:bump .18s ease}
+  @keyframes bump{50%{transform:scale(1.03)}}
+
+  .word{
+    font-size:17px;font-weight:600;word-break:break-word;padding-right:56px;
+  }
+  .num{
+    font-size:64px;font-weight:700;line-height:1.05;letter-spacing:-.04em;
+    font-variant-numeric:tabular-nums;color:var(--c);margin-top:2px;
+  }
+  .hint{font-size:13px;color:var(--muted);margin-top:2px}
+  .key{
+    position:absolute;top:12px;right:12px;
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);border-radius:3px;padding:2px 7px;background:#F6F7F9;
+  }
+
+  .rowtools{display:flex;gap:8px;margin-top:10px}
+  .mini{
+    font:inherit;font-size:13px;padding:6px 11px;background:#F4F5F7;
+    border:1px solid var(--line);border-radius:3px;color:var(--muted);cursor:pointer;
+  }
+  .mini:hover{color:var(--ink);border-color:var(--muted)}
+
+  .empty{
+    background:var(--card);border:1px dashed var(--line);border-radius:4px;
+    padding:28px 18px;color:var(--muted);font-size:15px;line-height:1.5;
+  }
+
+  footer{
+    margin-top:22px;padding-top:14px;border-top:1px solid var(--line);
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;
+  }
+  footer b{color:var(--ink)}
+  footer button{
+    margin-left:auto;font:inherit;font-size:14px;padding:8px 14px;
+    background:#fff;border:1px solid var(--line);border-radius:3px;color:var(--muted);cursor:pointer;
+  }
+  footer button:hover{color:#C2542F;border-color:#C2542F}
+
+  @media (max-width:480px){
+    .grid{grid-template-columns:1fr}
+    .num{font-size:56px}
+    .key{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Wortzähler</h1>
+    <p>Wort eintippen, dann bei jedem Mal die Fläche antippen.</p>
+  </header>
+
+  <div class="add">
+    <input id="in" type="text" placeholder="Wort eingeben, z. B. Ball" autocomplete="off" enterkeyhint="done">
+    <button id="addBtn">Hinzufügen</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="empty" id="empty">
+    Noch kein Wort erfasst. Oben ein Wort eintippen und mit Enter bestätigen.<br>
+    Danach zählt jeder Klick auf die Fläche – am Computer geht auch die Zifferntaste 1–9.
+  </div>
+
+  <footer>
+    <span>Total <b id="total">0</b></span>
+    <span>Laufzeit <b id="clock">0:00</b></span>
+    <button id="resetAll">Alles zurücksetzen</button>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var COLORS = ["#2F6FBF","#C2542F","#2E8B57","#7A4FB5","#B8891A","#167C7C"];
+  var items = [];
+  var startTime = null;
+  var timer = null;
+
+  var grid = document.getElementById('grid');
+  var empty = document.getElementById('empty');
+  var input = document.getElementById('in');
+
+  function fmtTime(ms){
+    var s = Math.floor(ms/1000), m = Math.floor(s/60);
+    s = s % 60;
+    return m + ':' + (s<10?'0':'') + s;
+  }
+
+  function tick(){
+    if (startTime === null) return;
+    document.getElementById('clock').textContent = fmtTime(Date.now() - startTime);
+  }
+
+  function startClock(){
+    if (startTime !== null) return;
+    startTime = Date.now();
+    timer = setInterval(tick, 1000);
+  }
+
+  function total(){
+    var n = 0;
+    for (var i=0;i<items.length;i++) n += items[i].count;
+    document.getElementById('total').textContent = n;
+  }
+
+  function add(word){
+    word = word.trim();
+    if (!word) return;
+    for (var i=0;i<items.length;i++){
+      if (items[i].word.toLowerCase() === word.toLowerCase()){
+        items[i].el.classList.add('bump');
+        setTimeout(function(el){ return function(){ el.classList.remove('bump'); }; }(items[i].el), 200);
+        return;
+      }
+    }
+    items.push({ word: word, count: 0, color: COLORS[items.length % COLORS.length] });
+    render();
+  }
+
+  function count(i){
+    items[i].count++;
+    startClock();
+    var el = items[i].el;
+    el.querySelector('.num').textContent = items[i].count;
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+    if (navigator.vibrate) navigator.vibrate(12);
+    total();
+  }
+
+  function render(){
+    grid.textContent = '';
+    empty.style.display = items.length ? 'none' : 'block';
+
+    items.forEach(function(it, i){
+      var card = document.createElement('div');
+      card.className = 'tally';
+      card.style.setProperty('--c', it.color);
+      card.setAttribute('role','button');
+      card.tabIndex = 0;
+      card.setAttribute('aria-label', it.word + ' zählen');
+
+      if (i < 9){
+        var key = document.createElement('span');
+        key.className = 'key';
+        key.textContent = 'Taste ' + (i+1);
+        card.appendChild(key);
+      }
+
+      var w = document.createElement('div');
+      w.className = 'word';
+      w.textContent = it.word;
+      card.appendChild(w);
+
+      var n = document.createElement('div');
+      n.className = 'num';
+      n.textContent = it.count;
+      card.appendChild(n);
+
+      var h = document.createElement('div');
+      h.className = 'hint';
+      h.textContent = 'antippen zum Zählen';
+      card.appendChild(h);
+
+      card.addEventListener('click', function(){ count(i); });
+      card.addEventListener('keydown', function(e){
+        if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); count(i); }
+      });
+
+      var tools = document.createElement('div');
+      tools.className = 'rowtools';
+
+      var undo = document.createElement('button');
+      undo.className = 'mini';
+      undo.textContent = 'Ein Klick zurück';
+      undo.addEventListener('click', function(e){
+        e.stopPropagation();
+        if (it.count > 0){ it.count--; n.textContent = it.count; total(); }
+      });
+
+      var del = document.createElement('button');
+      del.className = 'mini';
+      del.textContent = 'Wort entfernen';
+      del.addEventListener('click', function(e){
+        e.stopPropagation();
+        items.splice(i,1);
+        render(); total();
+      });
+
+      tools.appendChild(undo);
+      tools.appendChild(del);
+      card.appendChild(tools);
+
+      it.el = card;
+      grid.appendChild(card);
+    });
+
+    total();
+  }
+
+  document.getElementById('addBtn').addEventListener('click', function(){
+    add(input.value); input.value = ''; input.focus();
+  });
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){ add(input.value); input.value = ''; }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (document.activeElement === input) return;
+    if (e.key >= '1' && e.key <= '9'){
+      var i = parseInt(e.key,10) - 1;
+      if (items[i]) count(i);
+    }
+  });
+
+  document.getElementById('resetAll').addEventListener('click', function(){
+    if (!items.length) return;
+    if (!confirm('Alle Zähler auf 0 zurücksetzen? Die Wörter bleiben erhalten.')) return;
+    items.forEach(function(it){ it.count = 0; });
+    startTime = null;
+    clearInterval(timer);
+    document.getElementById('clock').textContent = '0:00';
+    render();
+  });
+
+  input.focus();
+})();
+</script>
+</body>
+</html>
