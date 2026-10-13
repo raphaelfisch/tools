@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Berufsinfoparcours Ägelsee</title>
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#1d2430; --muted:#5b6474; --line:#e3ded3;
+  --accent:#0f6b5c; --accent-soft:#e2f1ed; --accent-ink:#ffffff;
+  --w1:#2e9e5b; --w2:#2f6fd6; --w3:#8a4fd1; --w4:#e3b81c; --zu:#ec8a2d; --unt:#9aa1ab; --sch:#d64545;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;font-size:clamp(15px,min(1.35vw,2.2vh),24px);line-height:1.45;display:flex;flex-direction:column}
+header{padding:1.1em 2.2em .6em}
+.wrap{max-width:1400px;margin:0 auto}
+.brand{display:flex;flex-direction:column}
+.brand small{color:var(--muted);font-size:.75em;letter-spacing:.06em;text-transform:uppercase}
+.brand strong{font-size:1.5em;letter-spacing:-.01em}
+nav{padding:0 1.3em;border-bottom:2px solid var(--line)}
+nav .wrap{display:flex;gap:.4em;flex-wrap:wrap;max-width:calc(1400px + 1.8em)}
+nav button{font:inherit;font-size:.9em;background:none;border:none;padding:.6em 1em;cursor:pointer;color:var(--muted);border-bottom:4px solid transparent;margin-bottom:-2px;border-radius:.4em .4em 0 0}
+nav button .n{display:inline-block;width:1.6em;height:1.6em;line-height:1.6em;text-align:center;border-radius:50%;background:var(--line);color:var(--ink);font-size:.8em;margin-right:.45em;font-weight:600}
+nav button[aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--accent)}
+nav button[aria-selected="true"] .n{background:var(--accent);color:var(--accent-ink)}
+main{flex:1;overflow:auto;padding:1.2em 2.2em 1em}
+section{display:none;max-width:1400px;margin:0 auto}
+section.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:2.1em;line-height:1.15;letter-spacing:-.02em;margin-bottom:.35em}
+h2{font-size:1.15em;margin-bottom:.4em}
+.lead b{color:var(--ink)}
+.lead{font-size:1.15em;color:var(--muted);max-width:42em;margin-bottom:1.2em}
+.grid{display:grid;gap:1em}
+.g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)} .g2{grid-template-columns:1fr 1fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.1em 1.25em}
+.card p,.card li{color:var(--muted)}
+.card ul{padding-left:1.1em}
+.big{font-size:2.6em;font-weight:700;color:var(--accent);line-height:1}
+.big+span{display:block;margin-top:.3em;color:var(--muted)}
+.hl{background:var(--accent);color:var(--accent-ink);border:none}
+.hl p,.hl h2{color:var(--accent-ink)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:.8em}
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.8em 1em;display:flex;gap:.8em;align-items:flex-start}
+.step b.num{flex:none;width:2.2em;height:2.2em;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700}
+.step h3{font-size:1em}
+.step p{color:var(--muted);font-size:.85em}
+.step.ev{border-color:var(--accent)} .step.ev b.num{background:var(--accent);color:#fff}
+.tt{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:.4em;font-size:.85em}
+.tt .h{font-weight:600;color:var(--muted);padding:.3em .2em;display:flex;align-items:center}
+.tt .c{border-radius:8px;padding:.55em .6em;color:#fff;font-weight:600;min-height:2.8em;display:flex;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:.5em 1.1em;margin-top:.8em;font-size:.8em;color:var(--muted)}
+.legend i{display:inline-block;width:.9em;height:.9em;border-radius:3px;margin-right:.35em;vertical-align:-.1em}
+.bar{height:1.5em;border-radius:8px;background:var(--line);overflow:hidden;margin:.35em 0 .2em}
+.bar>span{display:block;height:100%;background:var(--accent)}
+.bar.weak>span{background:var(--unt)}
+.cmp{display:grid;grid-template-columns:7.5em 1fr 3.5em;align-items:center;gap:.7em;margin-top:.9em}
+.cmp .bar{margin:0}
+.col{display:flex;flex-direction:column;gap:1em}
+.tt .c.open3{flex-direction:column;align-items:flex-start;justify-content:center;line-height:1.2;cursor:pointer;outline:3px solid var(--sch);outline-offset:3px;animation:pulse 1.6s infinite}.tt .c.open3 small{font-weight:500;font-size:.78em;opacity:.9}
+.live-btn{font:inherit;font-weight:700;margin-top:.8em;background:#fff;color:var(--accent);border:none;border-radius:10px;padding:.5em 1.2em;cursor:pointer}.live-btn:hover{background:var(--accent-soft)}
+#zut .rule{margin:.2em 0}
+.w10{display:flex;align-items:center;gap:.6em;margin:0 0 .4em}.w10 .big{font-size:2.2em}.w10 span:last-child{color:var(--ink);font-weight:600;line-height:1.25}.w10 small{font-weight:400;color:var(--muted)}
+#zut .note{margin-top:.5em;padding:.35em .8em;border-left:4px solid var(--w4);background:#fbf6e3;border-radius:6px;color:var(--ink)}
+.stp{display:inline-grid;place-items:center;width:1.6em;height:1.6em;border-radius:50%;background:var(--accent);color:#fff;font-size:.85em;margin-right:.5em;vertical-align:.08em}
+#zut h1{margin-bottom:.25em}#zut .teaser h2{font-size:1em}#zut .teaser .live-btn{margin-top:.5em}#zut .legend{margin-top:.45em}#zut .grid{gap:.8em}#zut .res{margin-top:.8em;display:grid;grid-template-columns:2.2fr 1fr;gap:1.2em;align-items:stretch}
+#zut .teaser{border-radius:12px;padding:1em 1.2em;display:flex;flex-direction:column;justify-content:center}
+@media (max-width:900px){#zut .res{grid-template-columns:1fr}}#zut .rule .ic{width:1.5em;height:1.5em}#zut .card{padding:.9em 1.2em}#zut .legend{margin-top:.6em}
+.cmp .pct{color:var(--accent);text-align:right}.cmp .pct.weak{color:var(--muted)}
+.rule{display:flex;gap:.7em;align-items:center;margin:.45em 0}
+.rule .ic{flex:none;width:1.8em;height:1.8em;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700}
+.tool h2{display:flex;align-items:center;gap:.5em}
+.tool .tag{font-size:.65em;font-weight:600;background:var(--accent-soft);color:var(--accent);padding:.2em .6em;border-radius:99px}
+footer{padding:.6em 2.933em;color:var(--muted);font-size:.75em;border-top:1px solid var(--line)}
+footer .wrap{display:flex;justify-content:space-between;align-items:center}
+footer .nav{display:flex;gap:.5em}
+footer button{display:inline-flex;align-items:center;justify-content:center;width:2.6em;height:2.1em;padding:0;line-height:0;background:var(--card);border:1px solid var(--line);border-radius:8px;cursor:pointer;color:var(--ink)}
+footer button svg{display:block;width:1.2em;height:1.2em}
+footer button:hover{border-color:var(--accent);color:var(--accent)}
+#nb .lead{margin-bottom:.8em}
+.nb-wrap{display:grid;grid-template-columns:minmax(14em,1fr) 2.6fr;gap:1em}
+.nb-stu{display:flex;justify-content:space-between;align-items:center;width:100%;font:inherit;text-align:left;background:var(--bg);border:2px solid transparent;border-radius:10px;padding:.6em .8em;margin:.45em 0;cursor:pointer;color:var(--ink)}
+.nb-stu.sel{border-color:var(--accent);background:var(--accent-soft)}
+.nb-badge{font-size:.7em;font-weight:700;padding:.2em .6em;border-radius:99px;background:var(--sch);color:#fff;white-space:nowrap}
+.nb-badge.ok{background:var(--w1)}
+.nb-count{margin-top:.8em;font-weight:600;color:var(--muted)}
+.nb-count span{font-size:1.6em;color:var(--accent)}
+.nb-reset{font:inherit;font-size:.75em;margin-top:.6em;background:none;border:1px solid var(--line);border-radius:8px;padding:.3em .8em;cursor:pointer;color:var(--muted)}
+.nb-tt .c{position:relative;flex-direction:column;align-items:flex-start;justify-content:center;min-height:3.6em;line-height:1.2}
+.nb-tt .c small{font-weight:500;opacity:.9;font-size:.78em}
+.nb-tt .c.open{cursor:pointer;outline:3px solid var(--sch);outline-offset:3px;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{outline-color:transparent}}
+.nb-tt .c .chg{position:absolute;top:.35em;right:.4em;font:inherit;font-size:.7em;background:rgba(255,255,255,.25);color:#fff;border:1px solid rgba(255,255,255,.6);border-radius:6px;padding:.1em .45em;cursor:pointer}
+.nb-hint{margin-top:.8em;padding:.7em 1em;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-weight:600;min-height:2.6em}
+.nb-modal{display:none;position:fixed;inset:0;background:rgba(20,25,35,.45);z-index:10;align-items:center;justify-content:center;padding:16px}
+.nb-modal.open{display:flex}
+.nb-box{background:var(--card);border-radius:16px;padding:1.3em 1.5em;width:min(40em,100%);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.nb-opt{display:flex;justify-content:space-between;align-items:center;gap:1em;width:100%;font:inherit;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:.6em .9em;margin:.4em 0;cursor:pointer;color:var(--ink)}
+.nb-opt:hover:not([disabled]){border-color:var(--accent);background:var(--accent-soft)}
+.nb-opt[disabled]{opacity:.45;cursor:not-allowed}
+.nb-opt .why{font-size:.75em;color:var(--muted)}
+.nb-opt .tag2{font-size:.7em;font-weight:700;padding:.2em .6em;border-radius:99px;color:#fff;white-space:nowrap}
+.nb-opt.school{border-style:dashed}
+.cap{display:flex;flex-direction:column;align-items:flex-end;gap:.25em;font-size:.75em;color:var(--muted);white-space:nowrap}.cap b{color:var(--ink);font-size:1.15em}
+.capbar{display:block;width:5.5em;height:.45em;border-radius:99px;background:var(--line);overflow:hidden}.capbar i{display:block;height:100%;background:var(--accent)}
+.cap.full .capbar i{background:var(--sch)}
+.nb-actions{display:flex;justify-content:flex-end;gap:.6em;margin-top:.6em}
+.nb-actions button{font:inherit;background:none;border:1px solid var(--line);border-radius:8px;padding:.35em 1em;cursor:pointer}
+.nb-actions .ok{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.nb-actions .ok:disabled{background:var(--line);border-color:var(--line);color:var(--muted);cursor:not-allowed}
+.nb-opt.school.chosen{border-style:solid;border-color:var(--sch);background:#fbe9e9}
+@media (max-width:900px){.nb-wrap{grid-template-columns:1fr}}
+@media (max-width:900px){.g3,.g4,.steps{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}header,main,footer{padding-left:16px;padding-right:16px}nav{padding-left:calc(16px - .9em);padding-right:calc(16px - .9em)}}
+@media (max-width:560px){.g3,.g4,.steps{grid-template-columns:1fr}}
+.grid>*,.col>*,#zut .res>*,.nb-wrap>*{min-width:0}
+.tt .c{overflow-wrap:anywhere;hyphens:auto}
+@media (max-width:560px){.tt{font-size:.68em;gap:.3em}.tt .c{padding:.45em .4em}.nb-tt .c .chg{position:static;margin-top:.3em}#zut .teaser h2{font-size:1em}.cmp{grid-template-columns:6em 1fr 3em}}
+
+/* --- Animationen (laufen einmal beim Öffnen eines Tabs) --- */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes tileIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.88);filter:brightness(1.35)}60%{transform:scale(1.04)}100%{transform:none;filter:none}}
+:root{--t:2.2}
+.rise{animation:rise calc(.45s*var(--t)) cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+.tile-in{animation:tileIn calc(.35s*var(--t)) cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+.tt .c.open3.tile-in{animation:tileIn calc(.35s*var(--t)) cubic-bezier(.2,.7,.2,1) var(--d,0ms) both,pulse 1.6s calc(var(--d,0ms) + .35s*var(--t)) infinite}
+.nb-tt .c.pop{animation:pop calc(.5s*var(--t)) ease both}
+.capbar i{transition:width calc(.55s*var(--t)) cubic-bezier(.2,.7,.2,1)}
+.nb-opt.chosen{border-color:var(--accent);background:var(--accent-soft)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media print{nav,footer{display:none}section{display:block!important;page-break-after:always}main{overflow:visible}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><small>Sekundarschulzentrum Ägelsee</small><strong>Berufsinfoparcours (BIP)</strong></div>
+</div></header>
+<nav><div class="wrap" role="tablist">
+  <button role="tab" aria-selected="true" data-t="0"><span class="n">1</span>Warum BIP</button>
+  <button role="tab" aria-selected="false" data-t="1"><span class="n">2</span>So läuft's</button>
+  <button role="tab" aria-selected="false" data-t="2"><span class="n">3</span>Faire Zuteilung</button>
+  <button role="tab" aria-selected="false" data-t="3"><span class="n">4</span>Nachbearbeitung live</button>
+  <button role="tab" aria-selected="false" data-t="4"><span class="n">5</span>Werkzeuge</button>
+  <button role="tab" aria-selected="false" data-t="5"><span class="n">6</span>Was es braucht</button>
+</div></nav>
+
+<main>
+<!-- 1 WARUM -->
+<section class="active">
+  <h1>Zwei Tage, sechs Berufe – direkt im Betrieb erlebt.</h1>
+  <p class="lead">Der Berufsinfoparcours bringt die Jugendlichen vor der Berufswahl in echte Betriebe. Es ist der <b>erste Kontakt mit der Berufswelt</b> – ein <b>Blick durchs Schaufenster</b>: Kurze Besuche in sechs Betrieben zeigen, wo sich ein Schnuppern lohnen könnte. Die Schule plant alles zentral – fair verteilt und gut vorbereitet.</p>
+  <div class="grid g4">
+    <div class="card"><div class="big">~80</div><span>Schülerinnen und Schüler</span></div>
+    <div class="card"><div class="big">2</div><span>Tage, jeweils Dienstag/Mittwoch</span></div>
+    <div class="card"><div class="big">6</div><span>Betriebsbesuche pro Person, 3 pro Tag</span></div>
+    <div class="card"><div class="big">90'</div><span>pro Besuch – für einen ersten Einblick</span></div>
+  </div>
+  <div class="grid g3" style="margin-top:1em">
+    <div class="card"><h2>Für die Jugendlichen</h2><p>Sie wählen aus echten Angeboten und erhalten einen persönlichen Stundenplan mit ihren Wunschberufen.</p></div>
+    <div class="card"><h2>Für die Betriebe</h2><p>Sie werden persönlich angefragt, bestimmen ihre Kapazität selbst und erhalten vorab die Liste ihrer Gäste.</p></div>
+    <div class="card"><h2>Für die Schule</h2><p>Ein klarer Jahresablauf mit Werkzeugen, die Routinearbeit abnehmen – von der Anfrage bis zum Dankesbrief.</p></div>
+  </div>
+</section>
+
+<!-- 2 ABLAUF -->
+<section>
+  <h1>Ein klarer Ablauf übers Jahr</h1>
+  <p class="lead">Neun Schritte, immer in derselben Reihenfolge. Eine interaktive Checkliste führt durch jeden davon.</p>
+  <div class="steps">
+    <div class="step"><b class="num">00</b><div><h3>Jahresvorbereitung</h3><p>Betriebsadressen, Merkblatt, Logo und Unterschrift bereitstellen</p></div></div>
+    <div class="step"><b class="num">01</b><div><h3>Firmenanfrage</h3><p>Persönliches Schreiben mit vorausgefülltem PDF-Fragebogen an alle Betriebe</p></div></div>
+    <div class="step"><b class="num">02</b><div><h3>Rückmeldungen</h3><p>Ausgefüllte Fragebögen einlesen, Berufe auf die offizielle Lehrberufsliste abgleichen</p></div></div>
+    <div class="step"><b class="num">03</b><div><h3>Umfrage Schüler/innen</h3><p>Online-Wahl – die Auswahlliste enthält genau die angebotenen Berufe</p></div></div>
+    <div class="step"><b class="num">04</b><div><h3>Zuteilung</h3><p>Automatische Verteilung, Nachbearbeitung, Stundenpläne und Gruppenlisten</p></div></div>
+    <div class="step"><b class="num">05</b><div><h3>Teilnahmebestätigung</h3><p>Jeder Betrieb erhält per Mail seine Schülerliste</p></div></div>
+    <div class="step ev"><b class="num">06</b><div><h3>Event</h3><p>Zwei Tage Parcours – mit Reisezeiten direkt im Stundenplan eingeplant</p></div></div>
+    <div class="step"><b class="num">07</b><div><h3>Evaluation</h3><p>Rückmeldungen von Jugendlichen und Betrieben sammeln</p></div></div>
+    <div class="step"><b class="num">08</b><div><h3>Dank</h3><p>Dankesschreiben an die beteiligten Betriebe</p></div></div>
+  </div>
+</section>
+
+<!-- 3 ZUTEILUNG -->
+<section id="zut">
+  <h1>Faire Zuteilung – in drei Schritten</h1>
+  <div class="grid g2">
+    <div class="card">
+      <h2><span class="stp">1</span>Wählen</h2>
+      <p class="w10"><span class="big">10</span><span>Wünsche pro Person<br><small>6 Pflicht + 4 freiwillig</small></span></p>
+      <p>Warum so viele? Beliebte Berufe sind schnell voll – mehr Wünsche, weniger Lücken.</p>
+      <p class="note">Top-Wünsche werden angestrebt, aber nicht garantiert.</p>
+    </div>
+    <div class="card">
+      <h2><span class="stp">2</span>Zuteilen – nach festen Regeln</h2>
+      <div class="rule"><span class="ic">✓</span><p>Kein Betrieb wird überfüllt</p></div>
+      <div class="rule"><span class="ic">✓</span><p>Ein Slot findet nur mit Mindestzahl statt</p></div>
+      <div class="rule"><span class="ic">✓</span><p>Kein Beruf doppelt</p></div>
+      <div class="rule"><span class="ic">✓</span><p>Nur gewählte Berufe werden zugeteilt</p></div>
+      <div class="rule"><span class="ic">✓</span><p>Zufall statt Anmeldereihenfolge</p></div>
+    </div>
+  </div>
+  <div class="card res">
+    <div>
+      <h2><span class="stp">3</span>Ergebnis – persönlicher Stundenplan <span style="font-weight:400;color:var(--muted);font-size:.8em">(Beispiel)</span></h2>
+      <div class="tt">
+        <div class="h"></div><div class="h">Slot 1</div><div class="h">Slot 2</div><div class="h">Slot 3</div>
+        <div class="h">Di</div><div class="c" style="background:var(--w1)">Polymechaniker/in</div><div class="c" style="background:var(--unt)">Unterwegs</div><div class="c" style="background:var(--w4)">Logistiker/in</div>
+        <div class="h">Mi</div><div class="c" style="background:var(--w2)">Informatiker/in</div><div class="c" style="background:var(--w4)">Elektroinstallateur/in</div><div class="c open3" style="background:var(--sch)" title="Live zeigen" onclick="document.querySelectorAll('nav button')[3].click()">Schule<small>offen</small></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--w1)"></i>1. Wunsch</span><span><i style="background:var(--w2)"></i>2. Wunsch</span><span><i style="background:var(--w3)"></i>3. Wunsch</span><span><i style="background:var(--w4)"></i>4.–10. Wunsch</span><span><i style="background:var(--unt)"></i>unterwegs</span><span><i style="background:var(--sch)"></i>Schule</span>
+      </div>
+    </div>
+    <div class="hl teaser">
+      <h2>Und wenn ein Slot leer bleibt?</h2>
+      <p>Das wird persönlich mit den Jugendlichen besprochen – sie entscheiden selbst.</p>
+      <button class="live-btn" onclick="document.querySelectorAll('nav button')[3].click()">Live zeigen →</button>
+    </div>
+  </div>
+</section>
+
+<!-- 3b NACHBEARBEITUNG LIVE -->
+<section id="nb">
+  <h1>Nachbearbeitung live</h1>
+  <p class="lead">Rote Felder sind noch offen. Ein Klick zeigt, was in diesem Slot noch frei ist – nach denselben Regeln wie im echten Tool.</p>
+  <div class="nb-wrap">
+    <div class="card nb-list">
+      <h2>Offene Fälle</h2>
+      <div id="nbStudents"></div>
+      <div class="nb-count"><span id="nbOpen">0</span> Slots offen</div>
+      <button class="nb-reset" onclick="nbReset()">↺ Beispiel zurücksetzen</button>
+    </div>
+    <div class="card nb-plan">
+      <h2 id="nbName"></h2>
+      <div class="tt nb-tt" id="nbTT"></div>
+      <div class="legend">
+        <span><i style="background:var(--w1)"></i>1. Wunsch</span><span><i style="background:var(--w2)"></i>2. Wunsch</span><span><i style="background:var(--w3)"></i>3. Wunsch</span><span><i style="background:var(--w4)"></i>4.–10. Wunsch</span><span><i style="background:var(--zu)"></i>zusätzlich</span><span><i style="background:var(--sch)"></i>Schule</span>
+      </div>
+      <div class="nb-hint" id="nbHint"></div>
+    </div>
+  </div>
+  <div class="nb-modal" id="nbModal" onclick="if(event.target===this)nbClose()">
+    <div class="nb-box">
+      <h2 id="nbMTitle"></h2>
+      <p id="nbMSub" style="color:var(--muted);margin-bottom:.6em"></p>
+      <div id="nbOpts"></div>
+      <div class="nb-actions"><button onclick="nbClose()">Abbrechen</button><button id="nbOk" class="ok" disabled onclick="nbConfirm()">Bestätigen</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 WERKZEUGE -->
+<section>
+  <h1>Werkzeuge, die Routinearbeit abnehmen</h1>
+  <p class="lead">Alle Tools laufen direkt im Browser, ohne Installation. Grundprinzip: <b>Fehler vermeiden statt korrigieren.</b></p>
+  <div class="grid g3">
+    <div class="card tool"><h2>Fragebogen-Generator <span class="tag">01</span></h2><p>Persönlicher, ausfüllbarer PDF-Fragebogen für jeden Betrieb – bewusst persönlich statt Online-Formular.</p></div>
+    <div class="card tool"><h2>Serienmails <span class="tag">01 · 05</span></h2><p>Anfragen und Bestätigungen gehen automatisch aus Outlook raus, mit passendem Anhang.</p></div>
+    <div class="card tool"><h2>Import-Tool <span class="tag">02</span></h2><p>Liest die PDFs ein und gleicht Berufe mit der offiziellen Liste (262 EFZ/EBA) ab.</p></div>
+    <div class="card tool"><h2>Zuteilungs-Tool <span class="tag">04</span></h2><p>Das Herzstück: verteilt nach festen Regeln, Nachbearbeitung per Klick.</p></div>
+    <div class="card tool"><h2>Exporte <span class="tag">04</span></h2><p>Stundenpläne, Schulliste und Gruppenlisten als PDF – inkl. Zimmer und Reisezeiten.</p></div>
+    <div class="card tool"><h2>Workflow-Checkliste <span class="tag">00–08</span></h2><p>Interaktive Anleitung durch das ganze Jahr – nichts geht vergessen.</p></div>
+  </div>
+</section>
+
+<!-- 5 VORAUSSETZUNGEN -->
+<section>
+  <h1>Was eine Schule dafür braucht</h1>
+  <p class="lead">Die Technik ist schlank. Entscheidend sind Betriebe aus der Region und eine Person, die den Ablauf koordiniert.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h2>Organisation</h2>
+      <div class="rule"><span class="ic">1</span><p>Eine Koordinationsperson, die durch die Schritte 00–08 führt</p></div>
+      <div class="rule"><span class="ic">2</span><p>Eine Adressliste regionaler Betriebe (Excel)</p></div>
+      <div class="rule"><span class="ic">3</span><p>Zwei Tage im Schuljahr für den Parcours (Dienstag/Mittwoch)</p></div>
+      <div class="rule"><span class="ic">4</span><p>Zeit für die persönliche Nachbearbeitung einzelner Stundenpläne</p></div>
+    </div>
+    <div class="card">
+      <h2>Technik</h2>
+      <div class="rule"><span class="ic">✓</span><p>Microsoft 365 mit Forms (Umfrage) und Excel</p></div>
+      <div class="rule"><span class="ic">✓</span><p>Klassisches Outlook am Desktop für die Serienmails</p></div>
+      <div class="rule"><span class="ic">✓</span><p>Empfohlen: ein eigenes Funktionspostfach für den BIP</p></div>
+      <div class="rule"><span class="ic">✓</span><p>Ein aktueller Browser – sonst keine Installation</p></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  <span>Berufsinfoparcours · Sekundarschulzentrum Ägelsee</span>
+  <span class="nav"><button id="prev" aria-label="Zurück"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><button id="next" aria-label="Weiter"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></span>
+</div></footer>
+
+<script>
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('nav button'));
+  var secs=[].slice.call(document.querySelectorAll('main section'));
+  var cur=0;
+  function show(i){
+    cur=(i+secs.length)%secs.length;
+    secs.forEach(function(s,k){s.classList.toggle('active',k===cur)});
+    tabs.forEach(function(t,k){t.setAttribute('aria-selected',k===cur?'true':'false')});
+    document.querySelector('main').scrollTop=0;
+    animateTab(secs[cur]);
+  }
+  var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var T=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--t'))||1; // Tempo-Faktor: grösser = langsamer
+  function restart(el,cls,d){el.classList.remove(cls);void el.offsetWidth;el.style.setProperty('--d',d+'ms');el.classList.add(cls)}
+  function countUp(el){
+    if(!el.dataset.final)el.dataset.final=el.textContent;
+    var f=el.dataset.final,m=f.match(/^(\D*)(\d+)(.*)$/);if(!m||RM){el.textContent=f;return}
+    var n=+m[2],t0=null,dur=900*T;
+    function step(ts){if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-p,3);
+      el.textContent=m[1]+Math.round(n*e)+m[3];if(p<1)requestAnimationFrame(step)}
+    el.textContent=m[1]+'0'+m[3];requestAnimationFrame(step)}
+  function animateTab(sec){
+    if(RM)return;
+    var d=0,items=sec.querySelectorAll(':scope>h1,:scope>.lead,:scope .card,:scope .step');
+    var stepGap=(sec.querySelector('.steps')?80:60)*T;
+    [].forEach.call(items,function(el){restart(el,'rise',d);d+=el.classList.contains('step')?stepGap:60*T});
+    [].forEach.call(sec.querySelectorAll(':scope>.grid .big'),function(el){setTimeout(function(){countUp(el)},150*T)});
+    var tiles=sec.querySelectorAll('#zut .tt .c');
+    if(tiles.length){var td=450*T;[].forEach.call(tiles,function(el,k){restart(el,'tile-in',td+k*130*T)});
+      var te=sec.querySelector('#zut .teaser');if(te)restart(te,'rise',td+tiles.length*130*T+150*T)}
+  }
+  animateTab(secs[0]);
+  tabs.forEach(function(t,k){t.addEventListener('click',function(){show(k)})});
+  document.getElementById('prev').addEventListener('click',function(){show(cur-1)});
+  document.getElementById('next').addEventListener('click',function(){show(cur+1)});
+  document.addEventListener('keydown',function(e){
+    if(document.getElementById('nbModal').classList.contains('open')){if(e.key==='Escape')window.nbClose();else if(e.key==='Enter'&&!document.getElementById('nbOk').disabled){e.preventDefault();window.nbConfirm()}return;}
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();show(cur+1)}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(cur-1)}
+    else if(/^[1-6]$/.test(e.key)){show(+e.key-1)}
+  });
+})();
+</script>
+
+<script>
+(function(){
+  var SL=['Di · Slot 1','Di · Slot 2','Di · Slot 3','Mi · Slot 1','Mi · Slot 2','Mi · Slot 3'];
+  var COL={w1:'var(--w1)',w2:'var(--w2)',w3:'var(--w3)',w4:'var(--w4)',zu:'var(--zu)',sch:'var(--sch)'};
+  // Belegung pro Slot (gemeinsam für alle – Maximalzahl gilt)
+  var OFFERS0={
+    1:[{b:'Koch/Köchin',f:'Hotel Thurblick',bel:3,max:5},{b:'Automatiker/in',f:'Weber Automation AG',bel:4,max:4},{b:'Elektroinstallateur/in',f:'Elektro Keller',bel:4,max:5}],
+    2:[{b:'Logistiker/in EFZ',f:'Thurlog AG',bel:5,max:6},{b:'Fachmann/-frau Betreuung',f:'Kita Sonnenhof',bel:2,max:5},{b:'Koch/Köchin',f:'Hotel Thurblick',bel:4,max:5}],
+    3:[{b:'Logistiker/in EFZ',f:'Thurlog AG',bel:5,max:6},{b:'Kaufmann/-frau EFZ',f:'Gemeinde Musterdorf',bel:4,max:6},{b:'Koch/Köchin',f:'Hotel Thurblick',bel:2,max:5}],
+    4:[{b:'Fachmann/-frau Gesundheit',f:'Spital Seeblick',bel:3,max:4},{b:'Koch/Köchin',f:'Hotel Thurblick',bel:4,max:5},{b:'Gärtner/in',f:'Gartenbau Grün',bel:3,max:5}]
+  };
+  // Wunschlisten: alle noch freien Wunschberufe hat der Algorithmus bereits zugeteilt
+  var STU0=[
+    // Lena: 3. Wunsch (Kauffrau) war ausgebucht
+    {n:'Lena M.',wishes:['Fachmann/-frau Gesundheit','Detailhandelsfachmann/-frau','Kaufmann/-frau EFZ','Pharma-Assistent/in','Med. Praxisassistent/in','Fachmann/-frau Apotheke'],
+     s:[['Fachmann/-frau Gesundheit','w1'],['Pharma-Assistent/in','w4'],[null,'sch'],['Detailhandelsfachmann/-frau','w2'],['Fachmann/-frau Apotheke','w4'],['Med. Praxisassistent/in','w4']]},
+    // Jonas: 2. Wunsch (Elektroinstallateur) war ausgebucht
+    {n:'Jonas K.',wishes:['Informatiker/in','Elektroinstallateur/in','Polymechaniker/in','Mediamatiker/in','Applikationsentwickler/in'],
+     s:[['Informatiker/in','w1'],[null,'sch'],['Applikationsentwickler/in','w4'],[null,'sch'],['Polymechaniker/in','w3'],['Mediamatiker/in','w4']]},
+    // Aylin: 1. Wunsch (Coiffeuse) war ausgebucht
+    {n:'Aylin S.',wishes:['Coiffeur/-euse','Zeichner/in','Gärtner/in','Schreiner/in','Detailhandelsfachmann/-frau','Florist/in'],
+     s:[['Zeichner/in','w2'],['Schreiner/in','w4'],['Gärtner/in','w3'],['Florist/in','w4'],[null,'sch'],['Detailhandelsfachmann/-frau','w4']]}
+  ];
+  var stu,offers,cur=0,openSlot=null;
+  function clone(o){return JSON.parse(JSON.stringify(o))}
+  window.nbReset=function(){stu=clone(STU0);stu.forEach(function(x){x.s.forEach(function(c){c.done=false;c.orig=c[1]==='sch'})});offers=clone(OFFERS0);cur=0;hint('Klicke auf ein rotes Feld.');render()};
+  function hint(h){document.getElementById('nbHint').textContent=h}
+  function openCount(x){return x.s.filter(function(c){return c.orig&&!c.done}).length}
+  function render(){
+    var L=document.getElementById('nbStudents');L.innerHTML='';var tot=0;
+    stu.forEach(function(x,i){var o=openCount(x);tot+=o;
+      var b=document.createElement('button');b.className='nb-stu'+(i===cur?' sel':'');
+      b.innerHTML='<span>'+x.n+'</span><span class="nb-badge'+(o?'':' ok')+'">'+(o?o+' offen':'erledigt')+'</span>';
+      b.onclick=function(){cur=i;hint('Klicke auf ein rotes Feld.');render()};L.appendChild(b)});
+    document.getElementById('nbOpen').textContent=tot;
+    var x=stu[cur];document.getElementById('nbName').textContent='Stundenplan '+x.n;
+    var T=document.getElementById('nbTT');
+    var h='<div class="h"></div><div class="h">Slot 1</div><div class="h">Slot 2</div><div class="h">Slot 3</div>';
+    for(var d=0;d<2;d++){h+='<div class="h">'+(d?'Mi':'Di')+'</div>';
+      for(var k=0;k<3;k++){var i=d*3+k,c=x.s[i];
+        var lbl=c[0]||'Schule',sub='';
+        if(c.orig&&!c.done)sub='<small>offen – klicken</small>';
+        else if(c.orig&&c[1]==='sch')sub='<small>bewusst gewählt</small>';
+        else if(c.orig)sub='<small>'+'zusätzlich zugeteilt'+'</small>';
+        var chg=(c.orig&&c.done)?'<button class="chg" data-i="'+i+'">Ändern</button>':'';
+        h+='<div class="c'+(c.orig&&!c.done?' open':'')+(i===lastPop&&!RM4?' pop':'')+'" data-i="'+i+'" style="background:'+COL[c[1]]+'">'+lbl+sub+chg+'</div>'}}
+    T.innerHTML=h;
+    [].forEach.call(T.querySelectorAll('.c.open'),function(el){el.onclick=function(){nbOpen(+el.dataset.i)}});
+    [].forEach.call(T.querySelectorAll('.chg'),function(el){el.onclick=function(e){e.stopPropagation();nbChange(+el.dataset.i)}});
+  }
+  function nbChange(i){var c=stu[cur].s[i];
+    if(c[0]){offers[i].forEach(function(o){if(o.b===c[0])o.bel--})}
+    c[0]=null;c[1]='sch';c.done=false;hint('Zuteilung zurückgenommen – der Platz ist wieder frei.');render();nbOpen(i)}
+  function nbOpen(i){openSlot=i;var x=stu[cur];
+    document.getElementById('nbMTitle').textContent=x.n+' · '+SL[i];
+    document.getElementById('nbMSub').textContent='Alle Wunschberufe sind ausgeschöpft. Freie Alternativen in diesem Slot – gemeinsam besprechen:';
+    var have=x.s.map(function(c){return c[0]});
+    var H='';(offers[i]||[]).forEach(function(o,j){
+      if(x.wishes.indexOf(o.b)>-1)return; // Wunschberufe hätte der Algorithmus schon zugeteilt
+      var dup=have.indexOf(o.b)>-1,full=o.bel>=o.max;
+      var why=dup?'bereits im Stundenplan – kein Beruf doppelt':full?'voll – Maximalzahl erreicht':o.f;
+      var cap='<span class="cap'+(full?' full':'')+'"><span><b>'+o.bel+'/'+o.max+'</b> belegt</span><span class="capbar"><i style="width:'+(100*o.bel/o.max)+'%"></i></span></span>';
+      H+='<button class="nb-opt" data-j="'+j+'"'+(dup||full?' disabled':'')+'><span><b>'+o.b+'</b><br><span class="why">'+why+'</span></span>'+cap+'</button>'});
+    H+='<button class="nb-opt school" data-j="-1"><span><b>In der Schule bleiben</b><br><span class="why">Der Slot bleibt Schulzeit</span></span><span class="tag2" style="background:var(--sch)">Schule</span></button>';
+    var O=document.getElementById('nbOpts');O.innerHTML=H;
+    if(!RM4){var bars=[].map.call(O.querySelectorAll('.capbar i'),function(b){var w=b.style.width;b.style.width='0';return [b,w]});requestAnimationFrame(function(){requestAnimationFrame(function(){bars.forEach(function(p){p[0].style.width=p[1]})})})}
+    [].forEach.call(O.querySelectorAll('.nb-opt:not([disabled])'),function(b){b.onclick=function(){nbSelect(+b.dataset.j)}});
+    pend=null;document.getElementById('nbOk').disabled=true;
+    document.getElementById('nbModal').classList.add('open')}
+  var RM4=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,lastPop=null;
+  var pend=null;
+  // Option anklicken = nur auswählen (Vorschau), noch nichts übernehmen
+  function nbSelect(j){var slot=openSlot;
+    [].forEach.call(document.querySelectorAll('#nbOpts .nb-opt'),function(b){
+      var k=+b.dataset.j,on=k===j;b.classList.toggle('chosen',on);
+      if(k>=0){var o=offers[slot][k],n=o.bel+(on?1:0);
+        b.querySelector('.capbar i').style.width=(100*n/o.max)+'%';b.querySelector('.cap b').textContent=n+'/'+o.max}});
+    pend=j;document.getElementById('nbOk').disabled=false}
+  // Erst «Bestätigen» übernimmt die Wahl
+  window.nbConfirm=function(){if(pend===null)return;var j=pend,x=stu[cur],c=x.s[openSlot],slot=openSlot;
+    if(j<0){c[0]=null;c[1]='sch';hint(x.n+' bleibt in '+SL[slot]+' in der Schule.')}
+    else{var o=offers[slot][j];o.bel++;c[0]=o.b;c[1]='zu';
+      hint(x.n+' → '+o.b+' (zusätzlich). Belegung dort jetzt '+o.bel+'/'+o.max+'.')}
+    c.done=true;pend=null;lastPop=slot;nbClose();render();lastPop=null};
+  window.nbClose=function(){document.getElementById('nbModal').classList.remove('open')};
+  nbReset();
+})();
+</script>
+</body>
+</html>
